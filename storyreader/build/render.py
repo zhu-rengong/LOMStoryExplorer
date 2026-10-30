@@ -10,9 +10,19 @@ from ..model import (
     LoreBeat,
     MetaBeat,
     SayBeat,
+    SceneBeat,
     TextRef,
 )
-from ..wire import BEAT_BRANCH, BEAT_CHOICE, BEAT_JUMP, BEAT_LORE, BEAT_META, BEAT_SAY, SAY_MODE_CODE
+from ..wire import (
+    BEAT_BRANCH,
+    BEAT_CHOICE,
+    BEAT_JUMP,
+    BEAT_LORE,
+    BEAT_META,
+    BEAT_SAY,
+    BEAT_SCENE,
+    SAY_MODE_CODE,
+)
 from .wordcount import KINDS, WordCounter
 
 _MENU_LABEL = {
@@ -223,6 +233,8 @@ class Renderer:
                         out.append([BEAT_META, label])
             elif isinstance(beat, LoreBeat):
                 self._lore(beat.key, out)
+            elif isinstance(beat, SceneBeat):
+                out.append([BEAT_SCENE, beat.name, beat.key, beat.next])
         return out
 
     def _say(self, beat: SayBeat) -> list[Any]:

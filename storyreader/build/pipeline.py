@@ -389,6 +389,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     models, reused, failed = _analyze_all(sources, use_cache, reporter)
 
     edges, dynamic, inferred = collect_edges(models, sources)
+    scene_total = sum(model.scene_count for model in models.values())
     node_ids = sorted(models)
     chapters, chapter_index = build_chapters(node_ids)
     chapter_of_id = {sid: classify(sid)[0] for sid in node_ids}
@@ -418,6 +419,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
         f"{len(edges)} edges ({inferred} inferred, {len(position_edges)} position),"
         f" {len(dynamic)} dynamic jumps"
     )
+    reporter.info(f"{scene_total} scene switches")
     reporter.info(f"{len(chapters)} chapters; {len(times)} scripts with a fixed date")
     if times:
         reporter.info(
@@ -654,7 +656,12 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
         },
         languages=languages,
         dynamic=dynamic,
-        analysis={"failed": failed, "cache_reused": reused, "inferred_edges": inferred},
+        analysis={
+            "failed": failed,
+            "cache_reused": reused,
+            "inferred_edges": inferred,
+            "scene_switches": scene_total,
+        },
         artifacts=[{"name": name, "size": size} for name, size in parts],
     )
     write_report(REPORT_PATH, report_payload)

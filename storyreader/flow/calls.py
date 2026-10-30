@@ -14,6 +14,7 @@ from ..model import (
     Mark,
     MetaBeat,
     SayBeat,
+    SceneBeat,
     TextRef,
     Unknown,
 )
@@ -122,6 +123,10 @@ class CallHandler:
 
         if obj == "luamanager" and method in _JUMP_KINDS:
             self.emit_jump(method, args, state, beats, label)
+            return None
+
+        if obj == "luamanager" and method == "ChangeScene":
+            self.emit_scene(args, state, beats)
             return None
 
         if obj == "statmodifymanager":
@@ -256,6 +261,13 @@ class CallHandler:
             return
         beats.append(JumpBeat(target, ""))
         self.flow.ctx.add_edge(target, kind, label)
+
+    def emit_scene(self, args: Sequence[L.Expr], state: EvalState, beats: list[Any]) -> None:
+        values = ["", "", ""]
+        for index in range(min(len(args), 3)):
+            values[index] = as_text(self.flow.eval(args[index], state)) or ""
+        beats.append(SceneBeat(values[0], values[1], values[2]))
+        self.flow.ctx.scene_count += 1
 
     def option_list(self, table: Any) -> list[OptionDraft]:
         options: list[OptionDraft] = []

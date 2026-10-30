@@ -227,6 +227,19 @@
         return box;
       };
 
+      const renderScene = (beat) => {
+        const data = schema.scene(beat);
+        const row = ui.el("div", "scene-switch");
+        row.appendChild(ui.el("span", "scene-label", i18n.t("sceneSwitch")));
+        if (data.name) row.appendChild(ui.el("span", "scene-name", data.name));
+        if (data.key) row.appendChild(ui.el("span", "scene-key", data.key));
+        if (data.next) {
+          row.appendChild(ui.el("span", "scene-arrow", "→"));
+          row.appendChild(ui.el("span", "scene-next", data.next));
+        }
+        return row;
+      };
+
       const renderJump = (beat, ctx) => {
         const data = schema.jump(beat);
         if (!data.target) {
@@ -325,6 +338,11 @@
             continue;
           }
 
+          if (tag === "sc") {
+            frag.appendChild(renderScene(beat));
+            continue;
+          }
+
           if (tag === "s") {
             const data = schema.say(beat);
             const wrap = ui.el("div", `say${data.mode !== "dialog" ? ` ${SAY_CLASS[data.mode === "think" ? 2 : 1]}` : ""}`);
@@ -383,6 +401,9 @@
               push("meta", beat[1]);
             } else if (beat[0] === "j") {
               push("jump", `→ ${beat[1] || ""}`);
+            } else if (beat[0] === "sc") {
+              const data = schema.scene(beat);
+              push("jump", `↩ ${data.name}${data.next ? ` → ${data.next}` : ""}`);
             } else if (beat[0] === "c") {
               const options = schema.choices(beat);
               const first = options[0] && options[0].text ? `：${options[0].text}` : "";
@@ -442,6 +463,7 @@
         renderBranch,
         renderChoice,
         renderJump,
+        renderScene,
         speakerName,
         speakerTone,
         stripRich,

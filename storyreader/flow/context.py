@@ -16,6 +16,7 @@ class AnalysisContext:
     warnings: list[str] = field(default_factory=list)
     say_count: int = 0
     fx_count: int = 0
+    scene_count: int = 0
     option_count: int = 0
     branch_seq: int = 0
     edge_keys: set[tuple[str, str, str]] = field(default_factory=set)
@@ -37,5 +38,6 @@ class AnalysisContext:
             warnings=list(self.warnings[:20]),
             say_count=self.say_count,
             fx_count=self.fx_count,
+            scene_count=self.scene_count,
             option_count=self.option_count,
         )

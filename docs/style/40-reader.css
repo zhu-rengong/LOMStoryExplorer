@@ -642,6 +642,28 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 }
 .jump .option-cond { color: var(--reader-fg-3); font-size: var(--fs-micro); }
 
+.scene-switch {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--sp-2);
+  margin: 4px 0 12px;
+  padding: 4px 10px;
+  border-left: 3px double var(--reader-line-2);
+  border-radius: var(--r-2);
+  color: var(--reader-fg-3);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  line-height: 1.6;
+  letter-spacing: .04em;
+  user-select: none;
+}
+.scene-switch .scene-label { opacity: .78; }
+.scene-switch .scene-name { color: var(--reader-fg-2); }
+.scene-switch .scene-key { opacity: .8; }
+.scene-switch .scene-arrow { opacity: .7; }
+.scene-switch .scene-next { color: var(--reader-fg-2); }
+
 .lore {
   margin: 12px 0 16px;
   padding: 10px 14px 14px 16px;

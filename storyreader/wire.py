@@ -6,6 +6,7 @@ BEAT_BRANCH = "br"
 BEAT_JUMP = "j"
 BEAT_META = "m"
 BEAT_LORE = "lore"
+BEAT_SCENE = "sc"
 
 SAY_MODES = ("dialog", "narration", "think")
 SAY_MODE_CODE = {mode: index for index, mode in enumerate(SAY_MODES)}

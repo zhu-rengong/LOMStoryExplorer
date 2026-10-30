@@ -10,6 +10,7 @@ from .wire import (
     BEAT_LORE,
     BEAT_META,
     BEAT_SAY,
+    BEAT_SCENE,
     SAY_MODE_CODE,
     SAY_MODES,
 )
@@ -94,7 +95,14 @@ class LoreBeat:
     key: str
 
 
-Beat = SayBeat | ChoiceBeat | BranchBeat | JumpBeat | MetaBeat | LoreBeat
+@dataclass(frozen=True)
+class SceneBeat:
+    name: str
+    key: str = ""
+    next: str = ""
+
+
+Beat = SayBeat | ChoiceBeat | BranchBeat | JumpBeat | MetaBeat | LoreBeat | SceneBeat
 
 
 @dataclass(frozen=True)
@@ -118,6 +126,7 @@ class ScriptAnalysis:
     warnings: list[str] = field(default_factory=list)
     say_count: int = 0
     fx_count: int = 0
+    scene_count: int = 0
     option_count: int = 0
 
     @property
@@ -261,6 +270,8 @@ def beat_to_raw(beat: Beat) -> list[Any]:
         return [BEAT_JUMP, beat.target, beat.label]
     if isinstance(beat, MetaBeat):
         return [BEAT_META, beat.kind, beat.key, beat.value]
+    if isinstance(beat, SceneBeat):
+        return [BEAT_SCENE, beat.name, beat.key, beat.next]
     return [BEAT_LORE, beat.key]
 
 
@@ -290,6 +301,12 @@ def beat_from_raw(row: Any) -> Beat:
         return JumpBeat(row[1] if len(row) > 1 else None, row[2] if len(row) > 2 else "")
     if tag == BEAT_META:
         return MetaBeat(row[1], row[2], row[3] if len(row) > 3 else None)
+    if tag == BEAT_SCENE:
+        return SceneBeat(
+            row[1] if len(row) > 1 else "",
+            row[2] if len(row) > 2 else "",
+            row[3] if len(row) > 3 else "",
+        )
     return LoreBeat(row[1] if len(row) > 1 else "")
 
 
@@ -313,6 +330,7 @@ def analysis_to_wire(analysis: ScriptAnalysis) -> dict[str, Any]:
         "warnings": list(analysis.warnings),
         "say": analysis.say_count,
         "fx": analysis.fx_count,
+        "scenes": analysis.scene_count,
         "options": analysis.option_count,
     }
 
@@ -334,5 +352,6 @@ def analysis_from_wire(payload: dict[str, Any]) -> ScriptAnalysis:
         warnings=[str(item) for item in payload.get("warnings") or []],
         say_count=int(payload.get("say") or 0),
         fx_count=int(payload.get("fx") or 0),
+        scene_count=int(payload.get("scenes") or 0),
         option_count=int(payload.get("options") or 0),
     )

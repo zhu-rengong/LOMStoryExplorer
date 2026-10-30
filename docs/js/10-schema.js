@@ -117,6 +117,12 @@
     label: beat[2] || "",
   });
 
+  const scene = (beat) => ({
+    name: beat[1] || "",
+    key: beat[2] || "",
+    next: beat[3] || "",
+  });
+
   const metaBeat = (beat) => ({
     text: beat[1] || "",
     method: typeof beat[2] === "string" ? beat[2] : "",
@@ -195,6 +201,7 @@
     nodeSource: (id) => meta.shardOf[id] || "",
     pack: packed,
     say,
+    scene,
     storyOf,
     stripRich,
     textOf,
