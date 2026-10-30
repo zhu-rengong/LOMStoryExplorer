@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from . import unityprobe
+from .manifest import write_json
 
 ENTRY_VERSION = 2
 
@@ -159,10 +160,7 @@ def load_cache(path: Path, fingerprint: str) -> dict | None:
 
 
 def save_cache(path: Path, payload: dict) -> None:
-    target = Path(path)
-    target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
-                      encoding="utf-8")
+    write_json(path, payload)
 
 
 def summarize(payload: dict) -> dict:

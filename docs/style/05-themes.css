@@ -1,0 +1,37 @@
+:root,
+:root[data-theme="paper"] {
+  color-scheme: light;
+  --bg: var(--paper);
+  --bg-deep: #e9e3d8;
+  --surface: var(--paper-raised);
+  --surface-soft: #f8f4ec;
+  --surface-hover: #eee8dc;
+  --text: var(--ink);
+  --text-soft: var(--muted);
+  --line: rgb(64 59 48 / 13%);
+  --line-strong: rgb(64 59 48 / 23%);
+  --accent: var(--vermilion);
+  --accent-soft: rgb(164 59 50 / 9%);
+  --accent-ink: #fffaf0;
+  --selection: rgb(164 59 50 / 18%);
+  --paper-glow: rgb(255 253 247 / 78%);
+  --texture: rgb(76 62 44 / 2.5%);
+}
+:root[data-theme="night"] {
+  color-scheme: dark;
+  --bg: var(--night);
+  --bg-deep: #101310;
+  --surface: var(--night-raised);
+  --surface-soft: #1d211e;
+  --surface-hover: #2a302b;
+  --text: var(--night-ink);
+  --text-soft: var(--night-muted);
+  --line: rgb(225 229 214 / 10%);
+  --line-strong: rgb(225 229 214 / 20%);
+  --accent: #cb6a5c;
+  --accent-soft: rgb(203 106 92 / 12%);
+  --accent-ink: #1b1513;
+  --selection: rgb(203 106 92 / 25%);
+  --paper-glow: rgb(35 40 35 / 82%);
+  --texture: rgb(237 232 216 / 2%);
+}

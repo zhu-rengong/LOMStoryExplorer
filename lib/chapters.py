@@ -1,88 +1,58 @@
 from __future__ import annotations
 
 import re
+from collections.abc import Iterable
 
-_PALETTE = [
-    "#C8A96A", "#B4453B", "#6E8B8F", "#A8763E", "#7FA36B", "#8C7CA8",
-    "#C98B6B", "#5B8FA8", "#A8A06B", "#9C6B8F", "#6B8FA8", "#B08A5B",
-    "#8FA86B", "#A85B77", "#5B77A8", "#A88F5B",
-]
+from .model import Chapter
 
-_CH_RULE = re.compile(r"^ch(\d+)_", re.IGNORECASE)
-_ACT_RULE = re.compile(r"^act(\d+)", re.IGNORECASE)
-_S_RULE = re.compile(r"^[sS](\d{2})\d{2}_")
-_SCENE_RULE = re.compile(r"^(door|room|center|back|meeting|mall|teashop|fortress|talk|shop|inn)")
-_WORK_RULE = re.compile(r"^(kitchen|pharmacy|alchemy|craft|forge|chess|fish|farm|work|labour)")
-_TRAVEL_RULE = re.compile(r"^travel", re.IGNORECASE)
-_FREE_RULE = re.compile(r"^section_\d+_free", re.IGNORECASE)
-_SECTION_RULE = re.compile(r"^section_", re.IGNORECASE)
-_MISC_RULE = re.compile(r"^(legend|library|book|event|mission)", re.IGNORECASE)
-
-_TAIL_RANK = {"scene": 3, "work": 4, "travel": 5, "free": 6, "section": 7, "misc": 8}
-
-
-def classify(script_id: str) -> tuple[str, str]:
-    match = _CH_RULE.match(script_id)
-    if match:
-        n = int(match.group(1))
-        return f"ch{n}", "序章" if n == 0 else f"第{n}章"
-
-    match = _ACT_RULE.match(script_id)
-    if match:
-        n = int(match.group(1))
-        return f"act{n}", f"第{n}幕"
-
-    match = _S_RULE.match(script_id)
-    if match:
-        return f"s{match.group(1)}", f"事件 S{match.group(1)}xx"
-
-    if _SCENE_RULE.match(script_id):
-        return "scene", "場景互動"
-    if _WORK_RULE.match(script_id):
-        return "work", "勞作雜務"
-    if _TRAVEL_RULE.match(script_id):
-        return "travel", "旅途見聞"
-    if _FREE_RULE.match(script_id):
-        return "free", "自由模式"
-    if _SECTION_RULE.match(script_id):
-        return "section", "場景段落"
-    if _MISC_RULE.match(script_id):
-        return "misc", "雜項事件"
-    return "other", "其他劇本"
+PALETTE = ("#A86F28", "#A43B32", "#365F55", "#7E2924", "#3F7057", "#315E78")
+RULES = (
+    (re.compile(r"^ch(\d+)_", re.I), "chapter"),
+    (re.compile(r"^act(\d+)", re.I), "act"),
+    (re.compile(r"^[sS](\d{2})\d{2}_"), "series"),
+    (re.compile(r"^(door|room|center|back|meeting|mall|teashop|fortress|talk|shop|inn)"), "scene"),
+    (re.compile(r"^(kitchen|pharmacy|alchemy|craft|forge|chess|fish|farm|work|labour)"), "work"),
+    (re.compile(r"^travel", re.I), "travel"),
+    (re.compile(r"^section_\d+_free", re.I), "free"),
+    (re.compile(r"^section_", re.I), "section"),
+    (re.compile(r"^(legend|library|book|event|mission)", re.I), "misc"),
+)
+TITLES = {"scene": "場景互動", "work": "勞作雜務", "travel": "旅途見聞", "free": "自由模式",
+          "section": "場景段落", "misc": "雜項事件", "other": "其他劇本"}
+RANK = {"scene": 3, "work": 4, "travel": 5, "free": 6, "section": 7, "misc": 8, "other": 9}
 
 
-def build_chapters(script_ids: list[str]) -> tuple[list[dict], dict[str, int]]:
-    order: list[str] = []
-    titles: dict[str, str] = {}
+def classify(script_id: str) -> tuple[str, str, int]:
+    for rule, kind in RULES:
+        match = rule.match(script_id)
+        if not match:
+            continue
+        if kind == "chapter":
+            number = int(match.group(1))
+            return f"ch{number}", "序章" if number == 0 else f"第{number}章", number
+        if kind == "act":
+            number = int(match.group(1))
+            return f"act{number}", f"第{number}幕", number
+        if kind == "series":
+            number = int(match.group(1))
+            return f"s{number}", f"事件 S{number:02d}xx", number
+        return kind, TITLES[kind], 0
+    return "other", TITLES["other"], 0
+
+
+def build_chapters(script_ids: Iterable[str]) -> tuple[list[Chapter], dict[str, int]]:
     counts: dict[str, int] = {}
-
-    for sid in script_ids:
-        chapter_id, title = classify(sid)
-        if chapter_id not in titles:
-            order.append(chapter_id)
-            titles[chapter_id] = title
-            counts[chapter_id] = 0
-        counts[chapter_id] += 1
-
-    def sort_key(cid: str) -> tuple[int, int, str]:
-        if cid.startswith("ch"):
-            return 0, int(cid[2:] or 0), cid
-        if cid.startswith("act"):
-            return 1, int(cid[3:] or 0), cid
-        if cid.startswith("s") and cid[1:].isdigit():
-            return 2, int(cid[1:]), cid
-        return _TAIL_RANK.get(cid, 9), -counts[cid], cid
-
-    order.sort(key=sort_key)
-
-    chapters: list[dict] = []
-    for index, cid in enumerate(order):
-        chapters.append({
-            "id": cid,
-            "title": titles[cid],
-            "color": _PALETTE[index % len(_PALETTE)],
-            "count": counts[cid],
-        })
-
-    assignment = {cid: i for i, cid in enumerate(order)}
-    return chapters, assignment
+    titles: dict[str, str] = {}
+    ranks: dict[str, int] = {}
+    kinds: dict[str, int] = {}
+    for script_id in script_ids:
+        chapter_id, title, number = classify(script_id)
+        counts[chapter_id] = counts.get(chapter_id, 0) + 1
+        titles[chapter_id] = title
+        ranks[chapter_id] = number
+        kinds[chapter_id] = 0 if chapter_id.startswith("ch") else 1 if chapter_id.startswith("act") \
+            else 2 if chapter_id.startswith("s") and chapter_id[1:].isdigit() else RANK[chapter_id]
+    ordered = sorted(counts, key=lambda cid: (kinds[cid], ranks[cid] if kinds[cid] < 3 else -counts[cid], cid))
+    chapters = [Chapter(cid, titles[cid], PALETTE[index % len(PALETTE)], counts[cid])
+                for index, cid in enumerate(ordered)]
+    return chapters, {chapter.id: index for index, chapter in enumerate(chapters)}

@@ -3,174 +3,262 @@ from __future__ import annotations
 import gzip
 import hashlib
 import json
-import re
+import os
 import time
-from collections.abc import Iterable
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Any
 
+from . import entries, gametime
+from .chapters import build_chapters, classify
+from .emit.catalog import write_catalog
+from .emit.conditions import write_conditions
+from .emit.jsout import cleanup_generated
+from .emit.report import write_report
+from .emit.shards import ShardPlan, plan_shards, story_bytes
+from .emit.text import Renderer, write_language
+from .manifest import read_json
+from .model import BranchBeat, ChoiceBeat, SayBeat, StoryAnalysis, StoryEdge
+from .paths import (
+    CACHE_DIR, CHECKPOINT_JSON, DEFAULT_LANG, ENTRIES_JSON, LOCALE_DIR, LUA_DIR, MANIFEST_PATH,
+    REPORT_PATH, WEB_DATA_DIR,
+)
 from . import flow
-from .paths import CACHE_DIR
+
+PROTOCOL_VERSION = 1
+CACHE_VERSION = 2
+EMPTY_FLAG = 1
+SIMPLIFIED_FLAG = 2
 
 
-def log(message: str) -> None:
-    print(message, flush=True)
+class BuildError(RuntimeError):
+    pass
 
 
-_LITERAL = re.compile(r'"([A-Za-z][A-Za-z0-9_]{2,60})"')
-
-MAX_EDGE_LABEL = 60
-
-FACET_FIELDS = ("speakers", "flags", "checks", "stats", "rels", "options", "locks", "dice")
-
-CHECK_RE = re.compile(r"(?:條件|分支判定|骰子判定|場所事件)「([^」]+)」")
-
-
-def collect_facets(beats: list[list], reads: Iterable[str] | None = None) -> list:
-    speakers: set[str] = set()
-    flags: set[str] = set()
-    checks: set[str] = set()
-    stats: set[str] = set()
-    rels: set[str] = set()
-    options = locks = dice = 0
-
-    def walk(rows: list[list]) -> None:
-        nonlocal options, locks, dice
-        for beat in rows:
-            if not isinstance(beat, list) or not beat:
-                continue
-            tag = beat[0]
-            if tag == "say":
-                speaker = beat[1] if len(beat) > 1 else None
-                if speaker:
-                    speakers.add(speaker)
-            elif tag == "meta":
-                kind = beat[1] if len(beat) > 1 else ""
-                key = beat[2] if len(beat) > 2 else ""
-                if not key:
-                    continue
-                if kind == "flag":
-                    flags.add(key)
-                elif kind == "stat":
-                    stats.add(key)
-                elif kind == "rel":
-                    rels.add(key)
-                elif kind == "dice":
-                    checks.add(key)
-                    dice += 1
-            elif tag == "branch":
-                label = beat[1] if len(beat) > 1 else ""
-                for found in CHECK_RE.findall(label or ""):
-                    checks.add(found)
-                if len(beat) > 2 and isinstance(beat[2], list):
-                    walk(beat[2])
-            elif tag in ("choice", "_choice"):
-                branches = beat[1] if len(beat) > 1 and isinstance(beat[1], list) else []
-                options += len(branches)
-                for branch in branches:
-                    if not isinstance(branch, list):
-                        continue
-                    if len(branch) > 1 and branch[1]:
-                        dice += 1
-                    if len(branch) > 3 and branch[3]:
-                        locks += 1
-                    if len(branch) > 2 and isinstance(branch[2], list):
-                        walk(branch[2])
-
-    walk(beats)
-    if reads:
-        checks.update(key for key in reads if key)
-    return [
-        ",".join(sorted(speakers)),
-        ",".join(sorted(flags)),
-        ",".join(sorted(checks)),
-        ",".join(sorted(stats)),
-        ",".join(sorted(rels)),
-        options,
-        locks,
-        dice,
-    ]
+@dataclass(slots=True, frozen=True)
+class BuildOptions:
+    langs: tuple[str, ...]
+    default_lang: str = DEFAULT_LANG
+    use_cache: bool = True
+    full_text: bool = False
 
 
-def load_cache(path: Path) -> dict:
-    if not path.exists():
-        return {}
+@dataclass(slots=True)
+class AnalysisResult:
+    models: dict[str, StoryAnalysis]
+    reused: int
+    failed: int
+
+
+def load_cache(path: Path) -> dict[str, Any]:
     try:
-        with gzip.open(path, "rt", encoding="utf-8") as fp:
-            return json.load(fp)
-    except Exception:
+        with gzip.open(path, "rt", encoding="utf-8") as stream:
+            payload = json.load(stream)
+    except (OSError, ValueError, EOFError):
         return {}
+    return payload if payload.get("version") == CACHE_VERSION else {}
 
 
-def save_cache(path: Path, cache: dict) -> None:
+def save_cache(path: Path, entries: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with gzip.open(path, "wt", encoding="utf-8") as fp:
-        json.dump(cache, fp, ensure_ascii=False)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        with gzip.open(temporary, "wt", encoding="utf-8") as stream:
+            json.dump({"version": CACHE_VERSION, "entries": entries}, stream, ensure_ascii=False)
+        temporary.replace(path)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
 
 
-def analyze_all(sources: dict[str, str], use_cache: bool) -> tuple[dict[str, dict], int, int]:
-    cache_path = CACHE_DIR / "analysis.json.gz"
-    cache = load_cache(cache_path) if use_cache else {}
-    models: dict[str, dict] = {}
-    reused = failed = 0
-    started = time.time()
-    for sid, source in sorted(sources.items()):
-        sig = hashlib.sha1(f"{flow.FLOW_VERSION}:{source}".encode("utf-8")).hexdigest()[:16]
-        hit = cache.get(sid)
-        if hit and hit.get("sig") == sig:
-            models[sid] = hit["model"]
+def analyze_sources(sources: dict[str, str], use_cache: bool) -> AnalysisResult:
+    path = CACHE_DIR / "analysis.json.gz"
+    cached = load_cache(path).get("entries", {}) if use_cache else {}
+    current: dict[str, Any] = {}
+    models: dict[str, StoryAnalysis] = {}
+    reused = 0
+    for script_id, source in sorted(sources.items()):
+        signature = hashlib.sha256(f"{flow.FLOW_VERSION}:{source}".encode("utf-8")).hexdigest()[:24]
+        hit = cached.get(script_id) or {}
+        if hit.get("signature") == signature:
+            models[script_id] = StoryAnalysis.from_dict(hit["model"])
             reused += 1
-            continue
-        try:
-            models[sid] = flow.analyze(sid, source)
-        except Exception as exc:
-            failed += 1
-            models[sid] = {"id": sid, "beats": [], "edges": [], "dynamic": [],
-                           "warnings": [f"analysis failed: {exc}"], "reads": [],
-                           "stats": {"say": 0, "choice": 0, "fx": 0, "beats": 0, "reads": 0}}
-        cache[sid] = {"sig": sig, "model": models[sid]}
+        else:
+            models[script_id] = flow.analyze(script_id, source)
+        current[script_id] = {"signature": signature, "model": models[script_id].to_dict()}
     if use_cache:
-        save_cache(cache_path, cache)
-    log(f"[1/4] semantic analysis: {len(sources)} scripts (reused {reused}, "
-        f"analyzed {len(sources) - reused}, failed {failed}), {time.time() - started:.1f}s")
-    return models, reused, failed
+        save_cache(path, current)
+    failed = sum(bool(model.diagnostics) and not model.beats for model in models.values())
+    return AnalysisResult(models, reused, failed)
 
 
-def collect_edges(models: dict[str, dict], sources: dict[str, str]) -> tuple[list[list], list[str]]:
-    ids = set(models)
-    seen: dict[tuple[str, str, str], int] = {}
-    edges: list[list] = []
-    dynamic: list[str] = []
+def speakers_of(beats: list) -> set[str]:
+    speakers: set[str] = set()
+    for beat in beats:
+        if isinstance(beat, SayBeat) and beat.speaker:
+            speakers.add(beat.speaker)
+        elif isinstance(beat, ChoiceBeat):
+            for option in beat.options:
+                speakers.update(speakers_of(option.body))
+        elif isinstance(beat, BranchBeat):
+            speakers.update(speakers_of(beat.body))
+    return speakers
 
-    for sid, model in models.items():
-        for target, kind, label in model["edges"]:
-            if target not in ids:
-                dynamic.append(f"{sid} -> {target} (missing target)")
-                continue
-            key = (sid, target, kind)
-            if key in seen:
-                index = seen[key]
-                if label and label not in edges[index][3]:
-                    edges[index][3] = (edges[index][3] + " / " + label)[:MAX_EDGE_LABEL]
-                continue
-            seen[key] = len(edges)
-            edges.append([sid, target, kind, (label or "")[:MAX_EDGE_LABEL]])
 
-    inferred = 0
-    adjacency: dict[str, set[str]] = {}
-    for edge in edges:
-        adjacency.setdefault(edge[0], set()).add(edge[1])
-    for sid, source in sources.items():
-        existing = adjacency.get(sid)
-        if existing is None:
-            existing = adjacency[sid] = set()
-        for literal in sorted(set(_LITERAL.findall(source))):
-            if literal == sid or literal not in ids or literal in existing:
-                continue
-            existing.add(literal)
-            edges.append([sid, literal, "inferred", ""])
-            inferred += 1
-    dynamic.extend(f"{sid} contains dynamic jumps" for sid, model in models.items() for _ in model["dynamic"][:1])
-    temp = sum(1 for edge in edges if edge[2] in ("temp", "travel"))
-    log(f"[2/4] edges: {len(edges) - inferred - temp} jumps + {temp} temp/travel"
-        f" + {inferred} inferred ({len(dynamic)} dynamic jumps)")
-    return edges, dynamic
+class BuildPipeline:
+    def __init__(self, options: BuildOptions, log=print) -> None:
+        self.options = options
+        self.log = log
+
+    def run(self) -> dict[str, Any]:
+        self.validate_options()
+        sources = self.read_sources()
+        manifest = read_json(MANIFEST_PATH)
+        started = time.time()
+        analysis = analyze_sources(sources, self.options.use_cache)
+        self.log(
+            f"[1/4] Analyzed {len(sources)} scripts: {len(sources) - analysis.reused} changed, "
+            f"{analysis.reused} cached, {analysis.failed} failed"
+        )
+        node_ids = sorted(analysis.models)
+        chapters, chapter_indexes = build_chapters(node_ids)
+        chapter_of = {script_id: classify(script_id)[0] for script_id in node_ids}
+        edges, dynamic = self.collect_edges(analysis.models)
+        probe = read_json(ENTRIES_JSON)
+        position_edges, entry_list, entry_stats = entries.build(
+            sources, node_ids, {(edge.source, edge.target) for edge in edges}, probe
+        )
+        edges.extend(position_edges)
+        locales = {lang: self.read_locale(lang) for lang in self.options.langs}
+        rendered: dict[str, dict[str, Any]] = {}
+        shard_plans: dict[str, ShardPlan] = {}
+        for lang, locale in locales.items():
+            renderer = Renderer(locale, lang)
+            stories = {script_id: renderer.render(analysis.models[script_id].beats) for script_id in node_ids}
+            stories = {script_id: beats for script_id, beats in stories.items() if beats}
+            sizes = {script_id: story_bytes(stories.get(script_id, [])) for script_id in node_ids}
+            shard_plans[lang] = plan_shards(node_ids, sizes, chapter_of, [chapter.id for chapter in chapters])
+            rendered[lang] = {"renderer": renderer, "stories": stories, "sizes": sizes}
+            self.log(f"      {lang}: {len(stories)} nonempty stories, {renderer.missing_count} missing text keys")
+        catalog = self.catalog(
+            manifest, node_ids, chapters, chapter_indexes, chapter_of, analysis.models, edges, entry_list,
+            entry_stats["entry_sources"], shard_plans,
+        )
+        WEB_DATA_DIR.mkdir(parents=True, exist_ok=True)
+        keep = {"catalog.js"}
+        output = {"catalogBytes": write_catalog(WEB_DATA_DIR / "catalog.js", catalog), "languages": {}}
+        condition_payload = read_json(CHECKPOINT_JSON)
+        condition_items = condition_payload.get("items") or {}
+        condition_files = write_conditions(WEB_DATA_DIR, condition_items, PROTOCOL_VERSION)
+        keep.update(condition_files)
+        for lang in self.options.langs:
+            bundle = rendered[lang]
+            stats = write_language(
+                WEB_DATA_DIR, lang, bundle["stories"], bundle["renderer"], shard_plans[lang],
+                self.options.full_text, PROTOCOL_VERSION,
+            )
+            keep.update(stats.pop("files"))
+            output["languages"][lang] = stats
+        cleanup_generated(WEB_DATA_DIR, keep)
+        diagnostics = [diagnostic.format() for model in analysis.models.values() for diagnostic in model.diagnostics]
+        report = {
+            "protocolVersion": PROTOCOL_VERSION,
+            "generatedAt": catalog["generatedAt"],
+            "scripts": len(node_ids),
+            "edges": len(edges),
+            "chapters": len(chapters),
+            "analysis": {"reused": analysis.reused, "failed": analysis.failed, "diagnostics": diagnostics[:500]},
+            "dynamic": dynamic,
+            "entries": entry_stats,
+            "output": output,
+            "elapsed": round(time.time() - started, 2),
+        }
+        write_report(REPORT_PATH, report)
+        self.log(f"[done] {len(node_ids)} scripts, {len(edges)} edges, {len(chapters)} chapters")
+        self.log(f"       Data: {WEB_DATA_DIR}")
+        return report
+
+    def validate_options(self) -> None:
+        if not self.options.langs:
+            raise BuildError("No language selected; pass --langs zh-tw,zh-cn")
+        if self.options.default_lang not in self.options.langs:
+            raise BuildError("The default language must be included in --langs")
+        if not LUA_DIR.is_dir():
+            raise BuildError("data/lua not found; run extract.py first")
+
+    def read_sources(self) -> dict[str, str]:
+        sources = {path.stem: path.read_text(encoding="utf-8") for path in sorted(LUA_DIR.glob("*.lua"))}
+        if not sources:
+            raise BuildError("data/lua is empty; run extract.py first")
+        return sources
+
+    @staticmethod
+    def read_locale(lang: str) -> dict:
+        path = LOCALE_DIR / f"{lang}.json"
+        if not path.is_file():
+            raise BuildError(f"Missing {path}; run extract.py first")
+        return read_json(path)
+
+    @staticmethod
+    def collect_edges(models: dict[str, StoryAnalysis]) -> tuple[list[StoryEdge], list[str]]:
+        ids = set(models)
+        edges: list[StoryEdge] = []
+        dynamic: list[str] = []
+        seen: set[tuple[str, str, str]] = set()
+        for script_id, model in models.items():
+            dynamic.extend(f"{script_id}: {item}" for item in model.dynamic)
+            for edge in model.edges:
+                if edge.target not in ids:
+                    dynamic.append(f"{script_id}: missing target {edge.target}")
+                    continue
+                key = (edge.source, edge.target, edge.kind)
+                if key not in seen:
+                    seen.add(key)
+                    edges.append(edge)
+        return edges, dynamic
+
+    def catalog(self, manifest: dict, node_ids: list[str], chapters: list, chapter_indexes: dict[str, int],
+                chapter_of: dict[str, str], models: dict[str, StoryAnalysis], edges: list[StoryEdge],
+                entry_list: list[dict], entry_sources: dict[str, str], shard_plans: dict[str, ShardPlan]) -> dict:
+        anomalies = manifest.get("anomalies") or {}
+        empty = set(anomalies.get("empty") or [])
+        simplified = set(anomalies.get("simplified_only") or [])
+        indexes = {script_id: index for index, script_id in enumerate(node_ids)}
+        incoming = {script_id: 0 for script_id in node_ids}
+        outgoing = {script_id: 0 for script_id in node_ids}
+        for edge in edges:
+            outgoing[edge.source] += 1
+            incoming[edge.target] += 1
+        dates = gametime.explicit_dates({script_id: (LUA_DIR / f"{script_id}.lua").read_text(encoding="utf-8")
+                                         for script_id in node_ids})
+        nodes = []
+        for script_id in node_ids:
+            model = models[script_id]
+            flags = (EMPTY_FLAG if script_id in empty else 0) | (SIMPLIFIED_FLAG if script_id in simplified else 0)
+            nodes.append({
+                "id": script_id,
+                "chapter": chapter_indexes[chapter_of[script_id]],
+                "say": model.stats.get("say", 0),
+                "in": incoming[script_id],
+                "out": outgoing[script_id],
+                "flags": flags,
+                "entry": entry_sources.get(script_id) or next(
+                    (entry["source"] for entry in entry_list if entry["id"] == script_id), ""
+                ),
+                "date": dates.get(script_id, 0),
+                "speakers": sorted(speakers_of(model.beats)),
+                "shards": {lang: shard_plans[lang].assignment[script_id] for lang in self.options.langs},
+            })
+        return {
+            "version": PROTOCOL_VERSION,
+            "generatedAt": time.strftime("%Y-%m-%dT%H:%M:%S"),
+            "defaultLang": self.options.default_lang,
+            "languages": list(self.options.langs),
+            "chapters": [{"id": chapter.id, "title": chapter.title, "color": chapter.color, "count": chapter.count}
+                         for chapter in chapters],
+            "nodes": nodes,
+            "edges": [[indexes[edge.source], indexes[edge.target], edge.kind, edge.label] for edge in edges],
+            "entries": entry_list,
+            "conditionShards": 8,
+            "game": manifest.get("game_info") or {},
+        }

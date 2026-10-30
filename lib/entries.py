@@ -1,90 +1,61 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
+from typing import Any
 
 from .entryprobe import summarize as summarize_probe
+from .model import StoryEdge
 
-HARDCODED_ENTRIES: tuple[dict, ...] = (
-    {"id": "ch1_1", "label": "新遊戲開場", "source": "SaveSystem.cs L174-175"},
-    {"id": "act1", "label": "新篇章", "source": "SaveSystem.cs L209-210"},
+HARDCODED_ENTRIES = (
+    {"id": "ch1_1", "label": "New game", "source": "new-game"},
+    {"id": "act1", "label": "New chapter", "source": "new-chapter"},
 )
-
-_POSITION_RE = re.compile(r'Position\(\s*"([^"]+)"\s*\)')
-
-
-def find_positions(sources: dict[str, str]) -> dict[str, list[str]]:
-    found: dict[str, list[str]] = {}
-    for sid in sorted(sources):
-        names = sorted(set(_POSITION_RE.findall(sources[sid] or "")))
-        if names:
-            found[sid] = names
-    return found
+POSITION_CALL = re.compile(r'checkpointmanager\.Position\(\s*"([^"]+)"\s*\)')
 
 
-def _prefix_targets(name: str, ids: Sequence[str]) -> list[str]:
-    prefix = name.lower() + "_"
-    return [sid for sid in ids if sid.lower().startswith(prefix)]
+def find_positions(sources: dict[str, str]) -> dict[str, set[str]]:
+    return {script_id: set(POSITION_CALL.findall(source)) for script_id, source in sources.items()
+            if POSITION_CALL.search(source)}
 
 
-def expand_positions(positions: dict[str, list[str]], ids: Sequence[str],
-                     existing: set[tuple[str, str]],
-                     exact: dict[str, Sequence[str]] | None = None) -> tuple[list[list[str]], dict]:
-    edges: list[list[str]] = []
-    resolved: dict[str, int] = {}
-    exact_names: list[str] = []
-    prefix_names: list[str] = []
-    unresolved: list[str] = []
-    exact_map = exact or {}
-    id_set = set(ids)
-    for src in sorted(positions):
-        for name in positions[src]:
-            exact_targets = [sid for sid in exact_map.get(name, ()) if sid in id_set]
-            if exact_targets:
-                targets = exact_targets
-                exact_names.append(name)
-            else:
-                targets = _prefix_targets(name, ids)
-                if targets:
-                    prefix_names.append(name)
-            if not targets:
-                unresolved.append(name)
-                continue
-            resolved[name] = resolved.get(name, 0) + len(targets)
-            for dst in targets:
-                if (src, dst) in existing:
-                    continue
-                existing.add((src, dst))
-                edges.append([src, dst, "position", f"場所事件「{name}」"])
-    stats = {
-        "names": len({name for names in positions.values() for name in names}),
-        "resolved_names": len(resolved),
-        "exact_names": len(set(exact_names)),
-        "prefix_names": len(set(prefix_names)),
-        "targets": sum(resolved.values()),
-        "edges": len(edges),
-        "unresolved": sorted(set(unresolved))[:40],
-    }
-    return edges, stats
-
-
-def build(sources: dict[str, str], ids: Iterable[str],
-          existing: set[tuple[str, str]],
-          probe: dict | None = None) -> tuple[list[list[str]], list[dict], dict]:
-    id_list = list(ids)
+def build(sources: dict[str, str], ids: Iterable[str], existing: set[tuple[str, str]],
+          probe: dict[str, Any] | None = None) -> tuple[list[StoryEdge], list[dict], dict[str, Any]]:
+    id_list = sorted(ids)
     id_set = set(id_list)
+    probe = probe or {}
+    exact = probe.get("positions") or {}
     positions = find_positions(sources)
-    exact = (probe or {}).get("positions") or None
-    edges, position_stats = expand_positions(positions, id_list, existing, exact)
+    edges: list[StoryEdge] = []
+    stats = {"names": 0, "exact_names": 0, "prefix_names": 0, "targets": 0, "unresolved": []}
+    names_seen: set[str] = set()
+    for source, names in sorted(positions.items()):
+        for name in sorted(names):
+            names_seen.add(name)
+            targets = [target for target in exact.get(name, ()) if target in id_set]
+            mode = "exact"
+            if not targets:
+                prefix = name.lower() + "_"
+                targets = [target for target in id_list if target.lower().startswith(prefix)]
+                mode = "prefix"
+            if not targets:
+                stats["unresolved"].append(name)
+                continue
+            stats[f"{mode}_names"] += 1
+            stats["targets"] += len(targets)
+            for target in targets:
+                if (source, target) in existing:
+                    continue
+                existing.add((source, target))
+                edges.append(StoryEdge(source, target, "position", f"Position event: {name}"))
     entries = [dict(item) for item in HARDCODED_ENTRIES if item["id"] in id_set]
-    entry_sources = {sid: source for sid, source in ((probe or {}).get("entries") or {}).items()
-                     if sid in id_set}
-    stats = {
+    entry_sources = {script_id: source for script_id, source in (probe.get("entries") or {}).items()
+                     if script_id in id_set}
+    stats["names"] = len(names_seen)
+    stats["unresolved"] = sorted(set(stats["unresolved"]))[:60]
+    return edges, entries, {
         "hardcoded": len(entries),
-        "missing_hardcoded": [item["id"] for item in HARDCODED_ENTRIES
-                              if item["id"] not in id_set],
-        "position": position_stats,
-        "asset_probe": summarize_probe(probe or {}),
+        "position": stats,
+        "asset_probe": summarize_probe(probe),
         "entry_sources": entry_sources,
     }
-    return edges, entries, stats

@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 
+@dataclass(slots=True, frozen=True)
 class Expr:
     line: int
 
@@ -10,129 +11,115 @@ class Expr:
         raise NotImplementedError
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Str(Expr):
     value: str
-    line: int = 0
 
     def text(self) -> str:
-        return '"' + self.value.replace('"', '\\"') + '"'
+        escaped = self.value.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n")
+        return f'"{escaped}"'
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Num(Expr):
     value: float
-    line: int = 0
 
     def text(self) -> str:
-        return str(int(self.value)) if float(self.value).is_integer() else str(self.value)
+        return str(int(self.value)) if self.value.is_integer() else str(self.value)
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Literal(Expr):
     value: str
-    line: int = 0
 
     def text(self) -> str:
         return self.value
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Name(Expr):
     id: str
-    line: int = 0
 
     def text(self) -> str:
         return self.id
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Index(Expr):
     obj: Expr
     key: Expr
-    line: int = 0
 
     def text(self) -> str:
+        if isinstance(self.key, Str):
+            return f"{self.obj.text()}.{self.key.value}"
         return f"{self.obj.text()}[{self.key.text()}]"
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Call(Expr):
     func: Expr
     args: list[Expr]
-    line: int = 0
 
     def text(self) -> str:
         return f"{self.func.text()}({', '.join(arg.text() for arg in self.args)})"
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Table(Expr):
     fields: list[tuple[Expr | None, Expr]]
-    line: int = 0
 
     def text(self) -> str:
-        return "{...}"
+        return "{" + ", ".join(
+            f"{key.text()} = {value.text()}" if key else value.text() for key, value in self.fields
+        ) + "}"
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Un(Expr):
     op: str
     operand: Expr
-    line: int = 0
 
     def text(self) -> str:
-        return f"{self.op}{self.operand.text()}"
+        return f"{self.op} {self.operand.text()}" if self.op == "not" else f"{self.op}{self.operand.text()}"
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Bin(Expr):
     op: str
     left: Expr
     right: Expr
-    line: int = 0
 
     def text(self) -> str:
         return f"{self.left.text()} {self.op} {self.right.text()}"
 
 
+@dataclass(slots=True, frozen=True)
 class Stmt:
     line: int
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Local(Stmt):
     names: list[str]
     values: list[Expr]
-    line: int = 0
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Assign(Stmt):
     targets: list[Expr]
     values: list[Expr]
-    line: int = 0
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class CallStmt(Stmt):
     call: Call
-    line: int = 0
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class If(Stmt):
     clauses: list[tuple[Expr | None, list[Stmt]]]
-    line: int = 0
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class Do(Stmt):
     body: list[Stmt]
-    line: int = 0
-
-
-@dataclass
-class Unsupported(Stmt):
-    what: str
-    line: int = 0

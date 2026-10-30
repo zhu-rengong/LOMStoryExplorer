@@ -1,0 +1,41 @@
+(() => {
+  "use strict";
+  window.SR.register("i18nDict", {
+    "zh-tw": {
+      appTitle: "活俠傳 · 劇本閱讀", appSubtitle: "一卷江湖，諸般因果", search: "搜尋編號、正文或角色…",
+      chapters: "書目", bookmarks: "書籤", recent: "最近", library: "書庫", read: "閱讀", settings: "設置",
+      searchResults: "檢索結果", allChapters: "全部章節", emptyTitle: "展卷，入江湖",
+      emptyBody: "從左側書目選一則劇本，或搜尋記得的一句話。每次選擇，都通向另一段命運。",
+      emptySearch: "沒有相符的劇本", emptyBookmarks: "尚未收藏劇本", emptyRecent: "還沒有閱讀記錄",
+      loading: "正在整理書卷…", loadingStory: "正在展開劇本…", indexing: "正在建立全文索引",
+      retry: "重試", close: "關閉", back: "返回", forward: "前進", previous: "上一則", next: "續讀",
+      outgoing: "後續劇情", incoming: "來自劇情", outline: "分支大綱", context: "劇情脈絡",
+      bookmarkAdd: "加入書籤", bookmarkRemove: "移除書籤", copyId: "複製編號", copied: "已複製劇本編號",
+      copyLink: "複製連結", linkCopied: "已複製閱讀連結", theme: "主題", system: "跟隨系統", paper: "宣紙", night: "墨色",
+      language: "語言", typography: "排版", serif: "宋體", sans: "黑體", fontSize: "字號", lineHeight: "行距", width: "正文寬度",
+      reset: "恢復預設", stories: "則劇本", results: "項結果", noNext: "沒有直接續篇", related: "相連劇本",
+      condition: "條件", choices: "選項", narration: "旁白", thought: "心聲", lore: "江湖見聞",
+      newGame: "新遊戲開場", newChapter: "新篇章", combat: "戰鬥入口", free: "自由模式入口",
+      readProgress: "閱讀進度", dataError: "資料未能載入", dataErrorBody: "請確認已執行 build.py，並保留完整的 docs/data 目錄。",
+      expand: "展開", collapse: "收合", clear: "清除", menu: "選單", unknown: "未知劇本",
+    },
+    "zh-cn": {
+      appTitle: "活侠传 · 剧本阅读", appSubtitle: "一卷江湖，诸般因果", search: "搜索编号、正文或角色…",
+      chapters: "书目", bookmarks: "书签", recent: "最近", library: "书库", read: "阅读", settings: "设置",
+      searchResults: "检索结果", allChapters: "全部章节", emptyTitle: "展卷，入江湖",
+      emptyBody: "从左侧书目选一则剧本，或搜索记得的一句话。每次选择，都通向另一段命运。",
+      emptySearch: "没有相符的剧本", emptyBookmarks: "尚未收藏剧本", emptyRecent: "还没有阅读记录",
+      loading: "正在整理书卷…", loadingStory: "正在展开剧本…", indexing: "正在建立全文索引",
+      retry: "重试", close: "关闭", back: "返回", forward: "前进", previous: "上一则", next: "续读",
+      outgoing: "后续剧情", incoming: "来自剧情", outline: "分支大纲", context: "剧情脉络",
+      bookmarkAdd: "加入书签", bookmarkRemove: "移除书签", copyId: "复制编号", copied: "已复制剧本编号",
+      copyLink: "复制链接", linkCopied: "已复制阅读链接", theme: "主题", system: "跟随系统", paper: "宣纸", night: "墨色",
+      language: "语言", typography: "排版", serif: "宋体", sans: "黑体", fontSize: "字号", lineHeight: "行距", width: "正文宽度",
+      reset: "恢复默认", stories: "则剧本", results: "项结果", noNext: "没有直接续篇", related: "相连剧本",
+      condition: "条件", choices: "选项", narration: "旁白", thought: "心声", lore: "江湖见闻",
+      newGame: "新游戏开场", newChapter: "新篇章", combat: "战斗入口", free: "自由模式入口",
+      readProgress: "阅读进度", dataError: "数据未能加载", dataErrorBody: "请确认已执行 build.py，并保留完整的 docs/data 目录。",
+      expand: "展开", collapse: "收合", clear: "清除", menu: "菜单", unknown: "未知剧本",
+    },
+  });
+})();

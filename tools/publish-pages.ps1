@@ -5,42 +5,34 @@ param(
     [string]$Message = "",
     [switch]$DryRun
 )
-
 $ErrorActionPreference = "Stop"
-
 if (@("main", "master") -contains $Branch) { throw "refusing to publish to $Branch" }
 if (-not (Get-Command git -ErrorAction SilentlyContinue)) { throw "git not found on PATH" }
-
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $root = Split-Path -Parent $here
 $site = Join-Path $root "docs"
 $index = Join-Path $site "index.html"
 $dataDir = Join-Path $site "data"
-$graph = Join-Path $dataDir "graph.js"
-
+$catalog = Join-Path $dataDir "catalog.js"
 if (-not (Test-Path $index)) { throw "docs/index.html not found" }
-if (-not (Test-Path $graph)) { throw "docs/data/graph.js not found; run extract.py and build.py first" }
-$heads = @(Get-ChildItem -Path $dataDir -Filter "text-*-head.js" -File -ErrorAction SilentlyContinue)
-if (-not $heads.Count) { throw "docs/data/text-*-head.js not found; run build.py first" }
-
+if (-not (Test-Path $catalog)) { throw "docs/data/catalog.js not found; run build.py first" }
+$indexes = @(Get-ChildItem -Path $dataDir -Filter "stories-*-index.js" -File -ErrorAction SilentlyContinue)
+if (-not $indexes.Count) { throw "docs/data/stories-*-index.js not found; run build.py first" }
+$catalogText = Get-Content -Path $catalog -Raw -Encoding UTF8
+if ($catalogText -notmatch '"version":1') { throw "catalog protocol version is missing or unsupported" }
 $remoteUrl = git -C $root remote get-url $Remote 2>$null
 if ($LASTEXITCODE -ne 0 -or -not $remoteUrl) { throw "remote '$Remote' is not configured in $root" }
-
 $stamp = (Get-Date).ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss")
 if (-not $Message) { $Message = "deploy: publish static site at $stamp UTC" }
-
 $temp = Join-Path ([System.IO.Path]::GetTempPath()) ("storyreader-pages-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $temp -Force | Out-Null
-
 try {
     Get-ChildItem -Path $site -Force | Copy-Item -Destination $temp -Recurse -Force
     if (-not (Test-Path (Join-Path $temp ".nojekyll"))) {
         New-Item -ItemType File -Path (Join-Path $temp ".nojekyll") -Force | Out-Null
     }
-
     $bytes = (Get-ChildItem -Path $temp -Recurse -Force -File | Measure-Object -Property Length -Sum).Sum
     Write-Host ("staged docs: {0:N1} MB" -f ($bytes / 1MB)) -ForegroundColor Cyan
-
     Push-Location $temp
     try {
         git init --quiet
@@ -48,7 +40,6 @@ try {
         git add -A
         $count = @(git ls-files).Count
         Write-Host ("site files: {0} -> {1} ({2})" -f $count, $Branch, $remoteUrl) -ForegroundColor Cyan
-
         if ($DryRun) {
             Write-Host ("dry run: staged at {0}" -f $temp) -ForegroundColor Yellow
         } else {

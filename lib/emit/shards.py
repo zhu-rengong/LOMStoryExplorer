@@ -1,84 +1,62 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from dataclasses import dataclass
 from typing import Any
 
-from .jsout import _dump
+from .jsout import dump
 
-MAX_SHARD_BYTES = 700 * 1024
+MAX_SHARD_BYTES = 640 * 1024
+MAX_SHARDS = 32
 
-MAX_SHARDS = 24
+
+@dataclass(slots=True)
+class ShardPlan:
+    assignment: dict[str, str]
+    shards: list[dict[str, Any]]
 
 
 def story_bytes(beats: Any) -> int:
-    return len(_dump(beats).encode("utf-8"))
+    return len(dump(beats).encode("utf-8"))
 
 
 def shard_key(index: int) -> str:
-    if 0 <= index < 26:
-        return chr(ord("a") + index)
-    return f"s{index}"
+    return f"{index:02d}"
 
 
-def pack_shards(ids: Sequence[str], sizes: dict[str, int], chapter_of: dict[str, int],
-                chapter_ids: Sequence[str], max_bytes: int = MAX_SHARD_BYTES,
-                max_shards: int = MAX_SHARDS) -> tuple[dict[str, str], list[dict]]:
-    total = sum(sizes.get(sid, 0) for sid in ids)
-    budget = max(1, max_bytes, -(-total // max_shards))
-
-    def build(limit: int) -> list[dict]:
-        grouped: dict[int, list[str]] = {}
-        for sid in ids:
-            grouped.setdefault(chapter_of.get(sid, -1), []).append(sid)
-        bins: list[dict] = []
-        cur: dict | None = None
-
-        def flush() -> None:
-            nonlocal cur
-            if cur and cur["ids"]:
-                bins.append(cur)
-            cur = None
-
-        for chapter in sorted(grouped):
-            members = grouped[chapter]
-            weight = sum(sizes.get(sid, 0) for sid in members)
-            if weight > limit:
-                flush()
-                for sid in members:
-                    size = sizes.get(sid, 0)
-                    if cur is None or cur["bytes"] + size > limit:
-                        flush()
-                        cur = {"ids": [], "bytes": 0, "chapters": set()}
-                    cur["ids"].append(sid)
-                    cur["bytes"] += size
-                    cur["chapters"].add(chapter)
-                continue
-            if cur is not None and cur["bytes"] + weight > limit:
-                flush()
-            if cur is None:
-                cur = {"ids": [], "bytes": 0, "chapters": set()}
-            cur["ids"].extend(members)
-            cur["bytes"] += weight
-            cur["chapters"].add(chapter)
-        flush()
-        return bins
-
-    bins = build(budget)
-    while len(bins) > max_shards and budget < total:
+def plan_shards(ids: list[str], sizes: dict[str, int], chapter_of: dict[str, str], chapter_ids: list[str],
+                max_bytes: int = MAX_SHARD_BYTES, max_shards: int = MAX_SHARDS) -> ShardPlan:
+    total = sum(sizes.values())
+    budget = max(max_bytes, -(-total // max_shards), 1)
+    chapter_order = {chapter_id: index for index, chapter_id in enumerate(chapter_ids)}
+    ordered = sorted(ids, key=lambda script_id: (chapter_order.get(chapter_of[script_id], 999), script_id))
+    while True:
+        groups: list[list[str]] = []
+        current: list[str] = []
+        weight = 0
+        for script_id in ordered:
+            size = sizes.get(script_id, 0)
+            if current and (weight + size > budget or chapter_of[script_id] != chapter_of[current[-1]]):
+                groups.append(current)
+                current = []
+                weight = 0
+            current.append(script_id)
+            weight += size
+        if current:
+            groups.append(current)
+        if len(groups) <= max_shards or budget >= total:
+            break
         budget = int(budget * 1.25) + 1
-        bins = build(budget)
-
     assignment: dict[str, str] = {}
-    shards: list[dict] = []
-    for index, item in enumerate(bins):
+    shards: list[dict[str, Any]] = []
+    for index, members in enumerate(groups):
         key = shard_key(index)
-        for sid in item["ids"]:
-            assignment[sid] = key
+        for script_id in members:
+            assignment[script_id] = key
         shards.append({
             "key": key,
-            "nodes": len(item["ids"]),
-            "bytes": item["bytes"],
-            "chapters": [chapter_ids[chapter] for chapter in sorted(item["chapters"])
-                         if 0 <= chapter < len(chapter_ids)],
+            "file": f"stories-{{lang}}-{key}.js",
+            "stories": len(members),
+            "bytes": sum(sizes.get(script_id, 0) for script_id in members),
+            "chapter": chapter_of[members[0]],
         })
-    return assignment, shards
+    return ShardPlan(assignment, shards)

@@ -1,142 +1,65 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
-CHECKPOINT_SHARDS = 8
+from ..manifest import atomic_write_text
 
 
-def _dump(obj: Any) -> str:
-    return json.dumps(obj, ensure_ascii=False, separators=(",", ":"))
+def dump(payload: Any) -> str:
+    return json.dumps(payload, ensure_ascii=False, separators=(",", ":")).replace("\u2028", "\\u2028").replace("\u2029", "\\u2029")
 
 
-def write_graph_js(path: Path, payload: dict) -> int:
-    body = _dump(payload)
-    path.write_text(
-        "window.__STORY_GRAPH__=" + body + ";\n",
-        encoding="utf-8",
-        newline="\n",
-    )
-    return len(body.encode("utf-8"))
+def write_script(path: Path, script: str) -> int:
+    atomic_write_text(path, script.rstrip() + "\n")
+    return path.stat().st_size
 
 
-def write_checkpoints_js(path: Path, payload: dict) -> int:
-    body = _dump(payload)
-    path.write_text(
-        "window.__STORY_CHECKPOINTS__=" + body + ";\n",
-        encoding="utf-8",
-        newline="\n",
-    )
-    return len(body.encode("utf-8"))
+def write_assignment(path: Path, name: str, payload: Any) -> int:
+    body = dump(payload)
+    return write_script(path, f"window.{name}={body};")
 
 
-def shard_of(key: str, count: int = CHECKPOINT_SHARDS) -> int:
-    hash_value = 0
-    for ch in key:
-        hash_value = (hash_value * 31 + ord(ch)) & 0xFFFF
-    return hash_value % count
-
-
-def checkpoints_ascii(items: dict[str, dict]) -> bool:
-    return all(ord(ch) < 128 for key in items for ch in key)
-
-
-def slim_checkpoints(items: dict[str, dict]) -> dict[str, dict]:
-    out: dict[str, dict] = {}
-    for key, model in items.items():
-        if not isinstance(model, dict):
-            out[key] = model
-            continue
-        slim = dict(model)
-        if not slim.get("note"):
-            slim.pop("note", None)
-        branches = slim.get("branches")
-        if isinstance(branches, list):
-            kept = []
-            for branch in branches:
-                if isinstance(branch, dict) and branch.get("expr"):
-                    branch = {name: value for name, value in branch.items() if name != "conds"}
-                kept.append(branch)
-            slim["branches"] = kept
-        out[key] = slim
-    return out
-
-
-def write_checkpoint_shards(dir_path: Path, items: dict[str, dict],
-                            count: int = CHECKPOINT_SHARDS) -> list[dict]:
-    buckets: list[dict[str, dict]] = [{} for _ in range(count)]
-    for key, model in items.items():
-        buckets[shard_of(key, count)][key] = model
-    written: list[dict] = []
-    for index, bucket in enumerate(buckets):
-        path = dir_path / f"checkpoints-{index}.js"
-        body = _dump(bucket)
-        script = (
-            "(function(){var t=window.__STORY_CHECKPOINTS__||"
-            "(window.__STORY_CHECKPOINTS__={});var s=" + body
-            + ";for(var k in s)t[k]=s[k];})();\n"
-        )
-        path.write_text(script, encoding="utf-8", newline="\n")
-        written.append({"index": index, "name": path.name, "keys": len(bucket),
-                        "bytes": len(body.encode("utf-8"))})
-    return written
-
-
-def write_wordcount_js(path: Path, payload: dict) -> int:
-    body = _dump(payload)
-    path.write_text(
-        "window.__STORY_WORDCOUNT__=" + body + ";\n",
-        encoding="utf-8",
-        newline="\n",
-    )
-    return len(body.encode("utf-8"))
-
-
-def _text_assign(lang: str) -> str:
-    return (f'window.__STORY_TEXT__=window.__STORY_TEXT__||{{}};'
-            f'window.__STORY_TEXT__[{json.dumps(lang)}]')
-
-
-def write_text_js(path: Path, lang: str, stories: dict[str, Any],
-                  characters: dict[str, str], extra: dict) -> int:
-    payload = {"characters": characters, "stories": stories, **extra, "fullText": True}
-    body = _dump(payload)
-    path.write_text(
-        _text_assign(lang) + "=" + body + ";\n",
-        encoding="utf-8",
-        newline="\n",
-    )
-    return len(body.encode("utf-8"))
-
-
-def write_text_head_js(path: Path, lang: str, characters: dict[str, str],
-                       extra: dict, shard_keys: Sequence[str]) -> int:
-    payload = {
-        "characters": characters,
-        "stories": {},
-        "shardKeys": list(shard_keys),
-        "fullText": False,
-        **extra,
-    }
-    body = _dump(payload)
-    path.write_text(
-        _text_assign(lang) + "=" + body + ";\n",
-        encoding="utf-8",
-        newline="\n",
-    )
-    return len(body.encode("utf-8"))
-
-
-def write_text_shard_js(path: Path, lang: str, stories: dict[str, Any]) -> int:
-    body = _dump(stories)
+def write_language_index(path: Path, lang: str, payload: dict[str, Any]) -> int:
+    body = dump(payload)
+    language = dump(lang)
     script = (
-        "(function(){var p=(window.__STORY_TEXT__||{})["
-        + json.dumps(lang)
-        + "];if(!p)return;p.stories=p.stories||{};var s="
-        + body
-        + ";for(var k in s)p.stories[k]=s[k];})();\n"
+        "window.__SR_STORIES__=window.__SR_STORIES__||{};"
+        f"window.__SR_STORIES__[{language}]={body};"
+        f"window.__SR_STORIES__[{language}].loadedShards={{}};"
+        f"window.__SR_STORIES__[{language}].shardVersions={{}};"
     )
-    path.write_text(script, encoding="utf-8", newline="\n")
-    return len(body.encode("utf-8"))
+    return write_script(path, script)
+
+
+def write_language_stories(path: Path, lang: str, payload: dict[str, Any], shard: str = "") -> int:
+    body = dump(payload)
+    language = dump(lang)
+    script = (
+        "(function(){var root=window.__SR_STORIES__=window.__SR_STORIES__||{};"
+        f"var pack=root[{language}];if(!pack)throw new Error('Story index must load before story data');"
+        "var data=" + body + ";Object.assign(pack.stories,data.stories);"
+        + (f"pack.loadedShards[{dump(shard)}]=true;pack.shardVersions[{dump(shard)}]=data.version;"
+           if shard else "pack.fullTextLoaded=true;pack.fullTextVersion=data.version;")
+        + "})();"
+    )
+    return write_script(path, script)
+
+
+def write_conditions(path: Path, shard: int, payload: dict[str, Any]) -> int:
+    body = dump(payload)
+    script = (
+        "window.__SR_CONDITIONS__=window.__SR_CONDITIONS__||{version:0,items:{},loaded:{}};"
+        f"window.__SR_CONDITIONS__.items[{shard}]={body};"
+        f"window.__SR_CONDITIONS__.loaded[{shard}]=true;"
+    )
+    return write_script(path, script)
+
+
+def cleanup_generated(directory: Path, keep: set[str]) -> None:
+    patterns = ("catalog.js", "graph.js", "stories-*.js", "text-*.js", "conditions-*.js", "checkpoints-*.js", "wordcount.js")
+    for pattern in patterns:
+        for path in directory.glob(pattern):
+            if path.is_file() and path.name not in keep:
+                path.unlink()

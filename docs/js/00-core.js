@@ -1,180 +1,89 @@
-window.SR = window.SR || {};
-
-SR.register = (name, api) => {
-  SR[name] = api;
-  return api;
-};
-
-SR.fwd = (mod, name) => (...args) => {
-  const api = SR[mod];
-  if (!api || typeof api[name] !== "function") {
-    throw new Error(`SR.${mod}.${name} is not ready: module load order is broken`);
-  }
-  return api[name](...args);
-};
-
-SR.events = (() => {
-  const map = Object.create(null);
-  return {
-    on: (name, fn) => {
-      (map[name] || (map[name] = [])).push(fn);
-    },
-    emit: (name, payload) => {
-      const list = map[name];
-      if (!list) return;
-      for (const handler of list) {
-        try {
-          handler(payload);
-        } catch (err) {
-          continue;
-        }
-      }
-    },
-  };
-})();
-
 (() => {
   "use strict";
-  const SR = window.SR;
-
-  const G = window.__STORY_GRAPH__;
-  if (!G) {
-    document.body.innerHTML = '<p style="padding:40px;font-family:sans-serif">缺少 data/graph.js，請先執行 build.py。</p>';
-    return;
-  }
-
-  const MOTION_OK = !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
-
-  const HOVER_OK = !(window.matchMedia && window.matchMedia("(hover: none)").matches);
-
-  const state = {
-    lang: G.meta.defaultLang,
-    selected: null,
-    chapterFilter: new Set(),
-    history: [],
-    hIndex: -1,
-    query: "",
-    texts: window.__STORY_TEXT__ || {},
-    langLoaded: {},
-    searchIndex: null,
-    entryId: null,
-    layout: "wide",
-    searchActive: -1,
-    readingNode: null,
-    scrollMemory: new Map(),
-    railTab: "outline",
-    settingsType: "dialog",
-    filterSource: "",
-    filterSet: null,
-    filterError: null,
-    visibleCount: 0,
+  const SR = window.SR = window.SR || {};
+  SR.VERSION = 1;
+  SR.register = (name, api) => {
+    if (SR[name]) throw new Error(`Duplicate SR module: ${name}`);
+    SR[name] = api;
+    return api;
   };
-
-  const $ = (id) => document.getElementById(id);
-
-  const readerBody = $("readerBody");
-  const nodeTitle = $("nodeTitle");
-  const readerPanel = $("reader");
-  const searchInput = $("search");
-  const searchResults = $("searchResults");
-  const ioStatus = $("ioStatus");
-  const railEl = $("chapterRail");
-  const railScrim = $("railScrim");
-  const settingsDrawer = $("settingsDrawer");
-  const settingsScrim = $("settingsScrim");
-  const toastEl = $("toast");
-  const toTopBtn = $("toTopBtn");
-  const navMenu = $("navMenu");
-  const navBtn = $("navBtn");
-  const picker = $("fontPicker");
-  const pickerSearch = $("fontPickerSearch");
-  const pickerList = $("fontPickerList");
-
-  const progress = (text) => {
-    if (!ioStatus) return;
-    const next = text ? String(text) : "";
-    if (next) ioStatus.textContent = next;
-    ioStatus.hidden = !next;
-    if (!next) ioStatus.textContent = "";
+  const dom = {
+    byId: (id) => document.getElementById(id),
+    all: (selector, root = document) => [...root.querySelectorAll(selector)],
+    clear: (node) => {
+      while (node.firstChild) node.firstChild.remove();
+      return node;
+    },
+    h: (tag, attributes = {}, ...children) => {
+      const node = document.createElement(tag);
+      for (const [key, value] of Object.entries(attributes)) {
+        if (value === null || value === undefined || value === false) continue;
+        if (key === "class") node.className = value;
+        else if (key === "text") node.textContent = value;
+        else if (key === "dataset") Object.assign(node.dataset, value);
+        else if (key.startsWith("on") && typeof value === "function") node.addEventListener(key.slice(2), value);
+        else if (value === true) node.setAttribute(key, "");
+        else node.setAttribute(key, String(value));
+      }
+      for (const child of children.flat(Infinity)) {
+        if (child === null || child === undefined || child === false) continue;
+        node.append(child instanceof Node ? child : document.createTextNode(String(child)));
+      }
+      return node;
+    },
+    icon: (name, className = "icon") => {
+      const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+      svg.setAttribute("class", className);
+      svg.setAttribute("aria-hidden", "true");
+      const use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+      use.setAttribute("href", `#icon-${name}`);
+      svg.append(use);
+      return svg;
+    },
   };
-
-  const el = (tag, className, text) => {
-    const node = document.createElement(tag);
-    if (className) node.className = className;
-    if (text !== undefined) node.textContent = text;
-    return node;
-  };
-
-  let toastTimer = null;
-
-  const toast = (text) => {
-    if (!toastEl || !text) return;
-    toastEl.textContent = text;
-    toastEl.hidden = false;
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-      toastEl.hidden = true;
-    }, 2400);
-  };
-
-  const activeOverlay = () => {
-    const overlay = window.SR && window.SR.overlay;
-    if (!overlay || !overlay.stack || !overlay.stack.length) return null;
-    const top = overlay.defs[overlay.stack[overlay.stack.length - 1].key];
-    if (!top || !top.id) return null;
-    const node = $(top.id);
-    return node && !node.hidden ? node : null;
-  };
-
-  const focusables = (root) => {
-    const selector = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
-    return Array.prototype.filter.call(root.querySelectorAll(selector), (node) => node.offsetParent !== null);
-  };
-
-  const trapTab = (event) => {
-    if (event.key !== "Tab") return;
-    const root = activeOverlay();
-    if (!root) return;
-    const list = focusables(root);
-    if (!list.length) return;
-    const first = list[0];
-    const last = list[list.length - 1];
-    if (event.shiftKey && document.activeElement === first) {
-      event.preventDefault();
-      last.focus();
-    } else if (!event.shiftKey && document.activeElement === last) {
-      event.preventDefault();
-      first.focus();
+  const pending = new Map();
+  const queue = [];
+  let active = 0;
+  const pump = () => {
+    while (active < 2 && queue.length) {
+      const item = queue.shift();
+      active += 1;
+      const script = document.createElement("script");
+      script.src = item.src;
+      script.async = false;
+      const finish = (error) => {
+        active -= 1;
+        script.remove();
+        if (error) pending.delete(item.src);
+        item.settle(error);
+        pump();
+      };
+      script.addEventListener("load", () => finish(null), { once: true });
+      script.addEventListener("error", () => finish(new Error(`Unable to load data: ${item.src}`)), { once: true });
+      document.head.append(script);
     }
   };
-
-  SR.register("core", {
-    $: $,
-    G: G,
-    HOVER_OK: HOVER_OK,
-    MOTION_OK: MOTION_OK,
-    activeOverlay: activeOverlay,
-    el: el,
-    focusables: focusables,
-    navBtn: navBtn,
-    navMenu: navMenu,
-    nodeTitle: nodeTitle,
-    picker: picker,
-    pickerList: pickerList,
-    pickerSearch: pickerSearch,
-    progress: progress,
-    railEl: railEl,
-    railScrim: railScrim,
-    readerBody: readerBody,
-    readerPanel: readerPanel,
-    searchInput: searchInput,
-    searchResults: searchResults,
-    settingsDrawer: settingsDrawer,
-    settingsScrim: settingsScrim,
-    state: state,
-    toTopBtn: toTopBtn,
-    toast: toast,
-    toastEl: toastEl,
-    trapTab: trapTab,
-  });
+  const loadScript = (src) => {
+    if (pending.has(src)) return pending.get(src);
+    let resolve;
+    let reject;
+    const promise = new Promise((yes, no) => {
+      resolve = yes;
+      reject = no;
+    });
+    pending.set(src, promise);
+    queue.push({ src, settle: (error) => error ? reject(error) : resolve() });
+    pump();
+    return promise;
+  };
+  const debounce = (callback, delay = 180) => {
+    let timer = 0;
+    return (...args) => {
+      clearTimeout(timer);
+      timer = setTimeout(() => callback(...args), delay);
+    };
+  };
+  const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
+  const escapeRegExp = (value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  SR.register("core", { dom, loadScript, debounce, clamp, escapeRegExp });
 })();

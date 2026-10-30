@@ -4,132 +4,147 @@ from collections.abc import Sequence
 from typing import Any
 
 from .. import lua as L
+from ..model import Beat, BranchBeat, ChoiceOption, TextRef
+from .beats import fallback_option
+from .calls import CallProcessor
+from .expr import ExpressionEvaluator
+from .model import AnalysisContext, FlowState, PendingChoice, UnknownValue, callee, text_value
 
-from .model import Ref, State, _as_text
 
+class BlockWalker:
+    def __init__(self, context: AnalysisContext, evaluator: ExpressionEvaluator, calls: CallProcessor) -> None:
+        self.context = context
+        self.evaluator = evaluator
+        self.calls = calls
 
-class StmtMixin:
-    _MARK_KINDS = {"switch", "dice", "condition", "position"}
-
-    def _block(self, stmts: Sequence[L.Stmt], state: State, beats: list[list[Any]],
-               label: str) -> None:
-        index = 0
-        pending: dict[str, Any] | None = None
-        while index < len(stmts):
-            stmt = stmts[index]
-
-            if isinstance(stmt, L.If) and pending is not None and self._if_uses_choice(stmt, pending["var"]):
-                self._fill_choice(pending, stmt, state, label)
+    def walk(self, statements: Sequence[L.Stmt], state: FlowState, beats: list[Beat], label: str = "") -> None:
+        pending: PendingChoice | None = None
+        for statement in statements:
+            if isinstance(statement, L.If) and pending and self.uses_choice(statement, pending.variable):
+                self.fill_choice(pending, statement, state, label)
                 pending = None
-                index += 1
                 continue
-
-            if isinstance(stmt, L.If):
-                self._emit_if(stmt, state, beats, label)
-                index += 1
+            if isinstance(statement, L.If):
+                if pending:
+                    self.close_choice(pending)
+                    pending = None
+                self.emit_if(statement, state, beats, label)
                 continue
-
-            if isinstance(stmt, L.Do):
-                self._block(stmt.body, state.clone(), beats, label)
-                index += 1
+            if isinstance(statement, L.Do):
+                self.walk(statement.body, state.clone(), beats, label)
                 continue
-
-            produced = self._statement(stmt, state, beats, label)
-            if produced is not None:
-                if pending is not None:
-                    self._close_incomplete(pending)
+            produced = self.statement(statement, state, beats, label)
+            if produced:
+                if pending:
+                    self.close_choice(pending)
                 pending = produced
-            index += 1
+        if pending:
+            self.close_choice(pending)
 
-        if pending is not None:
-            self._close_incomplete(pending)
-
-    def _statement(self, stmt: L.Stmt, state: State, beats: list[list[Any]],
-                   label: str) -> dict[str, Any] | None:
-        if isinstance(stmt, L.Local):
+    def statement(self, statement: L.Stmt, state: FlowState, beats: list[Beat], label: str) -> PendingChoice | None:
+        if isinstance(statement, L.Local):
             pending = None
-            for name, expr in zip(stmt.names, stmt.values or []):
-                value, produced = self._eval_stmt_value(expr, state, beats, label)
+            for index, name in enumerate(statement.names):
+                if index >= len(statement.values):
+                    state.env[name] = None
+                    continue
+                value, produced = self.statement_value(statement.values[index], state, beats, label)
                 state.env[name] = value
-                if produced is not None:
+                if produced:
+                    produced.variable = name
                     pending = produced
-                    pending["var"] = name
-            for name in stmt.names[len(stmt.values):]:
-                state.env[name] = None
             return pending
-
-        if isinstance(stmt, L.Assign):
-            for target, expr in zip(stmt.targets, stmt.values or []):
-                self._assign(target, expr, state, beats, label)
-            return None
-
-        if isinstance(stmt, L.CallStmt):
-            return self._call(stmt.call, state, beats, label, stmt=True)
-
+        if isinstance(statement, L.Assign):
+            pending = None
+            for target, expression in zip(statement.targets, statement.values):
+                value, produced = self.statement_value(expression, state, beats, label)
+                self.assign(target, value, state)
+                if produced:
+                    produced.variable = target.id if isinstance(target, L.Name) else ""
+                    pending = produced
+            return pending
+        if isinstance(statement, L.CallStmt):
+            return self.calls.execute(statement.call, state, beats, label)
         return None
 
-    def _assign(self, target: L.Expr, expr: L.Expr, state: State,
-                beats: list[list[Any]], label: str) -> None:
-        value, _ = self._eval_stmt_value(expr, state, beats, label)
-        if isinstance(target, L.Name):
-            state.env[target.id] = value
-        elif isinstance(target, L.Index) and isinstance(target.obj, L.Name):
-            table = state.env.get(target.obj.id)
-            key = _as_text(self._eval(target.key, state)) or target.key.text()
-            if isinstance(table, dict):
-                table[key] = value
-            else:
-                state.env[target.obj.id] = {key: value}
-
-    def _emit_if(self, stmt: L.If, state: State, beats: list[list[Any]], label: str) -> None:
-        group = self._branch_seq
-        self._branch_seq += 1
-        for cond, body in stmt.clauses:
-            cond_label = "其他情況" if cond is None else self._cond_label(cond, state)
-            kind = "if" if cond is None else self._cond_kind(cond, state)
-            sub: list[list[Any]] = []
-            child = f"{label} › {cond_label}" if label else cond_label
-            self._block(body, state.clone(), sub, child)
-            beats.append(["branch", cond_label, sub, kind, group])
-
-    def _if_uses_choice(self, stmt: L.If, var: str) -> bool:
-        for cond, _ in stmt.clauses:
-            if cond is not None and self._choice_index(cond, var) is not None:
-                return True
-        return False
+    def statement_value(self, expression: L.Expr, state: FlowState, beats: list[Beat],
+                        label: str) -> tuple[Any, PendingChoice | None]:
+        if isinstance(expression, L.Call):
+            obj, method = callee(expression)
+            if not obj and method == "choose":
+                pending = self.calls.execute(expression, state, beats, label)
+                return UnknownValue(expression.text()), pending
+            value = self.evaluator.evaluate(expression, state)
+            if isinstance(value, UnknownValue) and not (obj == "checkpointmanager"):
+                self.context.fx_count += 1
+            return value, None
+        if self.is_dice_selection(expression):
+            return UnknownValue(expression.text()), self.calls.pending_choice(state.menu_options, state, beats)
+        return self.evaluator.evaluate(expression, state), None
 
     @staticmethod
-    def _choice_index(cond: L.Expr, var: str) -> int | None:
-        if not isinstance(cond, L.Bin) or cond.op != "==":
+    def is_dice_selection(expression: L.Expr) -> bool:
+        return isinstance(expression, L.Index) and isinstance(expression.obj, L.Name) \
+            and expression.obj.id == "dicemenudialog" and isinstance(expression.key, L.Str) \
+            and expression.key.value == "ResultSelection"
+
+    def assign(self, target: L.Expr, value: Any, state: FlowState) -> None:
+        if isinstance(target, L.Name):
+            state.env[target.id] = value
+            return
+        if isinstance(target, L.Index) and isinstance(target.obj, L.Name):
+            key = self.evaluator.key(target.key, state)
+            table = state.env.get(target.obj.id)
+            if not isinstance(table, dict):
+                table = {}
+                state.env[target.obj.id] = table
+            table[key] = value
+
+    def emit_if(self, statement: L.If, state: FlowState, beats: list[Beat], label: str) -> None:
+        group = self.context.branch_sequence
+        self.context.branch_sequence += 1
+        for condition, body in statement.clauses:
+            condition_label = self.evaluator.condition_label(condition, state)
+            kind = self.evaluator.condition_kind(condition, state)
+            nested: list[Beat] = []
+            child_label = f"{label} › {condition_label}" if label else condition_label
+            self.walk(body, state.clone(), nested, child_label)
+            beats.append(BranchBeat(condition_label, nested, kind, group))
+
+    def uses_choice(self, statement: L.If, variable: str) -> bool:
+        return any(
+            condition is not None and self.choice_index(condition, variable) is not None
+            for condition, _ in statement.clauses
+        )
+
+    @staticmethod
+    def choice_index(condition: L.Expr, variable: str) -> int | None:
+        if not isinstance(condition, L.Bin) or condition.op != "==":
             return None
-        left, right = cond.left, cond.right
-        if isinstance(left, L.Name) and left.id == var and isinstance(right, L.Num):
-            return int(right.value)
-        if isinstance(right, L.Name) and right.id == var and isinstance(left, L.Num):
-            return int(left.value)
+        for name, number in ((condition.left, condition.right), (condition.right, condition.left)):
+            if isinstance(name, L.Name) and name.id == variable and isinstance(number, L.Num):
+                return int(number.value)
         return None
 
-    def _fill_choice(self, pending: dict[str, Any], stmt: L.If, state: State, label: str) -> None:
-        option_map = {index: option for index, option in enumerate(pending["options"], start=1)}
-        branches: list[list[Any]] = []
-        for cond, body in stmt.clauses:
-            if cond is None:
-                option: dict[str, Any] = {"ref": Ref("text", "（其他情況）"), "cond": None, "lock": None}
+    def fill_choice(self, pending: PendingChoice, statement: L.If, state: FlowState, label: str) -> None:
+        options = {option.index: option for option in pending.options}
+        selected: list[ChoiceOption] = []
+        for position, (condition, body) in enumerate(statement.clauses, start=1):
+            if condition is None:
+                option = fallback_option("其他情況", position, pending.beat.menu)
             else:
-                index = self._choice_index(cond, pending["var"])
-                option = option_map.get(index) if index is not None else None
-                if option is None:
-                    option = {"ref": Ref("text", self._cond_label(cond, state)), "cond": None, "lock": None}
-            sub: list[list[Any]] = []
-            text = _as_text(option["ref"]) or "選項"
-            self._block(body, state.clone(), sub, text if not label else f"{label} › {text}")
-            branches.append(self._branch_row(option, sub))
-        pending["beat"][0] = "choice"
-        pending["beat"].append(branches)
-        self.option_count += len(branches)
+                index = self.choice_index(condition, pending.variable)
+                option = options.get(index or -1) or fallback_option(
+                    self.evaluator.condition_label(condition, state), index or position, pending.beat.menu
+                )
+            option.body = []
+            option_label = text_value(option.text) or "選項"
+            child_label = f"{label} › {option_label}" if label else option_label
+            self.walk(body, state.clone(), option.body, child_label)
+            selected.append(option)
+        pending.beat.options = selected
+        self.context.choice_count += len(selected)
 
-    def _close_incomplete(self, pending: dict[str, Any]) -> None:
-        beat = pending["beat"]
-        beat[0] = "choice"
-        beat.append([self._branch_row(option, []) for option in pending["options"]])
-        self.option_count += len(pending["options"])
+    def close_choice(self, pending: PendingChoice) -> None:
+        pending.beat.options = pending.options
+        self.context.choice_count += len(pending.options)

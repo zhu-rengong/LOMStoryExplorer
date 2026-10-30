@@ -1,251 +1,231 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
 from typing import Any
 
 from .. import lua as L
+from ..model import ChoiceBeat, JumpBeat, MetadataBeat, SayBeat, TextRef
+from .beats import option_list
+from .expr import ExpressionEvaluator
+from .model import AnalysisContext, CharacterValue, CheckpointValue, FlowState, PendingChoice, UnknownValue, callee, short, text_value
 
-from .model import CharRef, Mark, Ref, State, Unknown, _as_text, _short
-
-_SPEAKER_SENTINELS = frozenset({"narrative", "narrator", "none", "center", "center2", "think"})
-
-_CHECKPOINT_METHODS = ("Switch", "Dice", "Condition", "Position")
-
-_JUMP_KINDS = {
-    "SetNextScript": "explicit",
-    "SetCurrentStoryScript": "explicit",
+CHECKPOINT_METHODS = frozenset({"Switch", "Dice", "Condition", "Position"})
+SCRIPT_RELATIONS = {
+    "SetNextScript": "next",
+    "SetCurrentStoryScript": "next",
     "SetTempScript": "temp",
     "SetCurrentTravelScript": "travel",
-    "ExecuteScript": "inline",
 }
+SPEAKER_SENTINELS = frozenset({"narrative", "narrator", "none", "center", "center2", "think"})
+FX_OBJECTS = frozenset({
+    "menudialogs", "mainui", "flowcharts", "getvar", "runblock", "runwait", "wait", "stage",
+    "characters", "effects", "trait", "dicemenudialog", "transitionblack",
+})
 
-_FX_OBJECTS = ("menudialogs", "mainui", "flowcharts", "getvar", "runblock", "runwait", "wait",
-               "stage", "characters", "effects", "trait", "dicemenudialog")
 
-
-class CallsMixin:
-    @staticmethod
-    def _callee(expr: L.Call) -> tuple[str, str]:
-        func = expr.func
-        if isinstance(func, L.Name):
-            return "", func.id
-        if isinstance(func, L.Index):
-            if isinstance(func.obj, L.Name) and isinstance(func.key, L.Str):
-                return func.obj.id, func.key.value
-            if isinstance(func.obj, L.Index) and isinstance(func.key, L.Str):
-                inner = func.obj
-                if isinstance(inner.obj, L.Name) and isinstance(inner.key, L.Str):
-                    return f"{inner.obj.id}.{inner.key.value}", func.key.value
-        return "", expr.func.text()
-
-    @staticmethod
-    def _saydialog_of(arg: Any) -> str:
-        if not isinstance(arg, L.Index):
-            return ""
-        obj = getattr(arg, "obj", None)
-        key = getattr(arg, "key", None)
-        if isinstance(obj, L.Name) and obj.id == "saydialogs" and isinstance(key, L.Str):
-            return key.value
-        return ""
-
-    def _eval_call(self, expr: L.Call, state: State) -> Any:
-        obj, method = self._callee(expr)
-        args = expr.args
-
-        if method == "GetStoryText" and args:
-            key = _as_text(self._eval(args[0], state))
-            return Ref("key", key) if key else Unknown(expr.text())
-        if obj == "characters" and method == "Get" and args:
-            cid = _as_text(self._eval(args[0], state))
-            return CharRef(cid) if cid else Unknown(expr.text())
-        if obj == "characters" and method == "GetPortrait" and args:
-            cid = _as_text(self._eval(args[0], state)) or ""
-            pid = _as_text(self._eval(args[1], state)) if len(args) > 1 else ""
-            return CharRef(f"{cid}:{pid}")
-        if obj == "checkpointmanager" and method in _CHECKPOINT_METHODS and args:
-            key = _as_text(self._eval(args[0], state))
+def nested_calls(expression: L.Expr) -> Iterator[L.Call]:
+    if isinstance(expression, L.Call):
+        yield expression
+        yield from nested_calls(expression.func)
+        for argument in expression.args:
+            yield from nested_calls(argument)
+    elif isinstance(expression, (L.Index, L.Un)):
+        yield from nested_calls(expression.obj if isinstance(expression, L.Index) else expression.operand)
+    elif isinstance(expression, L.Bin):
+        yield from nested_calls(expression.left)
+        yield from nested_calls(expression.right)
+    elif isinstance(expression, L.Table):
+        for key, value in expression.fields:
             if key:
-                self.read_marks.add(key)
-            return Mark(method.lower(), key or expr.text())
-        return Unknown(expr.text())
+                yield from nested_calls(key)
+            yield from nested_calls(value)
 
-    def _call(self, call: L.Call, state: State, beats: list[list[Any]], label: str,
-              stmt: bool) -> dict[str, Any] | None:
-        obj, method = self._callee(call)
-        args = call.args
 
-        for arg in args:
-            if isinstance(arg, L.Call):
-                inner_obj, inner_method = self._callee(arg)
-                if inner_obj == "dicemenudialog" and inner_method == "ExecuteRoll" and arg.args:
-                    state.menu_options = self._option_list(self._eval(arg.args[0], state))
+class CallProcessor:
+    def __init__(self, context: AnalysisContext, evaluator: ExpressionEvaluator) -> None:
+        self.context = context
+        self.evaluator = evaluator
+        evaluator.call_evaluator = self.evaluate
 
-        if method == "say" and not obj:
-            if args:
-                value = self._eval(args[0], state)
-                ref = value if isinstance(value, Ref) else Ref("text", _short(args[0]))
-                kind = "dialog"
-                if state.speaker is None or state.dialog in ("center", "center2", "narrative"):
-                    kind = "narration"
-                if state.dialog == "think" or state.think:
-                    kind = "think"
-                speaker = state.speaker if kind in ("dialog", "think") else None
-                if speaker in _SPEAKER_SENTINELS:
-                    speaker = None
-                beats.append(["say", speaker, [ref.kind, ref.value], kind])
-                self.say_count += 1
-            return None
-
-        if method == "setcharacter" and not obj:
-            if args:
-                value = self._eval(args[0], state)
-                if isinstance(value, CharRef):
-                    state.speaker = value.id.split(":")[0]
-                else:
-                    state.speaker = None
-            return None
-
-        if method == "setsaydialog" and not obj:
-            dialog = self._saydialog_of(args[0]) if args else ""
-            if not dialog and args and isinstance(args[0], L.Index):
-                dialog = _as_text(self._eval(args[0], state)) or ""
-            if dialog:
-                state.dialog = dialog
-                state.think = dialog == "think"
-            return None
-
-        if obj == "os_mask" and method == "Show":
-            state.think = bool(args) and args[0].text() == "true"
-            self.fx_count += 1
-            return None
-
-        if obj == "luamanager" and method in _JUMP_KINDS:
-            return self._emit_jump(method, args, state, beats, label)
-
-        if obj == "statmodifymanager":
-            self._stat_call(method, args, state, beats)
-            return None
-
-        if obj == "checkpointmanager":
-            is_read = method in _CHECKPOINT_METHODS and bool(args)
-            key = _as_text(self._eval(args[0], state)) if is_read else None
+    def evaluate(self, call: L.Call, state: FlowState) -> Any:
+        obj, method = callee(call)
+        arguments = call.args
+        if method == "GetStoryText" and arguments:
+            key = text_value(self.evaluator.evaluate(arguments[0], state))
+            return TextRef("key", key) if key else UnknownValue(call.text())
+        if obj == "characters" and method in ("Get", "GetPortrait") and arguments:
+            character = text_value(self.evaluator.evaluate(arguments[0], state))
+            if not character:
+                return UnknownValue(call.text())
+            portrait = ""
+            if method == "GetPortrait" and len(arguments) > 1:
+                portrait = text_value(self.evaluator.evaluate(arguments[1], state)) or ""
+            return CharacterValue(character, portrait)
+        if obj == "checkpointmanager" and method in CHECKPOINT_METHODS and arguments:
+            key = text_value(self.evaluator.evaluate(arguments[0], state))
             if key:
-                self.read_marks.add(key)
-                if method == "Dice":
-                    beats.append(["meta", "dice", key])
-            return None
+                self.context.reads.add(key)
+                return CheckpointValue(method.lower(), key)
+        return UnknownValue(call.text())
 
-        if obj == "dicemenudialog" and method in ("ExecuteRoll", "Setup", "SetRandom"):
-            if method == "ExecuteRoll" and args:
-                table = self._eval(args[0], state)
-                state.menu_options = self._option_list(table)
-            self.fx_count += 1
-            return None
-
-        if not obj and method == "choose" and args:
-            options = self._option_list(self._eval(args[0], state))
-            beat: list[Any] = ["_choice"]
-            beats.append(beat)
-            return {"beat": beat, "var": "", "options": options}
-
-        if method.startswith("setmenu") or obj in _FX_OBJECTS:
-            self.fx_count += 1
-            return None
-
-        self.fx_count += 1
+    def execute(self, call: L.Call, state: FlowState, beats: list, label: str) -> PendingChoice | None:
+        obj, method = callee(call)
+        arguments = call.args
+        for argument in arguments:
+            for nested in nested_calls(argument):
+                nested_obj, nested_method = callee(nested)
+                if nested_obj == "dicemenudialog" and nested_method == "ExecuteRoll" and nested.args:
+                    table = self.evaluator.evaluate(nested.args[0], state)
+                    state.menu_options = option_list(table, state.menu)
+        if not obj and method == "say":
+            self.say(arguments, state, beats)
+        elif not obj and method == "setcharacter":
+            self.set_character(arguments, state)
+        elif not obj and method == "setsaydialog":
+            self.set_dialog(arguments, state)
+        elif not obj and method == "setmenudialog":
+            state.menu = self.menu_name(arguments[0]) if arguments else "Options"
+        elif obj == "os_mask" and method == "Show":
+            state.think = bool(arguments) and arguments[0].text() == "true"
+            self.context.fx_count += 1
+        elif obj == "luamanager" and method in SCRIPT_RELATIONS:
+            self.script_reference(method, arguments, state, beats, label, call.line)
+        elif obj == "luamanager" and method == "ExecuteScript":
+            self.context.fx_count += 1
+        elif obj == "statmodifymanager":
+            self.stat_call(method, arguments, state, beats)
+        elif obj == "checkpointmanager":
+            self.evaluate(call, state)
+            if method == "Dice" and arguments:
+                key = text_value(self.evaluator.evaluate(arguments[0], state))
+                if key:
+                    beats.append(MetadataBeat("dice", key, operation="check"))
+        elif obj == "dicemenudialog" and method in ("ExecuteRoll", "Setup", "SetRandom"):
+            if method == "ExecuteRoll" and arguments:
+                state.menu_options = option_list(self.evaluator.evaluate(arguments[0], state), state.menu)
+            self.context.fx_count += 1
+        elif not obj and method == "choose" and arguments:
+            return self.pending_choice(option_list(self.evaluator.evaluate(arguments[0], state), state.menu), state, beats)
+        else:
+            self.context.fx_count += 1
         return None
 
-    def _stat_call(self, method: str, args: Sequence[L.Expr], state: State,
-                   beats: list[list[Any]]) -> None:
-        if not args:
+    def pending_choice(self, options: list, state: FlowState, beats: list) -> PendingChoice:
+        beat = ChoiceBeat([], state.menu)
+        beats.append(beat)
+        return PendingChoice(beat=beat, variable="", options=options)
+
+    def say(self, arguments: Sequence[L.Expr], state: FlowState, beats: list) -> None:
+        if not arguments:
+            return
+        value = self.evaluator.evaluate(arguments[0], state)
+        reference = value if isinstance(value, TextRef) else TextRef("text", short(arguments[0]))
+        mode = "dialog"
+        if not state.speaker or state.dialog in ("center", "center2", "narrative"):
+            mode = "narration"
+        if state.dialog == "think" or state.think:
+            mode = "think"
+        speaker = state.speaker if mode in ("dialog", "think") else ""
+        if speaker in SPEAKER_SENTINELS:
+            speaker = ""
+        beats.append(SayBeat(speaker, reference, mode, state.portrait if speaker else ""))
+        self.context.say_count += 1
+
+    def set_character(self, arguments: Sequence[L.Expr], state: FlowState) -> None:
+        if not arguments:
+            return
+        value = self.evaluator.evaluate(arguments[0], state)
+        state.speaker = value.id if isinstance(value, CharacterValue) else ""
+        state.portrait = ""
+        if len(arguments) > 1:
+            portrait = self.evaluator.evaluate(arguments[1], state)
+            if isinstance(portrait, CharacterValue):
+                state.portrait = portrait.portrait
+        elif isinstance(value, CharacterValue):
+            state.portrait = value.portrait
+
+    @staticmethod
+    def menu_name(expression: L.Expr) -> str:
+        if isinstance(expression, L.Index) and isinstance(expression.key, L.Str):
+            return expression.key.value
+        return expression.text()
+
+    def set_dialog(self, arguments: Sequence[L.Expr], state: FlowState) -> None:
+        if not arguments:
+            return
+        dialog = self.menu_name(arguments[0])
+        state.dialog = dialog
+        state.think = dialog == "think"
+
+    def script_reference(self, method: str, arguments: Sequence[L.Expr], state: FlowState, beats: list,
+                         label: str, line: int) -> None:
+        relation = SCRIPT_RELATIONS[method]
+        expression = arguments[-1] if arguments else None
+        value = self.evaluator.evaluate(expression, state) if expression else UnknownValue("")
+        target = text_value(value)
+        if target:
+            beats.append(JumpBeat(target, "", relation))
+            self.context.add_edge(target, relation, label)
+            return
+        if isinstance(value, CheckpointValue) and value.kind == "position":
+            description = f"Position event「{value.key}」"
+            beats.append(JumpBeat("", description, "position"))
+            self.context.dynamic.append(f"{method} uses position provider {value.key}")
+            return
+        source = expression.text() if expression else ""
+        beats.append(JumpBeat("", f"{method}: {source}", relation))
+        self.context.dynamic.append(f"{method}({source})")
+        self.context.warn("dynamic-script", f"Unresolved {relation} script expression: {source}", line)
+
+    def stat_call(self, method: str, arguments: Sequence[L.Expr], state: FlowState, beats: list) -> None:
+        if not arguments:
             return
 
-        def arg_text(index: int) -> str | None:
-            if index >= len(args):
+        def text(index: int) -> str | None:
+            if index >= len(arguments):
                 return None
-            return _as_text(self._eval(args[index], state))
+            return text_value(self.evaluator.evaluate(arguments[index], state))
 
-        def arg_int(index: int, fallback: int = 0) -> int:
-            if index >= len(args):
+        def value(index: int, fallback: Any = 0) -> Any:
+            if index >= len(arguments):
                 return fallback
-            value = self._eval(args[index], state)
-            return value if isinstance(value, int) and not isinstance(value, bool) else fallback
+            result = self.evaluator.evaluate(arguments[index], state)
+            if isinstance(result, UnknownValue):
+                return result.expression
+            if isinstance(result, TextRef):
+                return result.value
+            if result is None or isinstance(result, (bool, int, float, str)):
+                return result
+            return str(result)
 
-        if method == "Player":
-            key = arg_text(0)
-            delta = self._eval(args[1], state) if len(args) > 1 else None
-            if key:
-                beats.append(["meta", "stat", key, delta if isinstance(delta, int) else 0])
-        elif method == "Character":
-            key = arg_text(0)
-            delta = self._eval(args[1], state) if len(args) > 1 else None
-            if key:
-                beats.append(["meta", "rel", key, delta if isinstance(delta, int) else 0])
-        elif method in ("SetPlayer", "UpdateSetPlayerStat"):
-            key = arg_text(0)
-            if key:
-                beats.append(["meta", "setstat", key, arg_int(1)])
-        elif method == "SetCharacter":
-            key = arg_text(0)
-            if key:
-                beats.append(["meta", "setrel", key, arg_int(1)])
-        elif method in ("SetFlag", "AddFlag"):
-            key = arg_text(0)
-            value = self._eval(args[1], state) if len(args) > 1 else None
-            if key:
-                beats.append(["meta", "flag", key, value if isinstance(value, int) else 0])
-        elif method == "AddStory":
-            key = arg_text(0)
-            if key:
-                beats.append(["meta", "story", key])
-        elif method in ("AddBook", "RemoveBook"):
-            key = arg_text(0)
-            if key:
-                beats.append(["meta", "book", key, arg_int(1, 1) if method == "AddBook" else -1])
-        elif method in ("AddMisc", "RemoveMisc"):
-            key = arg_text(0)
-            if key:
-                beats.append(["meta", "misc", key, arg_int(1, 1) if method == "AddMisc" else -1])
-        elif method in ("AddSpecial", "RemoveSpecial"):
-            key = arg_text(0)
-            if key:
-                beats.append(["meta", "special", key, arg_int(1, 1) if method == "AddSpecial" else -1])
-        elif method == "AddTalent":
-            key = arg_text(0)
-            if key:
-                beats.append(["meta", "talent", key, arg_int(1, 1)])
-        elif method == "AddAchievementLib":
-            key = arg_text(0)
-            if key:
-                beats.append(["meta", "library", key])
+        key = text(0)
+        if method == "Player" and key:
+            beats.append(MetadataBeat("stat", key, value(1), "add"))
+        elif method == "Character" and key:
+            beats.append(MetadataBeat("rel", key, value(1), "add"))
+        elif method == "SetPlayer" and key:
+            beats.append(MetadataBeat("stat", key, value(1), "set"))
+        elif method == "UpdateSetPlayerStat" and key:
+            beats.append(MetadataBeat("stat", key, value(1), "preview"))
+        elif method == "SetCharacter" and key:
+            beats.append(MetadataBeat("rel", key, value(1), "set"))
+        elif method in ("SetFlag", "AddFlag") and key:
+            beats.append(MetadataBeat("flag", key, value(1), "set" if method == "SetFlag" else "add"))
+        elif method == "AddStory" and key:
+            beats.append(MetadataBeat("story", key, operation="unlock"))
+        elif method in ("AddBook", "RemoveBook") and key:
+            beats.append(MetadataBeat("book", key, value(1, 1) if method == "AddBook" else -1, "add"))
+        elif method in ("AddMisc", "RemoveMisc") and key:
+            beats.append(MetadataBeat("misc", key, value(1, 1) if method == "AddMisc" else -1, "add"))
+        elif method in ("AddSpecial", "RemoveSpecial") and key:
+            beats.append(MetadataBeat("special", key, value(1, 1) if method == "AddSpecial" else -1, "add"))
+        elif method == "AddTalent" and key:
+            beats.append(MetadataBeat("talent", key, value(1, 1), "add"))
+        elif method == "AddAchievementLib" and key:
+            beats.append(MetadataBeat("library", key, operation="unlock"))
         elif method == "Mission":
-            key = arg_text(1) or arg_text(0)
-            if key:
-                beats.append(["meta", "mission", key])
-        else:
-            self.fx_count += 1
-
-    def _emit_jump(self, method: str, args: Sequence[L.Expr], state: State,
-                   beats: list[list[Any]], label: str) -> None:
-        target_expr = args[-1] if args else None
-        kind = _JUMP_KINDS.get(method, "explicit")
-
-        if method == "ExecuteScript":
-            self.fx_count += 1
-            return
-
-        target: str | None = None
-        if target_expr is not None:
-            target = _as_text(self._eval(target_expr, state))
-
-        if target is None:
-            self.dynamic_jumps.append(
-                f"{method}({target_expr.text() if target_expr is not None else ''})")
-            beats.append(["jump", None, f"{method}（動態目標）"])
-            return
-
-        beats.append(["jump", target, ""])
-        key = (target, kind, label)
-        if key not in self._edge_keys:
-            self._edge_keys.add(key)
-            self.edges.append([target, kind, label])
+            mission = text(1) or key
+            if mission:
+                beats.append(MetadataBeat("mission", mission, operation="trigger"))
+        elif not method.startswith("Get"):
+            self.context.fx_count += 1

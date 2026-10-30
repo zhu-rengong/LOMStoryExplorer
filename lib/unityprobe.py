@@ -10,10 +10,10 @@ UNITY_VERSION = "2020.3.49f1"
 
 def available() -> bool:
     try:
-        import TypeTreeGeneratorAPI  # noqa: F401
+        import TypeTreeGeneratorAPI
     except Exception:
         return False
-    return True
+    return TypeTreeGeneratorAPI is not None
 
 
 def _tree_node_cls():
