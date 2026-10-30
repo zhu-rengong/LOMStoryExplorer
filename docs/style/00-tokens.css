@@ -149,7 +149,7 @@
   --control-fg-hover: var(--fg-1);
   --control-bg-hover: var(--bg-hover);
   --control-bg-active: var(--bg-active);
-  --control-on-bg: var(--accent-soft);
+  --control-on-bg: rgba(45, 35, 20, .08);
   --control-on-fg: var(--accent-strong);
   --control-on-border: var(--accent-line);
   --control-disabled: .4;

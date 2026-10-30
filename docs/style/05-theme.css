@@ -36,6 +36,7 @@ html[data-theme="night"] {
   --danger-soft: #38231B;
   --cool: #86A8A6;
   --cool-soft: #1F2A28;
+  --control-on-bg: var(--accent-soft);
 
   --reader-bg: #17130D;
   --reader-bg-2: #211B13;

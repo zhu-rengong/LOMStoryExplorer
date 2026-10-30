@@ -14,20 +14,6 @@
   transition: background var(--t-slow) var(--ease), color var(--t-slow) var(--ease);
 }
 
-#reader::before,
-#reader::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  z-index: 0;
-  width: 1px;
-  background: var(--reader-line);
-  pointer-events: none;
-}
-#reader::before { left: 20px; }
-#reader::after { right: 20px; }
-
 .reader-head {
   position: relative;
   z-index: 2;
@@ -115,22 +101,16 @@
   z-index: 3;
   display: grid;
   align-items: center;
+  justify-items: center;
   width: 16px;
   cursor: col-resize;
   touch-action: none;
   background: none;
 }
-.reader-grip[data-edge="left"] { left: 0; justify-items: start; }
+.reader-grip[data-edge="left"] { left: 6px; }
 .reader-grip[data-edge="right"] {
   right: var(--scrollbar-w);
   width: 12px;
-  justify-items: end;
-}
-.reader-grip[data-edge="right"]::before {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  right: calc(var(--scrollbar-w) * -1);
 }
 
 .reader-grip::before {
