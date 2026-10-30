@@ -673,11 +673,21 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 .jump .option-cond { color: var(--reader-fg-3); font-size: var(--fs-micro); }
 
 .lore {
+  position: relative;
+  isolation: isolate;
   margin: 12px 0 16px;
   padding: 8px var(--rd-pad) 12px;
   border-left: 3px double var(--reader-line-2);
   border-radius: 0;
-  background: var(--reader-accent-soft);
+}
+.lore::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, var(--reader-accent-soft) 0%, transparent 88%);
+  filter: blur(8px);
+  pointer-events: none;
 }
 
 .lore-text .lore-p {
