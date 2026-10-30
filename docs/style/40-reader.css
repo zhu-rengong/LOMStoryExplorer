@@ -251,26 +251,7 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 }
 
 .say.think {
-  position: relative;
-  isolation: isolate;
-  padding: 8px 12px;
   border-left: 0;
-}
-.say.think::before,
-.say.think::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-}
-.say.think::before {
-  z-index: -2;
-  transform: translate(4px, 4px);
-  background: var(--reader-accent-soft);
-}
-.say.think::after {
-  z-index: -1;
-  background: var(--reader-card);
 }
 .say.think .what {
   font-family: var(--rd-font-think, var(--font-reading));
@@ -279,7 +260,8 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   color: var(--reader-fg-3);
   font-style: normal;
   letter-spacing: .05em;
-  opacity: .86;
+  opacity: .88;
+  text-shadow: 2px 2px 1px var(--think-ghost);
 }
 
 .say.think .who {
@@ -322,6 +304,8 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 }
 .option-head:hover { background-color: var(--bg-hover); }
 .option-head:active { background-color: var(--bg-active); }
+.option.is-open:has(> .option-head:hover) > .option-body { background-color: var(--bg-hover); }
+.option.is-open:has(> .option-head:active) > .option-body { background-color: var(--bg-active); }
 
 .option-idx {
   flex: none;
@@ -384,6 +368,7 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 .option-body {
   padding: var(--rd-pad-y) var(--rd-pad) var(--rd-gap-3)
            calc(var(--rd-pad) + 24px + var(--rd-gap-2));
+  transition: background-color var(--t-fast);
 }
 .option:not(.is-open) .option-body { display: none; }
 .option-body .say:last-child, .option-body .choice:last-child { margin-bottom: 0; }
@@ -412,6 +397,8 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 }
 .branch-head:hover { color: var(--reader-fg-2); background-color: var(--bg-hover); }
 .branch-head:active { background-color: var(--bg-active); }
+.branch.is-open:has(> .branch-head:hover) > .branch-body { background-color: var(--bg-hover); }
+.branch.is-open:has(> .branch-head:active) > .branch-body { background-color: var(--bg-active); }
 .branch-head .cond { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .branch.is-open .branch-head { color: var(--reader-fg-2); }
 
@@ -535,6 +522,7 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 .branch-body {
   padding: 4px 0 8px calc(var(--rd-pad) - 4px);
   margin-left: 4px;
+  transition: background-color var(--t-fast);
 }
 .branch:not(.is-open) .branch-body { display: none; }
 

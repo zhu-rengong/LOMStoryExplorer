@@ -36,6 +36,7 @@ html[data-theme="night"] {
   --reader-line-2: rgba(237, 230, 218, .28);
   --reader-accent: #C8A96A;
   --reader-accent-soft: #322A1C;
+  --think-ghost: rgba(237, 230, 218, .24);
 
   --seal-bg: #7E3226;
   --seal-fg: #F6E8D6;
