@@ -96,7 +96,6 @@
     for (const id of ["bookmarkBtn", "footBookmark"]) {
       const btn = $(id);
       if (!btn) continue;
-      btn.classList.toggle("is-on", on);
       btn.setAttribute("aria-pressed", on ? "true" : "false");
       btn.title = on ? t("bookmarkRemove") : t("bookmarkAdd");
     }

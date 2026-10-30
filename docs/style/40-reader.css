@@ -75,6 +75,12 @@
 
 .reader-actions { display: flex; align-items: center; gap: var(--sp-1); flex: none; }
 
+#bookmarkBtn[aria-pressed="true"],
+#footBookmark[aria-pressed="true"] { color: var(--control-on-fg); }
+
+#bookmarkBtn[aria-pressed="true"] svg,
+#footBookmark[aria-pressed="true"] svg { fill: currentColor; }
+
 .reader-more { flex: none; }
 
 .muted { color: var(--reader-fg-3); font-size: var(--fs-xs); }
