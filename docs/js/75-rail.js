@@ -26,10 +26,22 @@
         return nodesByChapter[index] || [];
       };
 
+      const syncSelection = (id) => {
+        const list = $("chapterList");
+        if (!list) return;
+        for (const row of list.querySelectorAll(".rail-item[data-id]")) {
+          const on = row.dataset.id === id;
+          row.classList.toggle("is-on", on);
+          row.setAttribute("aria-selected", on ? "true" : "false");
+        }
+      };
+
       const railRow = (id, extras) => {
         const node = graph.nodeById.get(id);
         const row = ui.el("div", "rail-item row row-tall");
+        row.dataset.id = id;
         row.setAttribute("role", "option");
+        row.setAttribute("aria-selected", store.state.selectedId === id ? "true" : "false");
         row.tabIndex = 0;
         if (!node) {
           row.appendChild(ui.el("span", "ri-id", id));
@@ -198,6 +210,7 @@
         reset,
         setOnlyChapter,
         setTab,
+        syncSelection,
         syncTabs,
         updateCount,
       };

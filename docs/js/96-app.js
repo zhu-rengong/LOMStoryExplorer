@@ -477,6 +477,7 @@
         store.subscribe(["selected"], () => {
           const node = store.selected();
           updateHistoryButtons();
+          rail.syncSelection(node ? node.id : "");
           if (!node) return;
           updateHash(node.id);
           reader.render(node);
