@@ -800,22 +800,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 }
 .foot-btn:active:not(:disabled) { background-color: var(--bg-active); }
 .foot-btn:disabled { opacity: .4; cursor: default; }
-
-.foot-btn.primary {
-  border-color: var(--reader-accent);
-  background-color: transparent;
-  color: var(--reader-accent);
-  letter-spacing: .06em;
-}
-.foot-btn.primary:hover:not(:disabled) {
-  color: var(--reader-accent);
-  border-color: var(--reader-accent);
-  background-color: var(--reader-accent-soft);
-}
-.foot-btn.primary:active:not(:disabled) {
-  border-color: var(--reader-accent);
-  background-color: var(--bg-active);
-}
 .foot-btn.is-end { opacity: .45; }
 
 .foot-bookmark {

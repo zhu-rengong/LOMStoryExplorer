@@ -542,7 +542,6 @@
     if (!btn || !label) return;
     btn.disabled = targets.length === 0;
     btn.classList.toggle("is-end", targets.length === 0);
-    btn.classList.toggle("primary", targets.length > 0);
     if (targets.length === 0) {
       label.textContent = t("recentEnd");
       if (caret) caret.hidden = true;
