@@ -4,7 +4,7 @@
   flex: 1;
   min-height: 0;
   display: grid;
-
+  gap: var(--tile-gap);
   grid-template-columns: var(--rail-w) minmax(0, 1fr);
 }
 
@@ -16,7 +16,7 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   flex-direction: column;
   min-height: 0;
   background: var(--bg-panel);
-  border-right: 1px solid var(--line-1);
+  border: 1px solid var(--tile-line);
   overflow: hidden;
 }
 
@@ -43,10 +43,9 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
 
 .rail-tabs {
   display: flex;
-  gap: 3px;
+  gap: 0;
   margin: 0 14px 10px;
-  padding: 4px;
-  border-radius: var(--r-1);
+  border-radius: 0;
   border: 1px solid var(--line-2);
   background: transparent;
   flex: none;
@@ -56,30 +55,30 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   flex: 1;
   height: 32px;
   border: 0;
-  border-radius: 7px;
+  border-radius: 0;
   background: transparent;
   color: var(--fg-3);
   font-size: var(--fs-md);
   cursor: pointer;
-  transition: background var(--t-base) var(--ease), color var(--t-base) var(--ease),
-              box-shadow var(--t-base) var(--ease);
+  transition: background-color var(--t-base) var(--ease), color var(--t-base) var(--ease);
 }
+.rail-tab + .rail-tab { border-left: 1px solid var(--line-2); }
 
 .rail-tab:hover {
   color: var(--fg-1);
-  background-image: linear-gradient(var(--bg-hover), var(--bg-hover));
+  background-color: var(--bg-hover);
 }
 .rail-tab:active {
   color: var(--fg-1);
-  background-image: linear-gradient(var(--bg-active), var(--bg-active));
+  background-color: var(--bg-active);
 }
 .rail-tab.is-on {
-  background: var(--bg-panel);
+  background-color: var(--accent-soft);
   color: var(--accent-strong);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .25), inset 0 0 0 1px var(--line-1);
+  font-weight: 600;
 }
-.rail-tab.is-on:hover { background-image: linear-gradient(var(--bg-hover), var(--bg-hover)); }
-.rail-tab.is-on:active { background-image: linear-gradient(var(--bg-active), var(--bg-active)); }
+.rail-tab.is-on:hover,
+.rail-tab.is-on:active { background-color: var(--accent-soft); }
 
 .rail-search { position: relative; margin: 0 14px 10px; flex: none; }
 .rail-search svg {
@@ -95,14 +94,14 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   width: 100%;
   height: 34px;
   padding: 0 10px 0 31px;
-  border-radius: 7px;
-  border: 1px solid transparent;
-  background: var(--bg-elev);
+  border-radius: 0;
+  border: 1px solid var(--line-1);
+  background: var(--bg-field);
   color: var(--fg-1);
   font-size: var(--fs-base);
 }
 .rail-search input::placeholder { color: var(--fg-3); }
-.rail-search input:focus { outline: none; border-color: var(--accent-line); box-shadow: 0 0 0 2px var(--accent-soft); }
+.rail-search input:focus { outline: none; border-color: var(--accent); }
 
 .rail-list {
   flex: 1;
@@ -126,13 +125,13 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   align-items: center;
   gap: 3px 10px;
   padding: 9px 10px;
-  border-radius: 7px;
+  border-radius: 0;
   cursor: pointer;
-  transition: background var(--t-fast), color var(--t-fast);
+  transition: background-color var(--t-fast), color var(--t-fast);
 }
-.rail-item:hover { background-image: linear-gradient(var(--bg-hover), var(--bg-hover)); }
-.rail-item:active { background-image: linear-gradient(var(--bg-active), var(--bg-active)); }
-.rail-item.is-on { background: var(--accent-soft); }
+.rail-item:hover { background-color: var(--bg-hover); }
+.rail-item:active { background-color: var(--bg-active); }
+.rail-item.is-on { background-color: var(--accent-soft); }
 .rail-item.is-on .ri-id { color: var(--accent-strong); }
 
 .rail-item .ri-id {
@@ -157,7 +156,7 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   height: 6px;
   flex: none;
   margin-left: 2px;
-  border-radius: 50%;
+  border-radius: 0;
   background: var(--cool);
 }
 .rail-item .ri-entry.is-combat { background: var(--danger); }
@@ -169,8 +168,8 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   width: 26px; height: 26px;
   display: grid;
   place-items: center;
-  border: 0;
-  border-radius: 6px;
+  border: 1px solid var(--line-1);
+  border-radius: 0;
   background: var(--bg-elev);
   color: var(--fg-3);
   opacity: 0;
@@ -191,17 +190,17 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   padding-left: 10px;
   background: var(--accent-wash);
   border: 1px solid var(--line-1);
-  border-radius: var(--r-1);
+  border-radius: 0;
 }
-.rail-item.rail-chap.is-open { background: var(--accent-soft); border-color: var(--accent-line); }
+.rail-item.rail-chap.is-open { background: var(--accent-soft); border-color: var(--accent); }
 
-.rail-item.rail-chap:hover { background-image: linear-gradient(var(--bg-hover), var(--bg-hover)); }
-.rail-item.rail-chap:active { background-image: linear-gradient(var(--bg-active), var(--bg-active)); }
+.rail-item.rail-chap:hover { background-color: var(--bg-hover); }
+.rail-item.rail-chap:active { background-color: var(--bg-active); }
 .rail-item.rail-chap:hover .rail-caret { color: var(--accent-strong); }
 .rail-item.rail-chap .ri-id {
   flex: 1;
   min-width: 0;
-  font-family: var(--font-reading);
+  font-family: var(--font-ui);
   font-size: 14px;
   letter-spacing: .02em;
 }
@@ -222,17 +221,17 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   margin-top: 6px;
   padding: 8px 10px;
   border: 1px solid var(--line-1);
-  border-radius: var(--r-1);
+  border-radius: 0;
   background: var(--bg-field);
 }
 .rail-body .rail-item.is-card:hover {
-  background-image: linear-gradient(var(--bg-hover), var(--bg-hover));
+  background-color: var(--bg-hover);
   border-color: var(--line-2);
 }
 .rail-body .rail-item.is-card:active {
-  background-image: linear-gradient(var(--bg-active), var(--bg-active));
+  background-color: var(--bg-active);
   border-color: var(--line-2);
 }
-.rail-body .rail-item.is-card.is-on { border-color: var(--accent-line); }
+.rail-body .rail-item.is-card.is-on { border-color: var(--accent); }
 
 .rail-empty { padding: 16px 12px; font-size: var(--fs-sm); color: var(--fg-3); line-height: 1.8; }

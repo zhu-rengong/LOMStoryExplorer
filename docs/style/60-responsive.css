@@ -1,14 +1,13 @@
 body[data-layout="compact"] #chapterRail,
 body[data-layout="mobile"] #chapterRail {
   position: fixed;
-  top: var(--topbar-h);
-  bottom: 0;
-  left: 0;
+  top: calc(var(--topbar-h) + var(--tile-gap) * 2);
+  bottom: var(--tile-gap);
+  left: var(--tile-gap);
   z-index: var(--z-drawer);
   width: min(320px, 86vw);
-  transform: translateX(-100%);
+  transform: translateX(calc(-100% - var(--tile-gap)));
   transition: transform var(--t-slow) var(--ease);
-  box-shadow: var(--shadow-2);
 }
 body.rail-open #chapterRail { transform: translateX(0); }
 
@@ -54,12 +53,10 @@ body[data-layout="mobile"] #reader {
   justify-self: stretch;
 }
 
-body[data-layout="mobile"] #reader { padding-bottom: env(safe-area-inset-bottom); }
-
 body[data-layout="mobile"] .reader-head { padding: 4px 14px 8px; }
 body[data-layout="mobile"] .reader-head h2 { font-size: var(--fs-md); }
 body[data-layout="mobile"] .reader-body { padding: 12px 15px 20px; }
-body[data-layout="mobile"] .reader-foot { margin: 0 10px 10px; gap: 8px; }
+body[data-layout="mobile"] .reader-foot { margin: 0; gap: 8px; }
 
 body[data-layout="mobile"] .reader-foot .foot-btn { height: 40px; padding: 0 11px; }
 body[data-layout="mobile"] .foot-bookmark { display: inline-flex; }
@@ -69,7 +66,7 @@ body[data-layout="mobile"] .foot-bookmark.is-on {
   background: var(--reader-accent-soft);
 }
 
-body[data-layout="mobile"] .reader-foot { margin-bottom: calc(10px + env(safe-area-inset-bottom)); }
+body[data-layout="mobile"] .reader-foot { padding-bottom: calc(8px + env(safe-area-inset-bottom)); }
 
 body[data-layout="mobile"] #statsBtn,
 body[data-layout="mobile"] #helpBtn { display: none; }
@@ -93,5 +90,5 @@ body[data-layout="mobile"] .lookup {
   bottom: 8px;
   width: auto;
   max-height: 64vh;
-  border-radius: var(--r-3);
+  border-radius: 0;
 }
