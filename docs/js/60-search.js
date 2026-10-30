@@ -27,10 +27,10 @@
   const searchResults = SR.core.searchResults;
   const state = SR.core.state;
   const stripRich = SR.reader.stripRich;
-  const syncChapterChips = SR.rail.syncChapterChips;
   const t = SR.i18n.t;
   const textDone = SR.text.textDone;
   const updateFilterUi = SR.filter.updateFilterUi;
+  const updateRailCount = SR.rail.updateRailCount;
 
   const ID_LIKE = /^[a-z]{1,8}[0-9_]*$/i;
 
@@ -217,7 +217,7 @@
     state.filterError = null;
     const input = $("filterExpr");
     if (input) input.value = "";
-    syncChapterChips();
+    updateRailCount();
     computeVisibility();
     updateFilterUi();
     persist();

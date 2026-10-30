@@ -26,7 +26,6 @@
   const setOnlyChapter = SR.rail.setOnlyChapter;
   const state = SR.core.state;
   const stripRich = SR.reader.stripRich;
-  const syncChapterChips = SR.rail.syncChapterChips;
   const t = SR.i18n.t;
   const toast = SR.core.toast;
   const toggleBookmark = SR.store.toggleBookmark;
@@ -136,7 +135,6 @@
   const ensureSelectedVisible = (node) => {
     if (visible[node.i]) return;
     state.chapterFilter.add(node.ch);
-    syncChapterChips();
     applyFilters();
     toast(t("chapterAutoAdded", { name: chapterTitle(chapterOf(node)) }));
   };

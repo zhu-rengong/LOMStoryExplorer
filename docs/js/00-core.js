@@ -62,7 +62,7 @@ SR.events = (() => {
     searchActive: -1,
     readingNode: null,
     scrollMemory: new Map(),
-    railTab: "chapters",
+    railTab: "outline",
     settingsType: "dialog",
     filterSource: "",
     filterSet: null,

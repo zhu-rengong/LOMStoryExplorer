@@ -116,7 +116,8 @@
   --rd-indent: var(--rd-pad);
 
   --topbar-h: 56px;
-  --rail-w: 216px;
+  --rail-w: 272px;
+  --reader-measure: 820px;
 
   --z-float: 10;
   --z-scrim: 30;

@@ -23,11 +23,7 @@
 
   const ENTRY_KEYS = { combat: "entryCombat", free: "entryFree" };
 
-  const RAIL_GROUPS = [
-    { key: "railGroupMain", test: (id) => /^(ch|act)/.test(id) },
-    { key: "railGroupEvent", test: (id) => /^s\d+$/.test(id) },
-    { key: "railGroupPlay", test: () => true },
-  ];
+  const RAIL_TABS = ["bookmarks", "outline"];
 
   let nodesByChapter = null;
 
@@ -70,48 +66,6 @@
       }
     });
     return row;
-  };
-
-  const renderChapters = () => {
-    const list = $("chapterList");
-    if (!list) return;
-    const searchEl = $("railSearch");
-    const query = searchEl ? searchEl.value.trim().toLowerCase() : "";
-    const frag = document.createDocumentFragment();
-
-    RAIL_GROUPS.forEach((group) => {
-      const items = [];
-      chapters.forEach((chapter, index) => {
-        if (!group.test(chapter.id)) return;
-        const title = chapterTitle(chapter);
-        if (query && title.toLowerCase().indexOf(query) < 0
-            && chapter.id.toLowerCase().indexOf(query) < 0) return;
-        items.push({ chapter: chapter, index: index, title: title });
-      });
-      if (!items.length) return;
-
-      frag.appendChild(el("p", "rail-group", t(group.key)));
-      items.forEach((item) => {
-        const index = item.index;
-        const chip = el("button", "chip");
-        chip.dataset.ch = String(index);
-        chip.dataset.title = item.title;
-        chip.appendChild(el("span", "cname", item.title));
-        chip.appendChild(el("span", "cnum", String(item.chapter.count)));
-        if (state.chapterFilter.has(index)) chip.classList.add("is-on");
-        chip.addEventListener("click", () => {
-          if (state.chapterFilter.has(index)) state.chapterFilter.delete(index);
-          else state.chapterFilter.add(index);
-          chip.classList.toggle("is-on");
-          updateRailCount();
-          applyFilters();
-        });
-        frag.appendChild(chip);
-      });
-    });
-
-    list.replaceChildren(frag);
-    updateRailCount();
   };
 
   const renderBookmarks = () => {
@@ -215,10 +169,9 @@
     updateRailCount();
   };
 
-  const renderRail = () => {
-    if (state.railTab === "bookmarks") renderBookmarks();
-    else if (state.railTab === "outline") renderOutlineRail();
-    else renderChapters();
+  const syncRailSearch = () => {
+    const box = $("railSearchBox");
+    if (box) box.hidden = state.railTab === "bookmarks";
     document.querySelectorAll(".rail-tab").forEach((tab) => {
       const on = tab.dataset.rail === state.railTab;
       tab.classList.toggle("is-on", on);
@@ -226,28 +179,23 @@
     });
   };
 
-  const setRailTab = (tab) => {
-    if (!tab || tab === state.railTab) return;
-    state.railTab = tab;
-    const search = $("railSearch");
-    if (search) {
-      search.value = "";
-      search.placeholder = t("railSearchPlaceholder");
-    }
-    renderRail();
+  const renderRail = () => {
+    if (state.railTab === "bookmarks") renderBookmarks();
+    else renderOutlineRail();
+    syncRailSearch();
   };
 
-  const syncChapterChips = () => {
-    const chips = document.querySelectorAll("#chapterList .chip");
-    chips.forEach((chip) => {
-      chip.classList.toggle("is-on", state.chapterFilter.has(Number(chip.dataset.ch)));
-    });
-    updateRailCount();
+  const setRailTab = (tab) => {
+    if (RAIL_TABS.indexOf(tab) < 0 || tab === state.railTab) return;
+    state.railTab = tab;
+    const search = $("railSearch");
+    if (search) search.value = "";
+    renderRail();
   };
 
   const setOnlyChapter = (index) => {
     state.chapterFilter = new Set([index]);
-    syncChapterChips();
+    updateRailCount();
     applyFilters();
     toast(t("chapterOnly", { name: chapterTitle(chapters[index]) }));
   };
@@ -255,40 +203,20 @@
   const clearChapterFilter = () => {
     if (!state.chapterFilter.size) return;
     state.chapterFilter.clear();
-    syncChapterChips();
-    applyFilters();
-  };
-
-  const toggleChapterFilter = (index) => {
-    const name = chapterTitle(chapters[index]);
-    if (!state.chapterFilter.size) {
-      state.chapterFilter.add(index);
-      toast(t("chapterOnly", { name: name }));
-    } else if (state.chapterFilter.has(index)) {
-      state.chapterFilter.delete(index);
-      toast(t("chapterOff", { name: name }));
-    } else {
-      state.chapterFilter.add(index);
-      toast(t("chapterAdded", { name: name }));
-    }
-    syncChapterChips();
+    updateRailCount();
     applyFilters();
   };
 
   SR.register("rail", {
-    RAIL_GROUPS: RAIL_GROUPS,
     applyFilters: applyFilters,
     chapterNodes: chapterNodes,
     clearChapterFilter: clearChapterFilter,
     railRow: railRow,
     renderBookmarks: renderBookmarks,
-    renderChapters: renderChapters,
     renderOutlineRail: renderOutlineRail,
     renderRail: renderRail,
     setOnlyChapter: setOnlyChapter,
     setRailTab: setRailTab,
-    syncChapterChips: syncChapterChips,
-    toggleChapterFilter: toggleChapterFilter,
     updateRailCount: updateRailCount,
   });
 })();

@@ -98,9 +98,6 @@
   if (railReset) {
     railReset.addEventListener("click", () => {
       state.chapterFilter.clear();
-      document.querySelectorAll(".chip").forEach((chip) => {
-        chip.classList.remove("is-on");
-      });
       updateRailCount();
       applyFilters();
     });

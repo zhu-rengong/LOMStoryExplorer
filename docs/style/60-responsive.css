@@ -5,7 +5,7 @@ body[data-layout="mobile"] #chapterRail {
   bottom: 0;
   left: 0;
   z-index: var(--z-drawer);
-  width: 264px;
+  width: min(320px, 86vw);
   transform: translateX(-100%);
   transition: transform var(--t-slow) var(--ease);
   box-shadow: var(--shadow-2);
@@ -19,6 +19,8 @@ body[data-layout="compact"] .topbar .rail-toggle,
 body[data-layout="mobile"] .topbar .rail-toggle { display: grid; }
 
 .rail-toggle { display: none; }
+
+body[data-layout="narrow"] { --rail-w: 236px; }
 
 body[data-layout="narrow"] .tb-label,
 body[data-layout="compact"] .tb-label,
@@ -48,7 +50,7 @@ body[data-layout="mobile"] #reader { padding-bottom: env(safe-area-inset-bottom)
 body[data-layout="mobile"] .reader-head { padding: 4px 14px 8px; }
 body[data-layout="mobile"] .reader-head h2 { font-size: var(--fs-md); }
 body[data-layout="mobile"] .reader-body { padding: 12px 15px 20px; }
-body[data-layout="mobile"] .reader-foot { margin: 0 10px 10px; gap: 8px; }
+body[data-layout="mobile"] .reader-foot { width: auto; margin: 0 10px 10px; gap: 8px; }
 
 body[data-layout="mobile"] .reader-foot .foot-btn { height: 40px; padding: 0 11px; }
 body[data-layout="mobile"] .foot-bookmark { display: inline-flex; }
@@ -66,7 +68,7 @@ body[data-layout="mobile"] #helpBtn { display: none; }
 @media (pointer: coarse) {
   :root { --ctl-sm: 34px; --ctl-md: 40px; --ctl-lg: 44px; }
   .icon-btn, .tool-btn, .foot-btn { min-height: var(--ctl-md); }
-  .chip, .rail-item, .menu-item, .nav-item, .lookup-item, .picker-item, .stats-kind {
+  .rail-item, .menu-item, .nav-item, .lookup-item, .picker-item, .stats-kind {
     min-height: 44px;
   }
   .seg-btn { min-height: 30px; }
