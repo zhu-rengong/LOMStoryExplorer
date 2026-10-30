@@ -21,8 +21,10 @@ class ExtractManifest:
     locale_stats: dict[str, Any]
     checkpoint_stats: dict[str, Any]
     entry_stats: dict[str, Any]
+    lore_stats: dict[str, Any]
     checkpoint_version: int
     entry_version: int
+    lore_version: int
 
     def to_json(self) -> dict[str, Any]:
         return asdict(self)

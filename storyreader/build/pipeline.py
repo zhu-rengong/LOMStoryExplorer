@@ -16,6 +16,8 @@ from ..config import (
     ENTRIES_PATH,
     FLOW_VERSION,
     LOCALE_DIR,
+    LORE_PATH,
+    LORE_VERSION,
     LUA_DIR,
     MANIFEST_PATH,
     REPORT_PATH,
@@ -144,11 +146,32 @@ def _names_of(locale: dict, namespace: str, keys: set[str]) -> dict[str, str]:
     return {key: table[key] for key in sorted(keys) if key in table}
 
 
+def _load_lore(reporter: Reporter) -> dict[str, str]:
+    payload = read_json(LORE_PATH)
+    if not isinstance(payload, dict):
+        reporter.warn("data/lore.json missing; lore entries fall back to LegendInfo only")
+        return {}
+    if payload.get("version") != LORE_VERSION:
+        reporter.warn(
+            f"data/lore.json version {payload.get('version')} does not match {LORE_VERSION};"
+            " rerun extract.py"
+        )
+        return {}
+    items = payload.get("items")
+    if not isinstance(items, dict):
+        return {}
+    return {
+        key: value for key, value in items.items()
+        if isinstance(key, str) and isinstance(value, str) and value
+    }
+
+
 def render_language(lang: str, locale: dict, node_ids: list[str],
                     models: dict[str, ScriptAnalysis], chapter_of_id: dict[str, str],
-                    chapters, facets: dict[str, Facets], edges: list[Edge]) -> LanguageRender:
+                    chapters, facets: dict[str, Facets], edges: list[Edge],
+                    lore: dict[str, str] | None = None) -> LanguageRender:
     started = time.time()
-    renderer = Renderer(locale, lang)
+    renderer = Renderer(locale, lang, lore_fallback=lore)
     stories: dict[str, list] = {}
     rows: dict[str, list[list[int]]] = {}
     for sid in node_ids:
@@ -192,6 +215,9 @@ def render_language(lang: str, locale: dict, node_ids: list[str],
         "think": renderer.think_count,
         "think_named": renderer.think_named_count,
         "lore": renderer.lore_count,
+        "lore_fallback": renderer.lore_fallback_count,
+        "lore_missing": renderer.lore_missing_count,
+        "lore_missing_samples": renderer.lore_missing[:40],
         "missing": renderer.missing_count,
     }
     return LanguageRender(
@@ -266,6 +292,9 @@ def _write_language(render: LanguageRender, shard_of: dict[str, str],
         "think": render.metrics["think"],
         "think_named": render.metrics["think_named"],
         "lore": render.metrics["lore"],
+        "lore_fallback": render.metrics["lore_fallback"],
+        "lore_missing": render.metrics["lore_missing"],
+        "lore_missing_samples": render.metrics["lore_missing_samples"],
         "edge_labels": len(render.edge_labels),
         "missing_keys": render.metrics["missing"],
         "missing_samples": render.missing[:40],
@@ -399,13 +428,14 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     locales = _load_locales(langs, reporter)
     if locales is None:
         return BuildResult(False, len(node_ids), len(edges), len(chapters), {}, REPORT_PATH)
+    lore = _load_lore(reporter)
 
     WEB_DATA_DIR.mkdir(parents=True, exist_ok=True)
     reporter.stage(3, 4, "render")
     renders: dict[str, LanguageRender] = {}
     for lang in langs:
         renders[lang] = render_language(
-            lang, locales[lang], node_ids, models, chapter_of_id, chapters, facets, edges)
+            lang, locales[lang], node_ids, models, chapter_of_id, chapters, facets, edges, lore)
         metrics = renders[lang].metrics
         reporter.info(
             f"rendered {lang}: {len(renders[lang].stories)} scripts, {metrics['options']} options"
@@ -414,7 +444,8 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
         )
         reporter.info(
             f"inner monologue {metrics['think']} ({metrics['think_named']} with a speaker),"
-            f" lore {metrics['lore']}"
+            f" lore {metrics['lore']} (fallback {metrics['lore_fallback']},"
+            f" unresolved {metrics['lore_missing']})"
         )
 
     if full_text:
@@ -571,6 +602,18 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
             f" ({wordcount_report[lang]['stories']} scripts)"
         )
 
+    default_metrics = (renders[default_lang].metrics
+                       if default_lang in renders else renders[langs[0]].metrics)
+    lore_manifest = (manifest or {}).get("lore_stats") or {}
+    lore_report = {
+        "items": len(lore),
+        "wanted": lore_manifest.get("wanted", 0),
+        "resolved": lore_manifest.get("resolved", 0),
+        "unresolved": lore_manifest.get("unresolved", 0),
+        "fallback": default_metrics.get("lore_fallback", 0),
+        "missing": default_metrics.get("lore_missing", 0),
+        "samples": default_metrics.get("lore_missing_samples", []),
+    }
     report_payload = compose(
         generated=time.strftime("%Y-%m-%d %H:%M:%S"),
         scripts=len(node_ids),
@@ -584,6 +627,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
         },
         facets=facet_report,
         checkpoints=checkpoint_report,
+        lore=lore_report,
         wordcount={"bytes": wordcount_size, "langs": wordcount_report},
         times={"explicit": len(times), "scripts": sorted(times)},
         chapters=[chapter.to_wire() for chapter in chapters],

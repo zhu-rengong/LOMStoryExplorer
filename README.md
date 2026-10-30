@@ -4,7 +4,7 @@ Offline reader and search tool for the story scripts of *Legend of Mortal*.
 
 The repository contains two halves:
 
-- `extract.py` reads the installed game assets (read only) and writes `data/lua`, `data/locale`, `data/checkpoints.json`, `data/entries.json`, and `data/manifest.json`.
+- `extract.py` reads the installed game assets (read only) and writes `data/lua`, `data/locale`, `data/checkpoints.json`, `data/entries.json`, `data/lore.json`, and `data/manifest.json`.
 - `build.py` analyzes the scripts, renders localized text, and writes the static payloads consumed by `docs/index.html`.
 
 The site is a zero-build static bundle. `docs/index.html` works when opened directly from disk (`file://`), and it also works when served from any static host.
@@ -42,7 +42,7 @@ storyreader/
   wire.py                    schema constants and data entry names
   model.py                   domain dataclasses and cache codecs
   lua/                       tokenizer, AST, recursive descent parser
-  game/                      Unity asset access, scripts, locales, checkpoints, entries, game info
+  game/                      Unity asset access, scripts, locales, checkpoints, entries, lore, game info
   flow/                      story analyzer (statements, calls, expressions, state)
   build/                     chapters, facets, graph, sharding, rendering, word count, report
   emit/                      wire payload writers
@@ -119,7 +119,8 @@ Checkpoint expressions are object trees with `tag` values `const`, `random`, `di
 
 ## Notes
 
-- Caches live in `data/cache` and are keyed by analysis, checkpoint and entry versions.
+- Legend entries use `LegendInfo/<key>` from the locale tables. When a story key has no locale value, `extract.py` reads the corresponding `StoryData._text` asset and writes it to `data/lore.json`; `build.py` uses that text as a fallback and skips entries that still have no text instead of printing the internal key.
+- Caches live in `data/cache` and are keyed by analysis, checkpoint, entry and lore versions.
 - `data/manifest.json` records asset fingerprints and stage statistics. `extract.py` skips unchanged assets unless `--force` is passed.
 - `build.py` writes artifacts atomically, then removes every `*.js` under `docs/data` that was not produced by the current run.
 - The extractor only reads the game installation. It never writes to the game directory.

@@ -66,9 +66,11 @@ def _strip_prefix(table: dict[str, str], prefix: str) -> dict[str, str]:
 
 class Renderer:
     def __init__(self, locale: dict[str, dict[str, str]], lang: str = "zh-tw",
-                 counter: WordCounter | None = None) -> None:
+                 counter: WordCounter | None = None,
+                 lore_fallback: dict[str, str] | None = None) -> None:
         self.lang = lang if lang in _MENU_LABEL else "zh-tw"
         self.counter = counter or WordCounter()
+        self.lore_fallback = lore_fallback or {}
         self.story = locale.get("Story", {})
         self.chars = locale.get("Character", {})
         self.titles = locale.get("CharacterTitle", {})
@@ -89,6 +91,9 @@ class Renderer:
         self.think_count = 0
         self.think_named_count = 0
         self.lore_count = 0
+        self.lore_fallback_count = 0
+        self.lore_missing_count = 0
+        self.lore_missing: list[str] = []
         self.character_ids: set[str] = set()
 
     def _story_text(self, key: str) -> str | None:
@@ -245,7 +250,17 @@ class Renderer:
         return [BEAT_CHOICE, branches]
 
     def _lore(self, key: str, out: list[list[Any]]) -> None:
-        text = self.legend.get(key) or key
+        text = self.legend.get(key) or ""
+        if not text:
+            fallback = self.lore_fallback.get(key) or ""
+            if fallback:
+                text = self._cn(fallback)
+                self.lore_fallback_count += 1
+            else:
+                self.lore_missing_count += 1
+                if len(self.lore_missing) < 120:
+                    self.lore_missing.append(key)
+                return
         self.counter.add("lore", text)
         self.lore_count += 1
         out.append([BEAT_LORE, text])
