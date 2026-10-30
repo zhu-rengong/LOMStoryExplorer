@@ -1,0 +1,64 @@
+html[data-theme="night"] {
+  --bg-page: #14110E;
+  --bg-panel: #1A1611;
+  --bg-elev: #221C15;
+  --bg-hover: rgba(237, 230, 218, .05);
+  --bg-active: rgba(237, 230, 218, .09);
+  --bg-field: rgba(255, 251, 241, .06);
+  --bg-scrim: rgba(0, 0, 0, .58);
+
+  --fg-1: #EDE6DA;
+  --fg-2: #B5AA98;
+  --fg-3: #A79E8C;
+  --fg-invert: #1B1712;
+
+  --line-1: rgba(237, 230, 218, .12);
+  --line-2: rgba(237, 230, 218, .24);
+  --line-3: rgba(237, 230, 218, .34);
+
+  --accent: #C8A96A;
+  --accent-strong: #E2C68C;
+  --accent-soft: rgba(200, 169, 106, .16);
+  --accent-line: rgba(200, 169, 106, .50);
+  --danger: #C25A4A;
+  --danger-soft: rgba(194, 90, 74, .16);
+  --cool: #7FA3A7;
+  --cool-soft: rgba(127, 163, 167, .14);
+
+  --reader-bg: #1C1813;
+  --reader-bg-2: #241E17;
+  --reader-card: rgba(38, 32, 25, .86);
+  --reader-card-hover: #2A231B;
+  --reader-fg: #E8E0D2;
+  --reader-fg-2: #B3A997;
+  --reader-fg-3: #A1998A;
+  --reader-line: rgba(237, 230, 218, .12);
+  --reader-line-2: rgba(237, 230, 218, .22);
+  --reader-accent: #C8A96A;
+  --reader-accent-soft: rgba(200, 169, 106, .14);
+  --reader-shadow: 0 24px 54px -30px rgba(0, 0, 0, .75);
+
+  --seal-bg: linear-gradient(150deg, #9E3F2B, #6E2A20);
+  --seal-fg: #F6E8D6;
+  --seal-line: rgba(255, 235, 214, .42);
+
+  --tex-hi: rgba(255, 255, 255, .05);
+  --tex-hi-soft: rgba(255, 255, 255, .06);
+  --tex-warm: rgba(200, 169, 106, .04);
+  --tex-line: rgba(200, 169, 106, .018);
+  --reader-bg-veil: rgba(28, 24, 19, .82);
+  --accent-wash: rgba(200, 169, 106, .06);
+  --crimson-line: rgba(194, 90, 74, .38);
+  --crimson-wash: rgba(194, 90, 74, .14);
+  --teal-line: rgba(127, 163, 167, .32);
+  --teal-wash: rgba(127, 163, 167, .12);
+
+  --spk-0: #D8B77A;
+  --spk-1: #D97E5A;
+  --spk-2: #8FB7BA;
+
+  --on-accent: #1B1712;
+
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 6px 16px -14px rgba(0, 0, 0, .75);
+  --shadow-2: 0 16px 40px -30px rgba(0, 0, 0, .85);
+}

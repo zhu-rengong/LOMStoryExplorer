@@ -1,0 +1,22 @@
+---
+description: 活侠传剧本抽取与检索器（StoryReader）的工程约束
+alwaysApply: true
+enabled: true
+updatedAt: 2026-10-30T18:00:00.000Z
+provider:
+---
+
+# 工程约束
+
+1. **现代 Python**：用 3.10+ 写法（`from __future__ import annotations`、`X | None`、`pathlib`、f-string、`dataclass`），不迁就旧式 `Dict`/`Optional`。
+2. **现代前端**：用 ES2020+（`const`/`let`、箭头函数、可选链、模板字符串），保持按编号加载的 classic script 与 `window.SR` 模块契约。
+3. **零注释**：不写任何注释与 docstring，改动触及的旧注释一并删除。
+4. **不测试**：不建测试文件、不跑测试、不启动阅读器验证，改完即止。
+5. **跨平台**：路径只用 `pathlib` 或 `os.environ`，不硬编码盘符与反斜杠。
+6. **全英文**：代码开发一律使用英文，包含但不限于日志、报错、脚本输出与文档等。
+7. **先读源码**：游戏 C# 源码在 `D:\Code Repository\LegendOfMortal\Source`，查机制、字段、协议前先去读，不凭记忆猜。
+8. **本体只读**：游戏本体 `G:\SteamLibrary\steamapps\common\LegendOfMortal` 只读取，禁止写入或修改。
+9. **自动提交**：每次任务执行完成后使用git提交，但不推送远端。
+10. **静态可部署**：`docs/` 是仓库内站点根，保持无构建、无服务端、无 CDN 依赖，资源引用一律走相对路径，`docs/index.html` 直接打开即可运行；生成数据 `docs/data/` 不入库，发布走 `tools/publish-pages.ps1` 推 `gh-pages` 分支（Pages 源选该分支）；要求与本地运行一致，新增资源不得破坏该前提。
+
+除以上条例外，实现方式自由发挥。

@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>活俠傳 · 劇本檢索</title>
+<link rel="stylesheet" href="style/00-tokens.css">
+<link rel="stylesheet" href="style/05-theme.css">
+<link rel="stylesheet" href="style/10-base.css">
+<link rel="stylesheet" href="style/20-topbar.css">
+<link rel="stylesheet" href="style/25-filter.css">
+<link rel="stylesheet" href="style/30-rail.css">
+<link rel="stylesheet" href="style/40-reader.css">
+<link rel="stylesheet" href="style/50-panels.css">
+<link rel="stylesheet" href="style/60-responsive.css">
+<link rel="stylesheet" href="style/90-motion.css">
+<link rel="stylesheet" href="style/95-extras.css">
+<script src="theme.js"></script>
+<script src="settings.js"></script>
+</head>
+<body data-layout="wide">
+
+<svg class="sprite" aria-hidden="true" focusable="false">
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/></symbol>
+  <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M12 2.6a1.9 1.9 0 0 1 1.9 1.9v.5c0 .4.3.7.7.8.3.1.6 0 .8-.2l.4-.4a1.9 1.9 0 1 1 2.7 2.7l-.4.4c-.2.2-.3.5-.2.8.1.4.4.7.8.7h.5a1.9 1.9 0 0 1 0 3.8h-.5c-.4 0-.7.3-.8.7-.1.3 0 .6.2.8l.4.4a1.9 1.9 0 1 1-2.7 2.7l-.4-.4c-.2-.2-.5-.3-.8-.2-.4.1-.7.4-.7.8v.5a1.9 1.9 0 0 1-3.8 0v-.5c0-.4-.3-.7-.7-.8-.3-.1-.6 0-.8.2l-.4.4a1.9 1.9 0 1 1-2.7-2.7l.4-.4c.2-.2.3-.5.2-.8-.1-.4-.4-.7-.8-.7h-.5a1.9 1.9 0 0 1 0-3.8h.5c.4 0 .7-.3.8-.7.1-.3 0-.6-.2-.8l-.4-.4a1.9 1.9 0 1 1 2.7-2.7l.4.4c.2.2.5.3.8.2.4-.1.7-.4.7-.8v-.5A1.9 1.9 0 0 1 12 2.6z"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7"/></symbol>
+  <symbol id="i-forward" viewBox="0 0 24 24"><path d="M9.5 5l7 7-7 7"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></symbol>
+  <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol>
+  <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-filter" viewBox="0 0 24 24"><path d="M3.5 5h17l-6.6 7.6V19l-3.8 1.8v-8.2L3.5 5z"/></symbol>
+  <symbol id="i-stats" viewBox="0 0 24 24"><path d="M4 20V9M10 20V4M16 20v-6"/><path d="M2.5 20.5h19"/></symbol>
+  <symbol id="i-top" viewBox="0 0 24 24"><path d="M12 19V6M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-jump" viewBox="0 0 24 24"><path d="M5 19.5V9a3 3 0 0 1 3-3h8"/><path d="m13 3 3 3-3 3"/><circle cx="5" cy="19.5" r="1.3"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 4 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 10.2l5.9-.9L12 4z"/></symbol>
+  <symbol id="i-tree" viewBox="0 0 24 24"><path d="M5 4v12a3 3 0 0 0 3 3h3M5 9h6a3 3 0 0 1 3 3v1M17 4v7M15.5 15h3M17 15v5"/><circle cx="17" cy="4" r="1.4"/><circle cx="17" cy="20" r="1.4"/></symbol>
+  <symbol id="i-list" viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h9"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.1"/><circle cx="12" cy="12" r="1.1"/><circle cx="18.5" cy="12" r="1.1"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.7 1.1c0 1.7-2.3 1.9-2.3 3.4"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-auto" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/></symbol>
+</svg>
+
+<header class="topbar">
+  <button id="railToggle" class="icon-btn rail-toggle" data-i18n-title="railToggleTitle" title="章節欄">
+    <svg><use href="#i-panel"/></svg>
+  </button>
+
+  <div class="brand">
+    <span class="seal" aria-hidden="true">活</span>
+    <div class="brand-text">
+      <h1 data-i18n="appTitle">活俠傳 · 劇本檢索</h1>
+      <p id="metaLine" data-i18n="loading">載入中…</p>
+    </div>
+  </div>
+
+  <div class="searchwrap">
+    <div class="search-field">
+      <svg class="search-icon"><use href="#i-search"/></svg>
+      <input id="search" type="search" autocomplete="off" spellcheck="false" role="combobox"
+             aria-expanded="false" aria-controls="searchResults"
+             data-i18n-placeholder="searchPlaceholder" data-i18n-title="searchTitle"
+             placeholder="搜尋劇本 id 或正文關鍵詞（/ 聚焦）" aria-label="搜尋劇本">
+      <div id="searchResults" class="dropdown" role="listbox" hidden></div>
+    </div>
+
+    <div class="menu-wrap" id="filterWrap">
+      <button id="filterBtn" class="tool-btn" aria-haspopup="dialog" aria-expanded="false"
+              data-i18n-title="filterBtnTitle" title="用條件篩選劇本">
+        <svg class="ico"><use href="#i-filter"/></svg>
+        <span class="tb-label" data-i18n="filterBtn">篩選</span>
+        <span id="filterBadge" class="filter-badge" hidden>0</span>
+      </button>
+      <div id="filterPanel" class="filter-panel" role="dialog" aria-label="篩選" hidden>
+        <div class="filter-row">
+          <div class="filter-input-wrap">
+            <input id="filterExpr" class="filter-expr" type="text" spellcheck="false" autocomplete="off"
+                   role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="filterSuggest"
+                   data-i18n-placeholder="filterPlaceholder"
+                   placeholder="speaker:master AND (dice:yes OR lock:yes)">
+            <div id="filterSuggest" class="filter-suggest" role="listbox" hidden></div>
+          </div>
+          <button id="filterApply" class="tool-btn primary" data-i18n="filterApply">套用</button>
+        </div>
+        <div id="filterStatus" class="filter-status"></div>
+
+        <div class="filter-section">
+          <p class="filter-label" data-i18n="filterFields">欄位</p>
+          <div class="filter-chips" id="filterFieldChips"></div>
+        </div>
+        <div class="filter-section">
+          <p class="filter-label" data-i18n="filterOperators">邏輯</p>
+          <div class="filter-chips" id="filterOpChips"></div>
+        </div>
+        <div class="filter-section">
+          <p class="filter-label" data-i18n="filterExamples">範例</p>
+          <div class="filter-chips" id="filterExampleChips"></div>
+        </div>
+
+        <div id="filterResults" class="filter-results" hidden></div>
+
+        <div class="filter-foot">
+          <span id="filterCount" class="filter-count"></span>
+          <button id="filterClear" class="link-btn" data-i18n="filterClear">清除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tools" id="toolbar">
+    <div class="seg" id="langSeg" role="group" aria-label="語言 / 语言">
+      <button class="seg-btn is-on" data-lang="zh-tw" title="繁體中文">繁</button>
+      <button class="seg-btn" data-lang="zh-cn" title="简体中文">簡</button>
+    </div>
+
+    <button id="statsBtn" class="tool-btn" aria-haspopup="dialog" aria-expanded="false"
+            data-i18n-title="statsBtnTitle" title="統計全站正文字數">
+      <svg class="ico"><use href="#i-stats"/></svg>
+      <span class="tb-label" data-i18n="statsBtn">字數</span>
+    </button>
+
+    <button id="helpBtn" class="icon-btn" aria-haspopup="dialog" aria-expanded="false"
+            data-i18n-title="helpTitle" title="快捷鍵一覽（?）">
+      <svg><use href="#i-help"/></svg>
+    </button>
+
+    <button id="settingsBtn" class="icon-btn" aria-haspopup="dialog" aria-expanded="false"
+            data-i18n-title="settingsBtnTitle" title="閱讀設定">
+      <svg><use href="#i-gear"/></svg>
+    </button>
+
+    <div class="menu-wrap more-wrap" id="moreWrap">
+      <button id="moreBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false"
+              data-i18n-title="moreTitle" title="更多">
+        <svg><use href="#i-more"/></svg>
+      </button>
+      <div id="moreMenu" class="menu" role="menu" hidden></div>
+    </div>
+  </div>
+</header>
+
+<main id="main">
+  <aside id="chapterRail" aria-label="章節">
+    <div class="rail-head">
+      <span class="rail-title" data-i18n="railTitle">章節</span>
+      <span id="railCount" class="rail-count"></span>
+      <button id="railReset" class="link-btn" data-i18n="railAll">全部</button>
+      <button id="railClose" class="icon-btn rail-close" data-i18n-title="closeTitle" title="收起">
+        <svg><use href="#i-close"/></svg>
+      </button>
+    </div>
+    <div class="rail-search">
+      <svg><use href="#i-search"/></svg>
+      <input id="railSearch" type="search" autocomplete="off" spellcheck="false"
+             data-i18n-placeholder="railSearchPlaceholder" placeholder="篩選章節…" aria-label="篩選章節">
+    </div>
+    <div class="rail-tabs" role="tablist" aria-label="章節欄視圖">
+      <button id="railTabChapters" class="rail-tab is-on" data-rail="chapters" role="tab"
+              aria-selected="true" data-i18n="railTabChapters">章節</button>
+      <button id="railTabBookmarks" class="rail-tab" data-rail="bookmarks" role="tab"
+              aria-selected="false" data-i18n="railTabBookmarks">書籤</button>
+      <button id="railTabOutline" class="rail-tab" data-rail="outline" role="tab"
+              aria-selected="false" data-i18n="railTabOutline">目錄</button>
+    </div>
+    <div id="chapterList" class="rail-list"></div>
+  </aside>
+  <div id="railScrim" class="scrim" hidden></div>
+
+  <section id="reader" aria-live="polite">
+    <div id="readProgress" class="read-progress" aria-hidden="true" hidden></div>
+    <header id="readerHead" class="reader-head">
+      <div class="reader-title">
+        <p id="nodeChapter" class="crumb" hidden></p>
+        <h2 id="nodeTitle" data-i18n="readerEmptyTitle">尚未選擇劇本</h2>
+        <div class="reader-actions">
+          <button class="icon-btn" id="backBtn" data-i18n-title="backTitle" title="上一處（←）" disabled>
+            <svg><use href="#i-back"/></svg>
+          </button>
+          <button class="icon-btn" id="forwardBtn" data-i18n-title="forwardTitle" title="下一處（→）" disabled>
+            <svg><use href="#i-forward"/></svg>
+          </button>
+          <button class="icon-btn" id="outlineBtn" aria-pressed="false"
+                  data-i18n-title="outlineToggleTitle" title="分支大綱">
+            <svg><use href="#i-tree"/></svg>
+          </button>
+          <div class="menu-wrap reader-nav" id="navWrap">
+            <button id="navBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false"
+                    data-i18n-title="navBtnTitle" title="跳到相連劇本" disabled>
+              <svg><use href="#i-jump"/></svg>
+            </button>
+            <div id="navMenu" class="menu menu-wide" role="menu" hidden></div>
+          </div>
+          <button class="icon-btn" id="bookmarkBtn" aria-pressed="false"
+                  data-i18n-title="bookmarkAdd" title="加入書籤">
+            <svg><use href="#i-star"/></svg>
+          </button>
+          <div class="menu-wrap reader-more">
+            <button class="icon-btn" id="readerMoreBtn" aria-haspopup="true" aria-expanded="false"
+                    data-i18n-title="moreTitle" title="更多">
+              <svg><use href="#i-more"/></svg>
+            </button>
+            <div id="readerMore" class="menu" role="menu" hidden>
+              <button class="menu-item" id="copyBtn" data-i18n="copyTitle" data-i18n-title="copyTitle">複製劇本 id</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div id="readerBody" class="reader-body">
+      <div class="empty-state">
+        <span class="brush" aria-hidden="true" data-i18n="emptyBrush">卷</span>
+        <h3 data-i18n="emptyH3">一卷手抄，任君翻閱</h3>
+        <p data-i18n="emptyP">左側是 2200 餘個劇本，按章節分組；也可以在頂欄搜尋 id 或正文。
+點一篇即可在此閱讀全文。</p>
+        <p class="hint-line" data-i18n="emptyHint">快捷鍵：/ 搜尋 · ← → 歷史 · [ ] 上下篇</p>
+      </div>
+    </div>
+    <div id="outlinePanel" class="outline-panel" role="dialog" aria-label="分支大綱" hidden>
+      <header class="outline-head">
+        <span class="outline-title" data-i18n="outlineTitle">大綱</span>
+        <button id="outlineClose" class="icon-btn" data-i18n-title="closeTitle" title="關閉">
+          <svg><use href="#i-close"/></svg>
+        </button>
+      </header>
+      <div id="outlineList" class="outline-list"></div>
+    </div>
+
+    <footer id="readerFoot" class="reader-foot" hidden>
+      <button id="prevBtn" class="foot-btn" data-i18n-title="recentPrev" title="上一篇">
+        <svg><use href="#i-back"/></svg><span data-i18n="recentPrev">上一篇</span>
+      </button>
+      <span id="footPos" class="foot-pos"></span>
+      <button id="footBookmark" class="foot-btn foot-bookmark" aria-pressed="false"
+              data-i18n-title="bookmarkAdd" title="加入書籤">
+        <svg><use href="#i-star"/></svg>
+      </button>
+      <div class="foot-next-wrap">
+        <button id="nextBtn" class="foot-btn primary" data-i18n-title="recentContinueTitle" title="沿劇情續接下一篇">
+          <span id="nextLabel" data-i18n="recentContinue">續讀</span>
+          <svg class="caret"><use href="#i-chevron"/></svg>
+        </button>
+        <div id="nextMenu" class="menu menu-wide foot-menu" role="menu" hidden></div>
+      </div>
+    </footer>
+
+    <button id="toTopBtn" class="to-top" data-i18n-title="toTopTitle" title="回到頂部" hidden>
+      <svg><use href="#i-top"/></svg>
+    </button>
+  </section>
+</main>
+
+<div id="settingsScrim" class="scrim" hidden></div>
+<aside id="settingsDrawer" class="drawer" hidden aria-modal="true" role="dialog" aria-label="閱讀設定">
+  <header class="drawer-head">
+    <h2 data-i18n="settingsTitle">閱讀設定</h2>
+    <button id="settingsClose" class="icon-btn" data-i18n-title="closeTitle" title="關閉">
+      <svg><use href="#i-close"/></svg>
+    </button>
+  </header>
+
+  <div class="drawer-body">
+    <section class="field">
+      <h3 class="field-title" data-i18n="themeTitle">外觀</h3>
+      <div class="seg seg-wide" id="themeSeg" role="group" aria-label="外觀主題">
+        <button class="seg-btn" data-theme="paper" data-i18n="themePaper">宣紙</button>
+        <button class="seg-btn" data-theme="night" data-i18n="themeNight">墨夜</button>
+        <button class="seg-btn is-on" data-theme="auto" data-i18n="themeAuto">跟隨系統</button>
+      </div>
+    </section>
+
+    <section class="field">
+      <h3 class="field-title" data-i18n="fontReading">正文字體</h3>
+      <button id="fontReadingTrigger" class="select font-trigger" aria-haspopup="listbox">
+        <span class="ft-name">宋體（預設）</span>
+        <svg class="caret"><use href="#i-chevron"/></svg>
+      </button>
+      <input id="fontReadingCustom" class="text-input" type="text" hidden
+             data-i18n-placeholder="fontCustomPlaceholder" placeholder="輸入系統字體名，如 Noto Serif TC">
+    </section>
+
+    <section class="field">
+      <h3 class="field-title" data-i18n="fontUi">介面字體</h3>
+      <button id="fontUiTrigger" class="select font-trigger" aria-haspopup="listbox">
+        <span class="ft-name">系統預設</span>
+        <svg class="caret"><use href="#i-chevron"/></svg>
+      </button>
+      <input id="fontUiCustom" class="text-input" type="text" hidden
+             data-i18n-placeholder="fontCustomPlaceholder" placeholder="輸入系統字體名，如 Noto Sans TC">
+    </section>
+
+    <section class="field">
+      <div class="field-row">
+        <h3 class="field-title" data-i18n="fontSize">正文字號</h3>
+        <output id="fontScaleOut" class="field-value">100%</output>
+      </div>
+      <input id="fontScale" class="range" type="range" min="90" max="140" step="5" value="100"
+             aria-label="正文字號">
+      <div class="chip-row" id="scalePresets">
+        <button class="chip-btn" data-scale="90">90%</button>
+        <button class="chip-btn" data-scale="100">100%</button>
+        <button class="chip-btn" data-scale="115">115%</button>
+        <button class="chip-btn" data-scale="130">130%</button>
+      </div>
+    </section>
+
+    <section class="field">
+      <h3 class="field-title" data-i18n="lineHeight">行距</h3>
+      <div class="seg seg-wide" id="leadingSeg" role="group">
+        <button class="seg-btn" data-leading="1.7" data-i18n="leadingTight">緊湊</button>
+        <button class="seg-btn" data-leading="1.85" data-i18n="leadingNormal">標準</button>
+        <button class="seg-btn" data-leading="2.05" data-i18n="leadingLoose">寬鬆</button>
+      </div>
+    </section>
+
+    <section class="field">
+      <div class="field-row">
+        <h3 class="field-title" data-i18n="fontTypes">文本類型</h3>
+        <span class="field-note" data-i18n="fontTypesHint">可分別設定</span>
+      </div>
+      <div class="type-tabs" id="typeTabs" role="tablist"></div>
+
+      <div class="type-panel">
+        <label class="sub-label" data-i18n="typeFont">字體</label>
+        <button id="typeFontTrigger" class="select font-trigger" aria-haspopup="listbox">
+          <span class="ft-name">跟隨正文</span>
+          <svg class="caret"><use href="#i-chevron"/></svg>
+        </button>
+        <input id="typeFontCustom" class="text-input" type="text" hidden
+               data-i18n-placeholder="fontCustomPlaceholder" placeholder="輸入系統字體名">
+
+        <div class="field-row sub-row">
+          <label class="sub-label" data-i18n="typeScale">字號</label>
+          <output id="typeScaleOut" class="field-value">100%</output>
+        </div>
+        <input id="typeScale" class="range" type="range" min="70" max="150" step="5" value="100"
+               aria-label="類型字號">
+
+        <label class="sub-label" data-i18n="typeWeight">字重</label>
+        <div class="seg seg-wide" id="weightSeg" role="group">
+          <button class="seg-btn" data-weight="400" data-i18n="weightRegular">常規</button>
+          <button class="seg-btn" data-weight="500" data-i18n="weightMedium">中等</button>
+          <button class="seg-btn" data-weight="600" data-i18n="weightBold">加粗</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="field">
+      <h3 class="field-title" data-i18n="previewTitle">預覽</h3>
+      <div class="preview" id="settingsPreview">
+        <p class="prev-line" data-type="dialog">
+          <span class="prev-tag" data-i18n="typeDialog">對白</span>
+          <span class="prev-body" data-i18n="previewText">江湖就是這樣，若想活得長久，還是趁早退隱吧。</span>
+        </p>
+        <p class="prev-line" data-type="speaker">
+          <span class="prev-tag" data-i18n="typeSpeaker">說話人</span>
+          <span class="prev-body" data-i18n="previewWho">唐布衣（飛俠）</span>
+        </p>
+        <p class="prev-line" data-type="narration">
+          <span class="prev-tag" data-i18n="typeNarration">旁白</span>
+          <span class="prev-body" data-i18n="previewNarration">他沉默了一會，終究沒有再說下去。</span>
+        </p>
+        <p class="prev-line" data-type="think">
+          <span class="prev-tag" data-i18n="typeThink">心聲</span>
+          <span class="prev-body" data-i18n="previewThink">這人，怕是不太好惹。</span>
+        </p>
+        <p class="prev-line" data-type="option">
+          <span class="prev-tag" data-i18n="typeOption">選項</span>
+          <span class="prev-body" data-i18n="previewOption">① 說得也是</span>
+        </p>
+        <p class="prev-line" data-type="cond">
+          <span class="prev-tag" data-i18n="typeCond">條件</span>
+          <span class="prev-body" data-i18n="previewCond">分支判定「Ch_1_1_001」== 1</span>
+        </p>
+        <p class="prev-line" data-type="label">
+          <span class="prev-tag" data-i18n="typeLabel">標籤</span>
+          <span class="prev-body" data-i18n="previewLabel">旗標「拜師」= 1</span>
+        </p>
+        <p class="prev-line" data-type="lore">
+          <span class="prev-tag" data-i18n="typeLore">劇情點</span>
+          <span class="prev-body" data-i18n="previewLore">唐門弟子趙活，於山門前當眾頂撞掌門。</span>
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <footer class="drawer-foot">
+    <button id="settingsReset" class="tool-btn" data-i18n="resetSettings">恢復預設</button>
+    <button id="settingsDone" class="tool-btn primary" data-i18n="done">完成</button>
+  </footer>
+</aside>
+
+<div id="fontPicker" class="picker" hidden role="listbox" aria-label="字體">
+  <div class="picker-search">
+    <svg><use href="#i-search"/></svg>
+    <input id="fontPickerSearch" type="search" autocomplete="off" spellcheck="false"
+           data-i18n-placeholder="fontSearchPlaceholder" placeholder="搜尋字體…" aria-label="搜尋字體">
+  </div>
+  <div id="fontPickerList" class="picker-list"></div>
+</div>
+
+<div id="lookupPanel" class="lookup" role="dialog" aria-label="出場劇本" hidden>
+  <header class="lookup-head">
+    <span id="lookupTitle" class="lookup-title"></span>
+    <button id="lookupClose" class="icon-btn" data-i18n-title="closeTitle" title="關閉">
+      <svg><use href="#i-close"/></svg>
+    </button>
+  </header>
+  <p id="lookupSub" class="lookup-sub"></p>
+  <div id="lookupList" class="lookup-list" role="listbox"></div>
+  <p class="lookup-hint" data-i18n="lookupHint">↑↓ 選擇 · Enter 跳轉 · Esc 關閉</p>
+</div>
+
+<div id="branchPreview" class="branch-preview" role="tooltip" hidden></div>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<div id="ioStatus" class="io-status" role="status" aria-live="polite" hidden></div>
+
+<div id="helpPanel" class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpHeading" hidden>
+  <header class="help-head">
+    <h2 id="helpHeading" data-i18n="helpTitle">快捷鍵</h2>
+    <button id="helpClose" class="icon-btn" data-i18n-title="closeTitle" title="關閉">
+      <svg><use href="#i-close"/></svg>
+    </button>
+  </header>
+  <div id="helpBody" class="help-body"></div>
+  <p class="help-hint" data-i18n="helpHint">按「?」或 Esc 關閉</p>
+</div>
+
+<div id="statsPanel" class="help-panel stats-panel" role="dialog" aria-modal="true"
+     aria-labelledby="statsHeading" hidden>
+  <header class="help-head">
+    <h2 id="statsHeading" data-i18n="statsTitle">字數統計</h2>
+    <button id="statsClose" class="icon-btn" data-i18n-title="closeTitle" title="關閉">
+      <svg><use href="#i-close"/></svg>
+    </button>
+  </header>
+  <div id="statsSummary" class="stats-summary"></div>
+  <div id="statsKinds" class="stats-kinds" role="group" aria-label="文本類型"></div>
+  <div id="statsBody" class="help-body stats-body"></div>
+  <p class="help-hint" data-i18n="statsHint">Esc 關閉 · 點章節展開劇本</p>
+</div>
+
+<script src="data/graph.js"></script>
+<script src="data/fonts.js"></script>
+<script src="storytext.js"></script>
+<script src="query.js"></script>
+<script src="js/00-core.js"></script>
+<script src="js/05-data.js"></script>
+<script src="js/08-overlay.js"></script>
+<script src="js/09-i18n-dict.js"></script>
+<script src="js/10-i18n.js"></script>
+<script src="js/15-store.js"></script>
+<script src="js/20-text.js"></script>
+<script src="js/22-checkpoints.js"></script>
+<script src="js/30-viewport.js"></script>
+<script src="js/40-reader.js"></script>
+<script src="js/42-condexpr.js"></script>
+<script src="js/45-rail.js"></script>
+<script src="js/47-stats.js"></script>
+<script src="js/50-panels.js"></script>
+<script src="js/52-panels-cond.js"></script>
+<script src="js/54-panels-preview.js"></script>
+<script src="js/55-filter.js"></script>
+<script src="js/60-search.js"></script>
+<script src="js/65-settings.js"></script>
+<script src="js/70-actions.js"></script>
+<script src="js/95-extras.js"></script>
+<script src="js/99-boot.js"></script>
+</body>
+</html>

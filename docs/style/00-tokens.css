@@ -1,0 +1,133 @@
+:root {
+  --gold: #C8A96A;
+  --crimson: #B4453B;
+  --teal: #6E8B8F;
+  --moss: #7FA36B;
+  --gold-1: rgba(200, 169, 106, .14);
+  --gold-2: rgba(200, 169, 106, .30);
+  --gold-3: rgba(200, 169, 106, .58);
+  --crimson-1: rgba(180, 69, 59, .12);
+  --crimson-2: rgba(180, 69, 59, .34);
+  --teal-1: rgba(79, 113, 117, .12);
+  --teal-2: rgba(79, 113, 117, .38);
+}
+
+:root {
+  --bg-page: #E2D6BF;
+  --bg-panel: #EBE1CD;
+  --bg-elev: #F5EDDD;
+  --bg-hover: rgba(42, 34, 24, .05);
+  --bg-active: rgba(42, 34, 24, .09);
+  --bg-field: rgba(255, 252, 244, .72);
+  --bg-scrim: rgba(38, 30, 20, .38);
+
+  --fg-1: #2B251C;
+  --fg-2: #6B6152;
+  --fg-3: #6A6050;
+  --fg-invert: #FBF6EA;
+
+  --line-1: rgba(43, 37, 28, .12);
+  --line-2: rgba(43, 37, 28, .22);
+  --line-3: rgba(43, 37, 28, .34);
+
+  --accent: #A87C36;
+  --accent-strong: #8A611F;
+  --accent-soft: rgba(168, 124, 54, .14);
+  --accent-line: rgba(168, 124, 54, .45);
+  --danger: #A8443A;
+  --danger-soft: rgba(168, 68, 58, .12);
+  --cool: #4F7175;
+  --cool-soft: rgba(79, 113, 117, .12);
+
+  --reader-bg: #FFFBF1;
+  --reader-bg-2: #F6EEDC;
+  --reader-card: rgba(255, 253, 247, .86);
+  --reader-card-hover: #FFFDF7;
+  --reader-fg: #241F18;
+  --reader-fg-2: #655C4D;
+  --reader-fg-3: #776D5D;
+  --reader-line: rgba(64, 52, 38, .15);
+  --reader-line-2: rgba(64, 52, 38, .28);
+  --reader-accent: #9E3F2B;
+  --reader-accent-soft: rgba(158, 63, 43, .09);
+  --reader-shadow: 0 24px 54px -30px rgba(60, 40, 16, .55);
+
+  --seal-bg: linear-gradient(150deg, #B4453B, #8A2F26);
+  --seal-fg: #FBEFE0;
+  --seal-line: rgba(255, 235, 214, .5);
+
+  --tex-hi: rgba(255, 255, 255, .5);
+  --tex-hi-soft: rgba(255, 255, 255, .55);
+  --tex-warm: rgba(120, 90, 50, .05);
+  --tex-line: rgba(120, 90, 50, .022);
+  --reader-bg-veil: rgba(255, 253, 247, .82);
+  --accent-wash: rgba(168, 124, 54, .04);
+  --crimson-line: rgba(169, 82, 47, .28);
+  --crimson-wash: rgba(169, 82, 47, .08);
+  --teal-line: rgba(63, 108, 112, .28);
+  --teal-wash: rgba(63, 108, 112, .08);
+
+  --spk-0: #8A6A2E;
+  --spk-1: #A9522F;
+  --spk-2: #3F6C70;
+
+  --on-accent: #FFF7EA;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+
+  --r-1: 3px;
+  --r-2: 5px;
+  --r-3: 8px;
+  --r-pill: 3px;
+
+  --ctl-sm: 28px;
+  --ctl-md: 32px;
+  --ctl-lg: 36px;
+
+  --fs-micro: 10px;
+  --fs-xs: 11px;
+  --fs-sm: 12px;
+  --fs-base: 13px;
+  --fs-md: 14px;
+  --fs-h: 17px;
+  --fs-title: 20px;
+
+  --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans TC", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Sarasa Mono TC", Consolas, "Courier New", monospace;
+  --font-reading: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", Georgia, "SimSun", serif;
+  --rd-scale: 1;
+  --rd-leading: 1.85;
+  --rd-fs: calc(16px * var(--rd-scale));
+  --rd-fs-sm: calc(14.5px * var(--rd-scale));
+  --rd-fs-xs: calc(11.5px * var(--rd-scale));
+
+  --rd-gap-1: 6px;
+  --rd-gap-2: 10px;
+  --rd-gap-3: 15px;
+  --rd-gap-4: 22px;
+
+  --rd-pad: 12px;
+  --rd-pad-y: 8px;
+  --rd-indent: var(--rd-pad);
+
+  --topbar-h: 56px;
+  --rail-w: 216px;
+
+  --z-float: 10;
+  --z-scrim: 30;
+  --z-drawer: 40;
+  --z-pop: 45;
+  --z-toast: 50;
+
+  --shadow-1: 0 1px 0 rgba(255, 255, 255, .35) inset, 0 6px 16px -14px rgba(80, 60, 30, .55);
+  --shadow-2: 0 16px 40px -30px rgba(80, 60, 30, .6);
+  --ease: cubic-bezier(.22, .61, .36, 1);
+  --t-fast: 120ms;
+  --t-base: 180ms;
+  --t-slow: 240ms;
+}

@@ -1,0 +1,279 @@
+from __future__ import annotations
+
+import hashlib
+from collections.abc import Callable, Iterator
+from pathlib import Path
+from typing import Any
+
+UNITY_VERSION = "2020.3.49f1"
+
+
+def available() -> bool:
+    try:
+        import TypeTreeGeneratorAPI  # noqa: F401
+    except Exception:
+        return False
+    return True
+
+
+def _tree_node_cls():
+    from UnityPy.helpers.TypeTreeNode import TypeTreeNode
+    return TypeTreeNode
+
+
+class Adapter:
+    def __init__(self, generator: Any) -> None:
+        self.generator = generator
+        self.failures = 0
+
+    def get_nodes_up(self, assembly: str, fullname: str) -> Any:
+        try:
+            flat = self.generator.get_nodes(assembly, fullname)
+        except Exception:
+            self.failures += 1
+            return None
+        node_cls = _tree_node_cls()
+        root = None
+        stack: list[Any] = []
+        for item in flat:
+            node = node_cls(m_Level=item.m_Level, m_Type=item.m_Type, m_Name=item.m_Name,
+                            m_ByteSize=0, m_Version=1, m_MetaFlag=item.m_MetaFlag)
+            while stack and stack[-1].m_Level >= node.m_Level:
+                stack.pop()
+            if stack:
+                stack[-1].m_Children.append(node)
+            else:
+                root = node
+            stack.append(node)
+        return root
+
+
+def build_generator(managed_dir: Path) -> tuple[Any, Adapter]:
+    from TypeTreeGeneratorAPI import TypeTreeGenerator
+
+    generator = TypeTreeGenerator(UNITY_VERSION, "AssetsTools")
+    loaded = 0
+    for dll in sorted(Path(managed_dir).glob("*.dll")):
+        try:
+            generator.load_dll(dll.read_bytes())
+            loaded += 1
+        except Exception:
+            continue
+    if not loaded:
+        raise RuntimeError(f"no loadable assemblies under {managed_dir}")
+    return generator, Adapter(generator)
+
+
+def asset_files(base_dir: Path) -> list[Path]:
+    base = Path(base_dir)
+    return [path for path in sorted(base.iterdir())
+            if path.is_file() and (path.suffix == ".assets" or path.name.startswith("level"))]
+
+
+def fingerprint(base_dir: Path) -> str:
+    parts = []
+    for path in asset_files(base_dir):
+        try:
+            stat = path.stat()
+        except OSError:
+            continue
+        parts.append(f"{path.name}:{stat.st_size}:{int(stat.st_mtime)}")
+    return hashlib.sha1("|".join(parts).encode("utf-8")).hexdigest()[:16]
+
+
+class Deref:
+    def __init__(self, env: Any, local: dict[int, Any], serialized: Any,
+                 base_dir: Path, adapter: Any) -> None:
+        self.env = env
+        self.base_dir = Path(base_dir)
+        self.adapter = adapter
+        self.externals = list(getattr(serialized, "externals", []) or [])
+        self.cache: dict[int, dict[int, Any]] = {0: local}
+
+    def _objects(self, file_id: int) -> dict[int, Any]:
+        if file_id in self.cache:
+            return self.cache[file_id]
+        table: dict[int, Any] = {}
+        try:
+            name = Path(self.externals[file_id - 1].path).name
+            target = self.base_dir / name
+            if target.is_file():
+                import UnityPy
+
+                sub = UnityPy.load(str(target))
+                sub.typetree_generator = self.adapter
+                table = {obj.path_id: obj for obj in sub.objects}
+                self.cache[-file_id] = sub
+        except Exception:
+            table = {}
+        self.cache[file_id] = table
+        return table
+
+    def __call__(self, ref: Any) -> Any:
+        if not isinstance(ref, dict):
+            return None
+        path_id = int(ref.get("m_PathID") or 0)
+        if not path_id:
+            return None
+        file_id = int(ref.get("m_FileID") or 0)
+        return self._objects(file_id).get(path_id)
+
+
+class Session:
+    def __init__(self, base_dir: Path, adapter: Any, log: Callable[[str], None] = print) -> None:
+        self.base_dir = Path(base_dir)
+        self.adapter = adapter
+        self.log = log
+        self._envs: dict[str, Any] = {}
+        self._externals: dict[str, list[str]] = {}
+        self._scripts: dict[str, dict[int, str]] = {}
+        self._names: list[str] | None = None
+        self._known: set[str] | None = None
+        self._failed: set[str] = set()
+        self.warnings = 0
+
+    def __enter__(self) -> Session:
+        return self
+
+    def __exit__(self, *_exc: Any) -> None:
+        self.close()
+
+    def close(self) -> None:
+        for env in self._envs.values():
+            try:
+                env.file.close()
+            except Exception:
+                continue
+        self._envs.clear()
+
+    def names(self) -> list[str]:
+        if self._names is None:
+            self._names = [path.name for path in asset_files(self.base_dir)]
+        return self._names
+
+    def _known_files(self) -> set[str]:
+        if self._known is None:
+            self._known = set(self.names())
+        return self._known
+
+    def _open(self, name: str) -> Any:
+        cached = self._envs.get(name)
+        if cached is not None:
+            return cached
+        if name in self._failed:
+            raise LookupError(f"{name} failed to open earlier")
+        import UnityPy
+
+        try:
+            env = UnityPy.load(str(self.base_dir / name))
+        except Exception:
+            self._failed.add(name)
+            raise
+        env.typetree_generator = self.adapter
+        serialized = getattr(env, "file", None) or next(iter(env.files.values()))
+        self._externals[name] = [Path(ext.path).name
+                                 for ext in (getattr(serialized, "externals", []) or [])]
+        self._envs[name] = env
+        return env
+
+    def _script_table(self, name: str) -> dict[int, str]:
+        table = self._scripts.get(name)
+        if table is not None:
+            return table
+        table = {}
+        if name in self._failed or name not in self._known_files():
+            self._scripts[name] = table
+            return table
+        try:
+            env = self._open(name)
+        except Exception as exc:
+            self._warn(f"failed to open {name}: {type(exc).__name__}")
+            self._scripts[name] = table
+            return table
+        for obj in env.objects:
+            if obj.type.name != "MonoScript":
+                continue
+            try:
+                table[obj.path_id] = getattr(obj.read(), "m_ClassName", "") or ""
+            except Exception:
+                continue
+        self._scripts[name] = table
+        return table
+
+    def _warn(self, message: str) -> None:
+        self.warnings += 1
+        self.log(f"      [warn] {message}")
+
+    def class_of(self, name: str, ref: Any) -> str:
+        file_id = int(getattr(ref, "m_FileID", 0) or 0)
+        path_id = int(getattr(ref, "m_PathID", 0) or 0)
+        if not path_id:
+            return ""
+        if file_id == 0:
+            return self._script_table(name).get(path_id, "")
+        externals = self._externals.get(name) or []
+        if 1 <= file_id <= len(externals):
+            return self._script_table(externals[file_id - 1]).get(path_id, "")
+        return ""
+
+    def iter_class(self, classes: set[str]) -> Iterator[tuple[str, Any, str]]:
+        for name in self.names():
+            try:
+                env = self._open(name)
+            except Exception as exc:
+                self._warn(f"failed to open {name}: {type(exc).__name__}")
+                continue
+            for obj in env.objects:
+                if obj.type.name != "MonoBehaviour":
+                    continue
+                try:
+                    head = obj.parse_monobehaviour_head()
+                except Exception:
+                    continue
+                cls = self.class_of(name, getattr(head, "m_Script", None))
+                if cls in classes:
+                    yield name, obj, cls
+
+    def object_of(self, name: str, ref: Any) -> Any:
+        if not isinstance(ref, dict):
+            ref = getattr(ref, "as_dict", lambda: None)()
+        if not isinstance(ref, dict):
+            return None
+        path_id = int(ref.get("m_PathID") or 0)
+        if not path_id:
+            return None
+        file_id = int(ref.get("m_FileID") or 0)
+        target = name
+        if file_id:
+            externals = self._externals.get(name) or []
+            if not 1 <= file_id <= len(externals):
+                return None
+            target = externals[file_id - 1]
+            if target not in self._known_files():
+                return None
+        try:
+            env = self._open(target)
+        except Exception as exc:
+            self._warn(f"failed to open {target}: {type(exc).__name__}")
+            return None
+        for obj in env.objects:
+            if obj.path_id == path_id:
+                return obj
+        return None
+
+    def tree(self, name: str, obj: Any) -> dict | None:
+        if obj is None:
+            return None
+        try:
+            return obj.read_typetree()
+        except Exception:
+            self._warn(f"failed to read typetree of {name} {getattr(obj, 'path_id', '?')}")
+            return None
+
+    def ref_tree(self, name: str, ref: Any) -> dict | None:
+        return self.tree(name, self.object_of(name, ref))
+
+    def string_of(self, name: str, ref: Any, field: str) -> str:
+        tree = self.ref_tree(name, ref) or {}
+        value = tree.get(field)
+        return value.strip() if isinstance(value, str) else ""
