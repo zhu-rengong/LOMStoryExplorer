@@ -231,7 +231,7 @@
         const items = [{ id: "all", key: "statsKindAll" }];
         KINDS.forEach((kind) => items.push({ id: kind, key: KIND_LABEL[kind] }));
         items.forEach((item) => {
-          const button = ui.el("button", `stats-kind chip${item.id === activeKind ? " is-on" : ""}`,
+          const button = ui.el("button", `stats-kind btn btn-sm${item.id === activeKind ? " is-on" : ""}`,
             i18n.t(item.key));
           button.type = "button";
           button.setAttribute("aria-pressed", item.id === activeKind ? "true" : "false");

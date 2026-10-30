@@ -324,8 +324,10 @@
 .select {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--sp-2);
-  height: var(--ctl-lg);
+  width: 100%;
+  height: var(--control-h);
   text-align: left;
   cursor: pointer;
 }

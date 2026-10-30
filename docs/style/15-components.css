@@ -77,27 +77,6 @@
   color: var(--on-accent);
 }
 
-.btn-tint {
-  border-color: var(--control-on-border);
-  background-color: var(--control-on-bg);
-  color: var(--control-on-fg);
-}
-
-.btn-tint:enabled:hover {
-  border-color: var(--control-on-fg);
-  background-color: var(--control-on-bg);
-  color: var(--control-on-fg);
-}
-
-.btn-tint:enabled:active {
-  border-color: var(--control-on-border);
-  background-color: var(--control-on-bg);
-  color: var(--control-on-fg);
-  box-shadow: inset 0 0 0 1px var(--control-on-border);
-}
-
-.btn-ghost { border-color: transparent; }
-
 .btn-block {
   width: 100%;
   justify-content: center;
@@ -144,6 +123,11 @@
 .btn.btn-icon.is-on:hover,
 .btn.btn-icon.is-on:active { border-color: transparent; }
 
+.btn-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -160,39 +144,8 @@
   line-height: 1;
   letter-spacing: .04em;
   white-space: nowrap;
-  cursor: pointer;
-  transition: color var(--t-fast), border-color var(--t-fast), background-color var(--t-fast);
-}
-
-.chip:enabled:hover {
-  border-color: var(--control-border-hover);
-  background-color: var(--control-bg-hover);
-  color: var(--control-fg-hover);
-}
-
-.chip:enabled:active { background-color: var(--control-bg-active); }
-
-.chip:disabled {
-  opacity: var(--control-disabled);
   cursor: default;
-}
-
-.chip.is-on {
-  border-color: var(--control-on-border);
-  background-color: var(--control-on-bg);
-  color: var(--control-on-fg);
-}
-
-.chip.is-on:hover,
-.chip.is-on:active {
-  border-color: var(--control-on-border);
-  background-color: var(--control-on-bg);
-  color: var(--control-on-fg);
-}
-
-.chip-mono {
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
+  transition: color var(--t-fast), border-color var(--t-fast), background-color var(--t-fast);
 }
 
 .chip-sm {
@@ -295,6 +248,7 @@
 
 .tabs {
   display: flex;
+  overflow: hidden;
   border: 1px solid var(--control-border);
   border-radius: var(--r-2);
   background: transparent;
@@ -306,13 +260,12 @@
   padding: 0 var(--row-pad);
   border: 0;
   background: transparent;
-  color: var(--fg-3);
+  color: var(--control-fg);
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
-  letter-spacing: .06em;
+  letter-spacing: .04em;
   cursor: pointer;
-  transition: background-color var(--t-base) var(--ease), color var(--t-base) var(--ease),
-              box-shadow var(--t-base) var(--ease);
+  transition: background-color var(--t-base) var(--ease), color var(--t-base) var(--ease);
 }
 
 .tab + .tab { border-left: 1px solid var(--control-border); }
@@ -325,16 +278,14 @@
 .tab:active { background-color: var(--control-bg-active); }
 
 .tab.is-on {
-  background-color: transparent;
+  background-color: var(--control-on-bg);
   color: var(--control-on-fg);
-  box-shadow: inset 0 -2px var(--control-on-border);
 }
 
 .tab.is-on:hover,
 .tab.is-on:active {
-  background-color: var(--control-bg-hover);
+  background-color: var(--control-on-bg);
   color: var(--control-on-fg);
-  box-shadow: inset 0 -2px var(--control-on-border);
 }
 
 .seg {

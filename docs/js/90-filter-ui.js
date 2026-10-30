@@ -374,7 +374,7 @@
         if (fieldBox) {
           const frag = document.createDocumentFragment();
           query.fields().forEach((field) => {
-            const chip = ui.el("button", "filter-chip chip chip-mono",
+            const chip = ui.el("button", "filter-chip btn btn-sm btn-mono",
               i18n.t(FIELD_LABEL_KEYS[field.id] || field.id));
             chip.type = "button";
             chip.dataset.insert = `${field.id}:`;
@@ -392,7 +392,7 @@
         const opBox = $("filterOpChips");
         if (opBox) {
           for (const op of ["AND", "OR", "NOT", "(", ")"]) {
-            const chip = ui.el("button", "filter-chip chip chip-mono", op);
+            const chip = ui.el("button", "filter-chip btn btn-sm btn-mono", op);
             chip.type = "button";
             chip.dataset.insert = op === "(" || op === ")" ? op : ` ${op} `;
             opBox.appendChild(chip);
@@ -408,7 +408,7 @@
         const exampleBox = $("filterExampleChips");
         if (exampleBox) {
           EXAMPLES.forEach((example) => {
-            const chip = ui.el("button", "filter-chip chip chip-mono", i18n.t(example.key));
+            const chip = ui.el("button", "filter-chip btn btn-sm btn-mono", i18n.t(example.key));
             chip.type = "button";
             chip.dataset.expr = example.expr;
             exampleBox.appendChild(chip);

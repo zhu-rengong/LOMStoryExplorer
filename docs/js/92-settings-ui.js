@@ -219,7 +219,7 @@
         if (!tabs) return;
         const frag = document.createDocumentFragment();
         settings.presets.types.forEach((type) => {
-          const button = ui.el("button", "type-tab chip");
+          const button = ui.el("button", "type-tab btn btn-sm");
           button.type = "button";
           button.setAttribute("role", "tab");
           button.dataset.type = type.id;
