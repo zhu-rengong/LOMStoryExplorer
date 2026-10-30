@@ -118,6 +118,10 @@
   color: var(--control-on-fg);
 }
 
+.btn.btn-icon.is-on,
+.btn.btn-icon.is-on:hover,
+.btn.btn-icon.is-on:active { border-color: transparent; }
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -388,6 +392,11 @@
   min-height: var(--pop-head-h);
   padding: 8px 12px;
   border-bottom: 1px solid var(--line-1);
+}
+
+.popover-head .icon-btn {
+  width: var(--ctl-sm);
+  height: var(--ctl-sm);
 }
 
 .popover-title {

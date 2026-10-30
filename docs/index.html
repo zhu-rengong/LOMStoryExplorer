@@ -220,7 +220,7 @@
          tabindex="0" data-i18n-title="gripTitle" title="拖動調整閱讀寬度"></div>
     <div id="outlinePanel" class="outline-panel surface popover" role="dialog" aria-label="分支大綱" hidden>
       <header class="outline-head panel-head popover-head">
-        <span class="outline-title" data-i18n="outlineTitle">大綱</span>
+        <span class="outline-title popover-title" data-i18n="outlineTitle">大綱</span>
         <button id="outlineClose" class="icon-btn btn btn-icon" data-i18n-title="closeTitle" title="關閉">
           <svg><use href="#i-close"/></svg>
         </button>
@@ -229,16 +229,16 @@
     </div>
 
     <footer id="readerFoot" class="reader-foot" hidden>
-      <button id="prevBtn" class="foot-btn btn btn-sm" data-i18n-title="recentPrev" title="上一篇">
+      <button id="prevBtn" class="foot-btn btn" data-i18n-title="recentPrev" title="上一篇">
         <svg><use href="#i-back"/></svg><span data-i18n="recentPrev">上一篇</span>
       </button>
       <span id="footPos" class="foot-pos"></span>
-      <button id="footBookmark" class="foot-btn btn foot-bookmark" aria-pressed="false"
+      <button id="footBookmark" class="foot-btn btn btn-icon foot-bookmark" aria-pressed="false"
               data-i18n-title="bookmarkAdd" title="加入書籤">
         <svg><use href="#i-star"/></svg>
       </button>
       <div class="foot-next-wrap">
-        <button id="nextBtn" class="foot-btn btn btn-sm" data-i18n-title="recentContinueTitle" title="沿劇情續接下一篇">
+        <button id="nextBtn" class="foot-btn btn" data-i18n-title="recentContinueTitle" title="沿劇情續接下一篇">
           <span id="nextLabel" data-i18n="recentContinue">續讀</span>
         </button>
         <div id="nextMenu" class="menu menu-wide foot-menu surface popover" role="menu" hidden></div>
@@ -254,7 +254,7 @@
 <div id="settingsScrim" class="scrim" hidden></div>
 <aside id="settingsDrawer" class="drawer surface" hidden aria-modal="true" role="dialog" aria-label="閱讀設定">
   <header class="drawer-head panel-head popover-head">
-    <h2 data-i18n="settingsTitle">閱讀設定</h2>
+    <h2 class="popover-title" data-i18n="settingsTitle">閱讀設定</h2>
     <button id="settingsClose" class="icon-btn btn btn-icon" data-i18n-title="closeTitle" title="關閉">
       <svg><use href="#i-close"/></svg>
     </button>
@@ -420,7 +420,7 @@
 
 <div id="helpPanel" class="help-panel surface" role="dialog" aria-modal="true" aria-labelledby="helpHeading" hidden>
   <header class="help-head panel-head popover-head">
-    <h2 id="helpHeading" data-i18n="helpTitle">快捷鍵</h2>
+    <h2 id="helpHeading" class="popover-title" data-i18n="helpTitle">快捷鍵</h2>
     <button id="helpClose" class="icon-btn btn btn-icon" data-i18n-title="closeTitle" title="關閉">
       <svg><use href="#i-close"/></svg>
     </button>
@@ -432,7 +432,7 @@
 <div id="statsPanel" class="help-panel stats-panel surface" role="dialog" aria-modal="true"
      aria-labelledby="statsHeading" hidden>
   <header class="help-head panel-head popover-head">
-    <h2 id="statsHeading" data-i18n="statsTitle">字數統計</h2>
+    <h2 id="statsHeading" class="popover-title" data-i18n="statsTitle">字數統計</h2>
     <button id="statsClose" class="icon-btn btn btn-icon" data-i18n-title="closeTitle" title="關閉">
       <svg><use href="#i-close"/></svg>
     </button>

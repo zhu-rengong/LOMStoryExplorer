@@ -21,7 +21,7 @@
   height: 3px;
   width: 0;
   border-radius: var(--r-2);
-  background: var(--accent);
+  background: var(--reader-accent);
   opacity: .55;
   pointer-events: none;
   transition: width 120ms linear, opacity var(--t-base) var(--ease);
@@ -82,23 +82,8 @@
 }
 .reader-actions .icon-btn.is-on { color: var(--reader-accent); background-color: var(--reader-accent-soft); }
 
-#bookmarkBtn.is-on,
-#footBookmark.is-on {
-  color: var(--reader-accent);
-  background: none;
-  border-color: transparent;
-}
 #bookmarkBtn.is-on svg,
 #footBookmark.is-on svg { fill: currentColor; }
-#bookmarkBtn:hover:not(:disabled),
-#footBookmark:hover:not(:disabled) {
-  background-color: var(--bg-hover);
-  border-color: transparent;
-}
-#bookmarkBtn:active:not(:disabled),
-#footBookmark:active:not(:disabled) {
-  background-color: var(--bg-active);
-}
 
 .reader-more { flex: none; }
 
@@ -117,8 +102,6 @@
   --control-on-border: var(--reader-accent);
   --row-hover-bg: var(--bg-hover);
   --row-active-bg: var(--bg-active);
-  --pop-bg: var(--reader-bg);
-  --pop-border: var(--reader-line-2);
   --focus-ring: 2px solid var(--reader-accent);
 }
 
@@ -758,12 +741,11 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 
 .foot-bookmark {
   display: none;
-  width: var(--ctl-lg);
+  width: var(--control-h);
   padding: 0;
   justify-content: center;
   flex: none;
 }
-.foot-bookmark svg { width: 14px; height: 14px; }
 
 .foot-pos {
   margin-left: auto;
@@ -787,7 +769,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   right: 16px;
   bottom: 72px;
   z-index: 3;
-  width: 30px; height: 30px;
   border: 1px solid var(--reader-line-2);
   background: var(--reader-bg);
   color: var(--reader-fg-2);
@@ -798,4 +779,3 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   border-color: var(--reader-accent);
   background-color: var(--bg-hover);
 }
-.to-top svg { width: 14px; height: 14px; }

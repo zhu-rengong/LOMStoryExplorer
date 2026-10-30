@@ -47,7 +47,10 @@
   width: 16px; height: 16px;
   stroke: var(--fg-3);
   pointer-events: none;
+  transition: stroke var(--t-base);
 }
+
+.rail-search:focus-within svg { stroke: var(--accent); }
 
 .rail-list {
   flex: 1;

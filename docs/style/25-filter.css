@@ -86,7 +86,16 @@
   color: var(--accent-strong);
 }
 .result-item .ri-meta,
-.result-item .tchap { margin-left: auto; font-size: var(--fs-xs); color: var(--fg-3); }
+.result-item .ri-ch,
+.result-item .tchap {
+  margin-left: auto;
+  max-width: 46%;
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 
 .filter-status { margin-top: var(--sp-2); font-size: var(--fs-xs); color: var(--fg-3); min-height: 16px; }
 .filter-status.is-error { color: var(--danger); }
