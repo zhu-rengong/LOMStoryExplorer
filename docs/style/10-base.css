@@ -35,5 +35,4 @@ svg {
   border-radius: 0;
 }
 *::-webkit-scrollbar-thumb:hover { background: var(--accent); }
-
-* { scrollbar-color: var(--line-2) transparent; scrollbar-width: thin; }
+*::-webkit-scrollbar-button { display: none; width: 0; height: 0; }

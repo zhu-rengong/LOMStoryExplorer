@@ -118,6 +118,7 @@
   width: 16px;
   cursor: col-resize;
   touch-action: none;
+  background: none;
 }
 .reader-grip[data-edge="left"] { left: 0; justify-items: start; }
 .reader-grip[data-edge="right"] {
@@ -843,4 +844,20 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   border-color: var(--control-border-hover);
   background: var(--control-bg-active);
   color: var(--control-fg-hover);
+}
+
+.reader-body .branch-head .cond .cx-var,
+.reader-body .option-cond .cx-var {
+  font-family: inherit;
+  font-size: 1em;
+  font-weight: inherit;
+}
+
+.reader-body .branch-head .cond .cx-var .cx-type,
+.reader-body .branch-head .cond .cx-var .cx-id,
+.reader-body .branch-head .cond .cx-var .cx-neg,
+.reader-body .option-cond .cx-var .cx-type,
+.reader-body .option-cond .cx-var .cx-id,
+.reader-body .option-cond .cx-var .cx-neg {
+  font-size: .82em;
 }
