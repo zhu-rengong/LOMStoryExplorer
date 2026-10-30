@@ -39,7 +39,6 @@ STAT_FIELD = {1: "_stat", 2: "_relationship", 3: "_flag", 4: "_book", 5: "_misc"
 COMPARE = {0: "=", 1: "!=", 2: "<", 3: "≤", 4: ">", 5: "≥"}
 LOGIC = {0: "且", 1: "或"}
 GROUP = {1: "總和", 2: "最大", 3: "最小", 4: "相乘", 5: "全部非零", 6: "任一非零"}
-DICE_PROPERTY = {0: "數值", 1: "好感度", 2: "技能", 3: "旗標"}
 DICE_FIELD = {0: "_stat", 1: "_relationship", 2: "_talent", 3: "_flag"}
 
 CHECKPOINT_CALL = re.compile(
@@ -340,17 +339,31 @@ def _parse_condition(tree: dict[str, Any], deref: Deref) -> dict[str, Any]:
     }
 
 
+def _dice_addition(item: dict[str, Any], deref: Deref) -> dict[str, Any]:
+    ptype = item.get("_type", 0)
+    field = DICE_FIELD.get(ptype)
+    ref = item.get(field) if field else None
+    target = deref(ref) if ref else None
+    name = _label(target, (ref or {}).get("m_PathID")) if ref else ""
+    ident = ""
+    if ptype == 2 and target is not None:
+        ident = str((_tree(target) or {}).get("_id") or "")
+    try:
+        rate = float(item.get("_rate", 1))
+    except (TypeError, ValueError):
+        rate = 1.0
+    return {
+        "type": ptype,
+        "name": name,
+        "id": ident,
+        "rate": rate,
+        "negative": bool(item.get("_negative", 0)),
+        "hide": bool(item.get("_autoHide", 0)),
+    }
+
+
 def _parse_dice(tree: dict[str, Any], deref: Deref) -> dict[str, Any]:
-    additions = []
-    for item in tree.get("_propertyItems") or []:
-        ptype = item.get("_type", 0)
-        field = DICE_FIELD.get(ptype)
-        ref = item.get(field) if field else None
-        name = _label(deref(ref), (ref or {}).get("m_PathID")) if ref else "未設定"
-        rate = item.get("_rate", 1)
-        sign = "-" if item.get("_negative", 0) else "+"
-        hidden = "（為空不顯示）" if item.get("_autoHide", 0) else ""
-        additions.append(f"{DICE_PROPERTY.get(ptype, '?')}（{name}）{sign}×{rate:g}{hidden}")
+    additions = [_dice_addition(item, deref) for item in tree.get("_propertyItems") or []]
     branches = []
     for index, item in enumerate(tree.get("_resultItems") or []):
         conds = []

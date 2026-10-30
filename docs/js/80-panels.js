@@ -154,7 +154,7 @@
           panel.style.position = "";
           return;
         }
-        overlay.place(panel, trigger, { align: "start", width: 330, fit: true });
+        overlay.place(panel, trigger, { align: "start", width: 380, fit: true });
       };
 
       const openLookup = (kind, key, trigger, method) => {
@@ -256,6 +256,31 @@
         condRow(parent, (branch && branch.text) || i18n.t("lookupCondEmpty"), result);
       };
 
+      const ADDITION_TYPES = ["diceAddStat", "diceAddRel", "diceAddTalent", "diceAddFlag"];
+
+      const additionLabel = (item) => {
+        const labels = item.label;
+        if (!labels) return "";
+        return labels[store.state.lang] || labels["zh-tw"] || "";
+      };
+
+      const additionRow = (item) => {
+        if (!item || typeof item !== "object") {
+          return ui.el("p", "lc-row lc-plain", item == null ? "" : String(item));
+        }
+        const row = ui.el("p", `lc-row lc-add${item.negative ? " is-neg" : ""}`);
+        const main = ui.el("span", "lc-add-main");
+        const typeKey = ADDITION_TYPES[Number(item.type)] || "";
+        if (typeKey) main.appendChild(ui.el("span", "lc-add-type", i18n.t(typeKey)));
+        main.appendChild(ui.el("span", "lc-add-name", additionLabel(item) || item.name || "—"));
+        row.appendChild(main);
+        const rate = Number(item.rate);
+        const factor = Number.isFinite(rate) && rate !== 1 ? i18n.t("diceAddRate", { n: rate }) : "";
+        row.appendChild(ui.el("span", "lc-add-rate", (item.negative ? "−" : "+") + factor));
+        if (item.hide) row.appendChild(ui.el("span", "lc-add-tag", i18n.t("diceAddHide")));
+        return row;
+      };
+
       const renderCondModel = (body, model) => {
         const kind = model.kind;
         const branches = model.branches || [];
@@ -278,9 +303,7 @@
         } else if (kind === "dice") {
           if ((model.additions || []).length) {
             body.appendChild(ui.el("p", "lookup-cond-sub", i18n.t("lookupCondAdditions")));
-            model.additions.forEach((value) => {
-              body.appendChild(ui.el("p", "lc-row lc-plain", value));
-            });
+            model.additions.forEach((item) => body.appendChild(additionRow(item)));
           }
           branches.forEach((branch) => {
             branchRow(body, branch, i18n.t("lookupCondResult", { n: branch.result }), kind);
@@ -404,7 +427,7 @@
         id: "lookupPanel",
         group: "pop",
         onHide: hideLookup,
-        placement: { align: "start", width: 330, fit: true },
+        placement: { align: "start", width: 380, fit: true },
       });
       return {
         attachLookupAnchor,

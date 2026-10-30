@@ -1,7 +1,9 @@
 .lookup {
+  --lk-fs-note: 12px;
+  --lk-fs-body: 13px;
   position: fixed;
   z-index: var(--z-drawer);
-  width: 348px;
+  width: 380px;
   max-width: calc(100vw - 24px);
   max-height: 60vh;
   display: flex;
@@ -9,10 +11,12 @@
   overflow: hidden;
 }
 
+.lookup-title { font-size: 15px; }
+
 .lookup-sub {
   padding: 6px 12px 0;
   font-family: var(--font-display);
-  font-size: var(--fs-micro);
+  font-size: var(--lk-fs-note);
   color: var(--fg-3);
   letter-spacing: .1em;
 }
@@ -21,7 +25,7 @@
   padding: 10px 12px;
   border-top: 3px double var(--line-1);
   font-family: var(--font-display);
-  font-size: var(--fs-micro);
+  font-size: var(--lk-fs-note);
   color: var(--fg-3);
   letter-spacing: .06em;
 }
@@ -31,7 +35,7 @@
   padding: 0 4px 4px;
   border-bottom: 1px solid var(--line-1);
   font-family: var(--font-display);
-  font-size: var(--fs-micro);
+  font-size: var(--lk-fs-note);
   font-weight: 600;
   color: var(--accent-strong);
   letter-spacing: 0.18em;
@@ -51,7 +55,7 @@
 .lookup-cond-title {
   margin-bottom: 4px;
   font-family: var(--font-display);
-  font-size: var(--fs-micro);
+  font-size: var(--lk-fs-note);
   font-weight: 600;
   color: var(--accent-strong);
   letter-spacing: 0.18em;
@@ -60,7 +64,7 @@
 .lookup-cond-sub {
   margin: 4px 0;
   font-family: var(--font-display);
-  font-size: var(--fs-micro);
+  font-size: var(--lk-fs-note);
   color: var(--fg-3);
   letter-spacing: 0.08em;
 }
@@ -72,7 +76,7 @@
   gap: var(--sp-2);
   padding: 4px 0;
   font-family: var(--font-display);
-  font-size: var(--fs-xs);
+  font-size: var(--lk-fs-body);
   letter-spacing: .04em;
   line-height: 1.6;
   color: var(--fg-2);
@@ -90,7 +94,7 @@
   border-color: var(--line-1);
   background: var(--bg-field);
   color: var(--fg-1);
-  font-size: var(--fs-micro);
+  font-size: var(--lk-fs-note);
   line-height: 1.6;
 }
 .lookup-cond .cx-var.is-link {
@@ -101,12 +105,12 @@
   background: transparent;
   color: var(--control-fg);
   font-family: var(--font-mono);
-  font-size: var(--fs-xs);
+  font-size: var(--lk-fs-body);
   line-height: 1.6;
   letter-spacing: 0;
 }
 .lookup-cond .cx-type,
-.lookup-cond .cx-id { font-size: var(--fs-micro); color: var(--fg-3); }
+.lookup-cond .cx-id { font-size: var(--lk-fs-note); color: var(--fg-3); }
 .lookup-cond .cx-var.is-link:hover,
 .lookup-cond .cx-var.is-link:focus-visible {
   border-color: var(--accent-line);
@@ -120,14 +124,57 @@
 }
 .lookup-cond .cx-op { margin: 0 4px; color: var(--accent-strong); }
 .lookup-cond .cx-const { color: var(--fg-2); }
-.lookup-cond .cx-gtag { border-color: var(--line-1); color: var(--fg-3); font-size: var(--fs-micro); }
+.lookup-cond .cx-gtag { border-color: var(--line-1); color: var(--fg-3); font-size: var(--lk-fs-note); }
 .lookup-cond .cx-dice { border-color: var(--line-2); color: var(--cool); }
 .lookup-cond .cx-fallback {
   padding: 0 4px;
   border-color: var(--line-2);
   color: var(--fg-2);
-  font-size: var(--fs-micro);
+  font-size: var(--lk-fs-note);
   cursor: help;
+}
+
+.lc-add {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 3px 0;
+}
+.lc-add .lc-add-main {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+.lc-add .lc-add-type {
+  flex: none;
+  padding: 0 5px;
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-2);
+  background: var(--bg-field);
+  color: var(--fg-3);
+  font-size: var(--lk-fs-note);
+  line-height: 1.6;
+}
+.lc-add .lc-add-name {
+  min-width: 0;
+  color: var(--fg-1);
+  overflow-wrap: anywhere;
+}
+.lc-add .lc-add-rate {
+  flex: none;
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-strong);
+  white-space: nowrap;
+}
+.lc-add.is-neg .lc-add-rate { color: var(--danger); }
+.lc-add .lc-add-tag {
+  flex: none;
+  font-size: var(--lk-fs-note);
+  color: var(--fg-3);
+  white-space: nowrap;
 }
 
 .lc-result {
@@ -136,7 +183,7 @@
   border-radius: var(--r-2);
   background: var(--accent-soft);
   color: var(--accent-strong);
-  font-size: var(--fs-micro);
+  font-size: var(--lk-fs-note);
   white-space: nowrap;
 }
 
@@ -144,7 +191,7 @@
 .lookup-cond-note {
   padding: 4px 0;
   font-family: var(--font-display);
-  font-size: var(--fs-micro);
+  font-size: var(--lk-fs-note);
   color: var(--fg-3);
   line-height: 1.6;
 }
@@ -153,7 +200,7 @@
   margin: 8px 4px 4px;
   padding: 0 4px;
   font-family: var(--font-display);
-  font-size: var(--fs-micro);
+  font-size: var(--lk-fs-note);
   line-height: 1.6;
   color: var(--fg-3);
 }
@@ -164,17 +211,17 @@
   gap: 4px var(--sp-2);
 }
 .lookup-item .li-top { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 7px; }
-.lookup-item .li-id { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--accent-strong); }
+.lookup-item .li-id { font-family: var(--font-mono); font-size: var(--lk-fs-body); color: var(--accent-strong); }
 .lookup-item .li-ch {
   font-family: var(--font-display);
-  font-size: var(--fs-micro);
+  font-size: var(--lk-fs-note);
   color: var(--fg-3);
   letter-spacing: .06em;
 }
 .lookup-item .li-text {
   grid-column: 1 / -1;
   font-family: var(--font-display);
-  font-size: var(--fs-xs);
+  font-size: var(--lk-fs-body);
   color: var(--fg-2);
   letter-spacing: .03em;
   line-height: 1.7;
@@ -182,6 +229,8 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.lookup .popover-empty { font-size: var(--lk-fs-body); }
 
 .scrim {
   position: fixed;

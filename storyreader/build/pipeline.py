@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -347,6 +348,77 @@ def _sanitize_checkpoints(items: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+DICE_NAMESPACE = {0: "PlayerStat", 1: "Character", 2: "PlayerTalent", 3: "Flag"}
+DICE_NAME_PREFIX = {2: "Name/", 3: "Name/"}
+
+_SEGMENT_SPLIT = re.compile(r"[^0-9A-Za-z]+")
+_TOKEN_SPLIT = re.compile(r"[A-Z]+(?![a-z])|[A-Z][a-z]+|[a-z]+|[0-9]+")
+
+
+def _name_segments(name: str) -> list[str]:
+    segments: list[str] = []
+    for chunk in _SEGMENT_SPLIT.split(name or ""):
+        if not chunk:
+            continue
+        tokens: list[str] = []
+        for token in _TOKEN_SPLIT.findall(chunk):
+            if token.isdigit() and tokens:
+                tokens[-1] += token
+            else:
+                tokens.append(token.lower())
+        segments.extend(tokens)
+    return segments
+
+
+def _dice_label(addition: dict[str, Any], locale: dict[str, Any]) -> str:
+    kind = addition.get("type")
+    namespace = DICE_NAMESPACE.get(kind)
+    if namespace is None:
+        return ""
+    table = locale.get(namespace) or {}
+    if not isinstance(table, dict):
+        return ""
+    prefix = DICE_NAME_PREFIX.get(kind, "")
+    name = str(addition.get("name") or "")
+    keys: list[str] = []
+    if kind == 3:
+        keys.append(prefix + name)
+    else:
+        ident = str(addition.get("id") or "")
+        if kind == 2 and ident:
+            keys.append(prefix + ident)
+        segments = _name_segments(name)
+        for index in range(len(segments)):
+            keys.append(prefix + "-".join(segments[index:]))
+    for key in keys:
+        value = table.get(key)
+        if value:
+            return str(value)
+    return ""
+
+
+def _localize_model(model: dict[str, Any], locales: dict[str, dict[str, Any]]) -> None:
+    for addition in model.get("additions") or []:
+        if not isinstance(addition, dict):
+            continue
+        labels: dict[str, str] = {}
+        for lang, locale in locales.items():
+            label = _dice_label(addition, locale)
+            if label:
+                labels[lang] = label
+        if labels:
+            addition["label"] = labels
+    for variant in model.get("variants") or []:
+        if isinstance(variant, dict):
+            _localize_model(variant, locales)
+
+
+def _localize_checkpoints(items: dict[str, Any], locales: dict[str, dict[str, Any]]) -> None:
+    for model in items.values():
+        if isinstance(model, dict):
+            _localize_model(model, locales)
+
+
 def _game_info() -> GameInfo:
     root = game_root()
     if root is None:
@@ -500,6 +572,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
         checkpoint_blob = {}
     raw_items = checkpoint_blob.get("items")
     checkpoint_items = _sanitize_checkpoints(raw_items if isinstance(raw_items, dict) else {})
+    _localize_checkpoints(checkpoint_items, locales)
     checkpoint_variants = sum(
         len(model.get("variants") or []) for model in checkpoint_items.values())
     checkpoint_parts: list[dict[str, Any]] = []
