@@ -145,7 +145,6 @@
     <div class="rail-head">
       <span class="rail-title" data-i18n="railTitle">書目</span>
       <span id="railCount" class="rail-count"></span>
-      <button id="railReset" class="link-btn" data-i18n="railAll">全部</button>
       <button id="railClose" class="icon-btn rail-close" data-i18n-title="closeTitle" title="收起">
         <svg><use href="#i-close"/></svg>
       </button>
@@ -205,14 +204,20 @@
         </div>
       </div>
     </header>
-    <div id="readerBody" class="reader-body">
-      <div class="empty-state">
-        <span class="brush" aria-hidden="true" data-i18n="emptyBrush">卷</span>
-        <h3 data-i18n="emptyH3">一卷手抄，任君翻閱</h3>
-        <p data-i18n="emptyP">左側目錄按章節收錄 2200 餘個劇本，書籤可收藏常讀篇章；也可以在頂欄搜尋 id 或正文。
+    <div class="reader-main">
+      <div id="readerBody" class="reader-body">
+        <div class="empty-state">
+          <span class="brush" aria-hidden="true" data-i18n="emptyBrush">卷</span>
+          <h3 data-i18n="emptyH3">一卷手抄，任君翻閱</h3>
+          <p data-i18n="emptyP">左側目錄按章節收錄 2200 餘個劇本，書籤可收藏常讀篇章；也可以在頂欄搜尋 id 或正文。
 點一篇即可在此閱讀全文。</p>
-        <p class="hint-line" data-i18n="emptyHint">快捷鍵：/ 搜尋 · ← → 歷史 · [ ] 上下篇</p>
+          <p class="hint-line" data-i18n="emptyHint">快捷鍵：/ 搜尋 · ← → 歷史 · [ ] 上下篇</p>
+        </div>
       </div>
+      <div class="reader-grip" data-edge="left" role="separator" aria-orientation="vertical"
+           tabindex="0" data-i18n-title="gripTitle" title="拖動調整閱讀寬度"></div>
+      <div class="reader-grip" data-edge="right" role="separator" aria-orientation="vertical"
+           tabindex="0" data-i18n-title="gripTitle" title="拖動調整閱讀寬度"></div>
     </div>
     <div id="outlinePanel" class="outline-panel" role="dialog" aria-label="分支大綱" hidden>
       <header class="outline-head">
@@ -452,6 +457,7 @@
 <script src="js/20-text.js"></script>
 <script src="js/22-checkpoints.js"></script>
 <script src="js/30-viewport.js"></script>
+<script src="js/35-grip.js"></script>
 <script src="js/40-reader.js"></script>
 <script src="js/42-condexpr.js"></script>
 <script src="js/45-rail.js"></script>

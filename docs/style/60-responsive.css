@@ -45,6 +45,9 @@ body[data-layout="mobile"] .more-wrap { display: inline-flex; }
 .more-wrap .menu { width: 268px; }
 .more-wrap .menu .nav-label { max-width: 46%; }
 
+body[data-layout="compact"] .reader-grip,
+body[data-layout="mobile"] .reader-grip { display: none; }
+
 body[data-layout="mobile"] #reader { padding-bottom: env(safe-area-inset-bottom); }
 
 body[data-layout="mobile"] .reader-head { padding: 4px 14px 8px; }

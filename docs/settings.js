@@ -42,6 +42,10 @@
 
   const DEFAULT_TYPE = { font: "", scale: 100, weight: 400 };
 
+  const MEASURE_MIN = 480;
+  const MEASURE_MAX = 1280;
+  const MEASURE_DEFAULT = 820;
+
   const TYPE_OVERRIDES = {
     speaker: { font: "kai", scale: 150 },
     narration: { scale: 150 },
@@ -71,6 +75,7 @@
     uiCustom: "",
     scale: 130,
     leading: 1.85,
+    measure: MEASURE_DEFAULT,
     types: defaultTypes(),
   };
 
@@ -86,6 +91,7 @@
       uiCustom: DEFAULTS.uiCustom,
       scale: DEFAULTS.scale,
       leading: DEFAULTS.leading,
+      measure: DEFAULTS.measure,
       types: defaultTypes(),
     };
   };
@@ -159,6 +165,7 @@
     root.style.setProperty("--font-ui", stackFor("ui"));
     root.style.setProperty("--rd-scale", String(state.scale / 100));
     root.style.setProperty("--rd-leading", String(state.leading));
+    root.style.setProperty("--reader-measure", `${state.measure}px`);
 
     for (const type of TYPES) {
       const item = state.types[type.id] || DEFAULT_TYPE;
@@ -176,6 +183,7 @@
     uiCustom: state.uiCustom,
     scale: state.scale,
     leading: state.leading,
+    measure: state.measure,
     types: clone(state.types),
   });
 
@@ -192,6 +200,7 @@
       if (typeof saved.uiCustom === "string") state.uiCustom = saved.uiCustom;
       state.scale = Math.round(clampNumber(saved.scale, 80, 200, 100) / 5) * 5;
       state.leading = clampNumber(saved.leading, 1.2, 2.6, 1.85);
+      state.measure = Math.round(clampNumber(saved.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT));
       state.types = normalizeTypes(saved.types);
     } catch {
       return;
@@ -332,6 +341,7 @@
   window.StorySettings = {
     presets: { reading: READING, ui: UI, types: TYPES, weights: WEIGHTS },
     defaults: clone(DEFAULTS),
+    measureRange: { min: MEASURE_MIN, max: MEASURE_MAX, fallback: MEASURE_DEFAULT },
     get: snapshot,
     ensureFamilies: ensureFamilies,
     families: families,
@@ -347,6 +357,9 @@
         }
         if (patch.leading !== undefined) {
           state.leading = clampNumber(patch.leading, 1.2, 2.6, state.leading);
+        }
+        if (patch.measure !== undefined) {
+          state.measure = Math.round(clampNumber(patch.measure, MEASURE_MIN, MEASURE_MAX, state.measure));
         }
         if (patch.types && typeof patch.types === "object") {
           for (const typeId of Object.keys(patch.types)) {

@@ -6,7 +6,6 @@
   const $ = SR.core.$;
   const FACETS = SR.data.FACETS;
   const applyFilterSource = SR.filter.applyFilterSource;
-  const applyFilters = SR.rail.applyFilters;
   const applyI18n = SR.i18n.applyI18n;
   const applyLayout = SR.viewport.applyLayout;
   const back = SR.actions.back;
@@ -60,7 +59,6 @@
   const toggleOutlinePanel = SR.panels.toggleOutlinePanel;
   const toggleRail = SR.viewport.toggleRail;
   const updateFilterUi = SR.filter.updateFilterUi;
-  const updateRailCount = SR.rail.updateRailCount;
   const updateToTop = SR.reader.updateToTop;
 
   const setLang = (lang) => {
@@ -93,15 +91,6 @@
       setLang(btn.dataset.lang);
     });
   });
-
-  const railReset = $("railReset");
-  if (railReset) {
-    railReset.addEventListener("click", () => {
-      state.chapterFilter.clear();
-      updateRailCount();
-      applyFilters();
-    });
-  }
 
   const bindShell = () => {
     const railToggle = $("railToggle");

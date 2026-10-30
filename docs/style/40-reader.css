@@ -126,16 +126,58 @@
 
 .muted { color: var(--reader-fg-3); font-size: var(--fs-xs); }
 
+.reader-main {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+}
+
 .reader-body {
   position: relative;
   z-index: 1;
   flex: 1;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
 
   padding: 16px max(22px, calc((100% - var(--reader-measure)) / 2)) 24px;
   scroll-behavior: smooth;
 }
+
+.reader-grip {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 3;
+  display: grid;
+  place-items: center;
+  width: 14px;
+  cursor: col-resize;
+  touch-action: none;
+}
+.reader-grip[data-edge="left"] { left: max(6px, calc((100% - var(--reader-measure)) / 2 - 7px)); }
+.reader-grip[data-edge="right"] { right: max(6px, calc((100% - var(--reader-measure)) / 2 - 7px)); }
+
+.reader-grip::before {
+  content: "";
+  width: 1px;
+  height: 100%;
+  background: var(--reader-line);
+  transition: width var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
+}
+
+.reader-grip:hover::before,
+.reader-grip:focus-visible::before,
+body.is-gripping .reader-grip::before {
+  width: 2px;
+  background: var(--reader-accent);
+}
+
+.reader-grip:focus-visible { outline: none; }
+
+body.is-gripping { cursor: col-resize; user-select: none; }
 
 .empty-state {
   display: flex;
