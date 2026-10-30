@@ -84,7 +84,7 @@
 
 .reader-body {
   --control-border: var(--reader-line-2);
-  --control-border-hover: var(--reader-line-2);
+  --control-border-hover: var(--line-3);
   --control-fg: var(--reader-fg-2);
   --control-fg-hover: var(--reader-fg);
   --control-bg-hover: var(--bg-hover);
@@ -665,11 +665,25 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 .scene-switch .scene-next { color: var(--reader-fg-2); }
 
 .lore {
+  position: relative;
+  isolation: isolate;
   margin: 12px 0 16px;
   padding: 10px 14px 14px 16px;
-  border: 3px double var(--reader-line-2);
+  border: 0;
   border-radius: var(--r-2);
-  background: linear-gradient(90deg, var(--accent-wash), transparent 72%);
+  background: transparent;
+}
+
+.lore::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+  z-index: -1;
+  border-radius: 14px;
+  background: var(--accent-wash);
+  opacity: .62;
+  filter: blur(12px);
+  pointer-events: none;
 }
 
 .lore-text .lore-p {
