@@ -491,11 +491,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   background: var(--control-bg-active);
   color: var(--reader-accent);
 }
-.cx-var.is-link[aria-expanded="true"] {
-  border-color: var(--reader-accent);
-  background: var(--reader-accent-soft);
-  color: var(--reader-accent);
-}
 .cx-var.is-link:hover .cx-name {
   text-decoration: underline;
   text-decoration-color: var(--reader-accent);
@@ -711,11 +706,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   color: var(--reader-accent);
   border-color: var(--reader-accent);
 }
-.reader-body .meta-action[aria-expanded="true"] {
-  color: var(--reader-accent);
-  border-color: var(--reader-accent);
-  background: var(--reader-accent-soft);
-}
 
 .is-flash {
   animation: flash-beat 1.4s var(--ease);
@@ -823,6 +813,19 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   opacity: 1;
 }
 
+.reader-body .chip-stat,
+.reader-body .meta-action {
+  font-family: var(--rd-font-label, var(--font-mono));
+  font-size: var(--rd-fs-label, var(--fs-xs));
+  font-weight: var(--rd-w-label, 400);
+}
+
+.reader-actions .btn-icon,
+.reader-foot .btn-icon,
+.reader-body .cond-lookup {
+  border-color: transparent;
+}
+
 .reader-body .cx-var.is-link {
   min-height: 0;
   padding: 0 6px;
@@ -833,12 +836,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   border-color: var(--control-border-hover);
   background: var(--control-bg-active);
   color: var(--control-fg-hover);
-}
-
-.reader-body .cx-var.is-link[aria-expanded="true"] {
-  border-color: var(--control-on-border);
-  background: var(--control-on-bg);
-  color: var(--control-on-fg);
 }
 
 #bookmarkBtn[aria-pressed="true"],

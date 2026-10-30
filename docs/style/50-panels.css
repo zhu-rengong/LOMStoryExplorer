@@ -118,11 +118,6 @@
   background: var(--control-bg-active);
   color: var(--control-fg-hover);
 }
-.lookup-cond .cx-var.is-link[aria-expanded="true"] {
-  border-color: var(--control-on-border);
-  background: var(--control-on-bg);
-  color: var(--control-on-fg);
-}
 .lookup-cond .cx-op { margin: 0 4px; color: var(--accent-strong); }
 .lookup-cond .cx-const { color: var(--fg-2); }
 .lookup-cond .cx-gtag { border-color: var(--line-1); color: var(--fg-3); font-size: var(--fs-micro); }
