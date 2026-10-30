@@ -274,6 +274,9 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 
 .choice {
   margin: var(--rd-gap-3) 0 var(--rd-gap-4);
+  padding: var(--rd-gap-2);
+  border: 1px solid var(--reader-line-2);
+  background: var(--reader-bg-2);
 }
 
 .option {
@@ -372,6 +375,26 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 }
 .option:not(.is-open) .option-body { display: none; }
 .option-body .say:last-child, .option-body .choice:last-child { margin-bottom: 0; }
+
+.branch-group {
+  margin: var(--rd-gap-3) 0 var(--rd-gap-4);
+  border: 1px solid var(--reader-line-2);
+  background: var(--reader-bg-2);
+}
+.branch-group > .branch {
+  margin: 0;
+  border-left: 0;
+}
+.branch-group > .branch + .branch {
+  border-top: 1px solid var(--reader-line);
+}
+
+.branch-body .branch-group,
+.option-body .branch-group,
+.branch-body .choice,
+.option-body .choice {
+  margin: var(--rd-gap-2) 0;
+}
 
 .branch {
   margin: 0 0 var(--rd-gap-2);

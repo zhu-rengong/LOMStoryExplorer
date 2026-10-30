@@ -388,6 +388,7 @@
     ctx = ctx || { seq: 0 };
     const frag = document.createDocumentFragment();
     let metaBuffer = [];
+    let branchBuffer = [];
 
     const flushMeta = () => {
       if (metaBuffer.length === 0) return;
@@ -404,8 +405,24 @@
       metaBuffer = [];
     };
 
+    const flushBranches = () => {
+      if (branchBuffer.length === 0) return;
+      const group = el("div", "branch-group");
+      branchBuffer.forEach((box) => group.appendChild(box));
+      branchBuffer = [];
+      frag.appendChild(group);
+    };
+
     for (const beat of beats) {
       const tag = beat[0];
+
+      if (tag === "br") {
+        flushMeta();
+        branchBuffer.push(renderBranch(beat[1], beat[2], ctx, true, beat[3] || "if"));
+        continue;
+      }
+
+      flushBranches();
 
       if (tag === "m") {
         metaBuffer.push(stripRich(beat[1]));
@@ -439,13 +456,12 @@
         frag.appendChild(wrapEl);
       } else if (tag === "c") {
         frag.appendChild(renderChoice(beat[1], ctx));
-      } else if (tag === "br") {
-        frag.appendChild(renderBranch(beat[1], beat[2], ctx, true, beat[3] || "if"));
       } else if (tag === "j") {
         frag.appendChild(renderJump(beat[1], beat[2]));
       }
     }
     flushMeta();
+    flushBranches();
     return frag;
   };
 
