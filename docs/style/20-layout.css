@@ -5,9 +5,12 @@ body {
   padding: var(--tile-gap);
   background-color: var(--bg-page);
   background-image:
-    radial-gradient(130% 100% at 50% -10%, transparent 55%, var(--vignette) 100%),
-    repeating-linear-gradient(0deg, transparent 0 3px, var(--texture-line) 3px 4px),
-    repeating-linear-gradient(90deg, transparent 0 3px, var(--texture-line) 3px 4px);
+    var(--paper-fiber),
+    var(--paper-crack),
+    radial-gradient(130% 100% at 50% -10%, transparent 52%, var(--vignette) 100%),
+    repeating-linear-gradient(0deg, transparent 0 4px, var(--texture-line) 4px 5px);
+  background-size: 180px 180px, 240px 240px, cover, auto;
+  background-repeat: repeat, repeat, no-repeat, repeat;
   color: var(--fg-1);
   font-family: var(--font-ui);
   font-size: var(--fs-base);
@@ -15,6 +18,15 @@ body {
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 4px;
+  z-index: 0;
+  border: 1px solid var(--line-1);
+  pointer-events: none;
 }
 
 #main {
@@ -47,8 +59,10 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   height: var(--topbar-h);
   padding: 0 var(--sp-4);
   flex: none;
-  background: var(--bg-panel);
-  border: 1px solid var(--line-1);
+  background-color: var(--bg-panel);
+  background-image: var(--paper-fiber);
+  background-size: 180px 180px;
+  border: var(--frame-w) solid var(--line-3);
 }
 
 .brand {
@@ -66,17 +80,22 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   width: 34px; height: 34px;
   flex: none;
   border-radius: var(--r-2);
-  background: var(--seal-bg);
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, .16), transparent 58%),
+    var(--seal-bg);
   color: var(--seal-fg);
-  box-shadow: inset 0 0 0 2px var(--seal-ring);
+  box-shadow: inset 0 0 0 2px var(--seal-ring),
+              inset 0 0 0 4px var(--seal-bg),
+              inset 0 0 0 5px var(--seal-ring);
   font-family: var(--font-display);
   font-size: 17px;
   font-weight: 600;
   line-height: 1;
   letter-spacing: 0;
-  transition: opacity var(--t-base) var(--ease);
+  transform: rotate(var(--seal-tilt));
+  transition: opacity var(--t-base) var(--ease), transform var(--t-base) var(--ease);
 }
-.brand:hover .seal { opacity: .88; }
+.brand:hover .seal { opacity: .9; transform: rotate(0deg); }
 
 .brand-text { min-width: 0; }
 
@@ -84,7 +103,7 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   font-family: var(--font-display);
   font-size: 18px;
   font-weight: 600;
-  letter-spacing: .18em;
+  letter-spacing: .2em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -94,7 +113,7 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   margin-top: 2px;
   font-size: var(--fs-micro);
   color: var(--fg-3);
-  letter-spacing: .14em;
+  letter-spacing: .16em;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   overflow: hidden;

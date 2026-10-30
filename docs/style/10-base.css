@@ -2,6 +2,8 @@
 
 html, body { height: 100%; margin: 0; }
 
+html { -webkit-text-size-adjust: 100%; }
+
 button, input, select { font: inherit; color: inherit; }
 h1, h2, h3, h4, p { margin: 0; }
 
@@ -25,7 +27,7 @@ svg {
   border-radius: 0;
 }
 
-::selection { background: var(--accent-soft); color: var(--fg-1); }
+::selection { background: var(--accent-soft); color: var(--accent-strong); }
 
 *::-webkit-scrollbar { width: var(--scrollbar-w); height: var(--scrollbar-w); }
 *::-webkit-scrollbar-track { background: transparent; }
@@ -35,3 +37,5 @@ svg {
   border-radius: 0;
 }
 *::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+* { scrollbar-color: var(--line-2) transparent; scrollbar-width: thin; }

@@ -1,75 +1,67 @@
 :root {
-  --gold: #9A7B4F;
-  --crimson: #9C3A28;
-  --teal: #47665F;
-  --moss: #6F8A5E;
-  --gold-1: rgba(154, 123, 79, .14);
-  --gold-2: rgba(154, 123, 79, .30);
-  --gold-3: rgba(154, 123, 79, .58);
-  --crimson-1: rgba(156, 58, 40, .12);
-  --crimson-2: rgba(156, 58, 40, .32);
-  --teal-1: rgba(71, 102, 95, .12);
-  --teal-2: rgba(71, 102, 95, .34);
-}
+  --bg-page: #E3D4B2;
+  --bg-panel: #EDE1C3;
+  --bg-elev: #F6ECD4;
+  --bg-hover: rgba(45, 35, 20, .055);
+  --bg-active: rgba(45, 35, 20, .105);
+  --bg-field: #FAF1DB;
+  --bg-scrim: rgba(27, 21, 12, .52);
 
-:root {
-  --bg-page: #E6DAC1;
-  --bg-panel: #EFE5D0;
-  --bg-elev: #F7EFDC;
-  --bg-hover: rgba(58, 45, 30, .055);
-  --bg-active: rgba(58, 45, 30, .10);
-  --bg-field: #FBF5E5;
-  --bg-scrim: rgba(32, 25, 16, .48);
+  --fg-1: #211C14;
+  --fg-2: #4D4535;
+  --fg-3: #746A55;
+  --fg-invert: #F8F0DC;
 
-  --fg-1: #292319;
-  --fg-2: #5C5242;
-  --fg-3: #7A6E5A;
-  --fg-invert: #F8F0DF;
+  --line-1: rgba(45, 35, 20, .15);
+  --line-2: rgba(45, 35, 20, .28);
+  --line-3: rgba(45, 35, 20, .44);
 
-  --line-1: rgba(58, 45, 30, .14);
-  --line-2: rgba(58, 45, 30, .26);
-  --line-3: rgba(58, 45, 30, .40);
-
-  --accent: #9C3A28;
-  --accent-strong: #7C2B1C;
-  --accent-soft: #EBD9CE;
-  --accent-line: #B0715D;
+  --accent: #A5382A;
+  --accent-strong: #7C2418;
+  --accent-soft: #F0DCD1;
+  --accent-line: #BE8474;
   --danger: #8E2F22;
-  --danger-soft: #EAD4CC;
-  --cool: #47665F;
-  --cool-soft: #DCE6DE;
+  --danger-soft: #EBD3CB;
+  --cool: #3C5560;
+  --cool-soft: #DCE5E2;
 
-  --reader-bg: #FBF4E2;
-  --reader-bg-2: #F2E7CF;
-  --reader-card: #F8F0DC;
-  --reader-card-hover: #FCF6E8;
-  --reader-fg: #262017;
-  --reader-fg-2: #5F5544;
-  --reader-fg-3: #7C705A;
-  --reader-line: rgba(72, 58, 38, .16);
-  --reader-line-2: rgba(72, 58, 38, .30);
-  --reader-accent: #9C3A28;
-  --reader-accent-soft: #F0DED3;
-  --think-ghost: rgba(41, 35, 25, .18);
+  --reader-bg: #F7EDD6;
+  --reader-bg-2: #F0E3C7;
+  --reader-card: #F4E8CE;
+  --reader-card-hover: #FBF2DD;
+  --reader-fg: #211C14;
+  --reader-fg-2: #4D4535;
+  --reader-fg-3: #746A55;
+  --reader-line: rgba(45, 35, 20, .16);
+  --reader-line-2: rgba(45, 35, 20, .30);
+  --reader-accent: #A5382A;
+  --reader-accent-soft: #F1DDD1;
+  --think-ghost: rgba(33, 28, 20, .16);
 
-  --seal-bg: #9C3A28;
-  --seal-fg: #F7EEDC;
-  --seal-ring: rgba(247, 238, 220, .22);
+  --seal-bg: #A5382A;
+  --seal-fg: #F9F0DA;
+  --seal-ring: rgba(249, 240, 218, .26);
 
-  --reader-bg-veil: #F6ECD7;
-  --accent-wash: #F1E6CE;
-  --crimson-line: #C08B7B;
-  --crimson-wash: #F3E1D9;
-  --teal-line: #9EB6AB;
-  --teal-wash: #E3EBE2;
+  --reader-bg-veil: #F3E7CB;
+  --accent-wash: #F2E5C9;
+  --crimson-line: #C08A7B;
+  --crimson-wash: #F2DED4;
+  --teal-line: #9CB2AE;
+  --teal-wash: #E0E8E4;
 
-  --spk-0: #8A5A2E;
-  --spk-1: #A34A2F;
-  --spk-2: #3F605C;
+  --spk-0: #8A5A2B;
+  --spk-1: #A5382A;
+  --spk-2: #3C5560;
 
-  --on-accent: #FBF5E6;
-  --texture-line: rgba(90, 70, 45, .035);
-  --vignette: rgba(50, 38, 22, .05);
+  --on-accent: #FBF3DF;
+  --texture-line: rgba(90, 68, 40, .04);
+  --vignette: rgba(48, 34, 16, .07);
+  --reader-rules: rgba(45, 35, 20, .055);
+  --ink-edge: #3A2F1D;
+
+  --paper-fiber: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.86' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 0.30 0 0 0 0 0.22 0 0 0 0 0.10 0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23f)'/%3E%3C/svg%3E");
+  --paper-crack: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cg fill='none' stroke='%233A2F1D' stroke-width='0.7' opacity='0.05'%3E%3Cpath d='M-10 40 L38 34 L74 52 L118 38 L156 56 L206 44 L250 58'/%3E%3Cpath d='M12 -10 L30 44 L22 92 L46 132 L34 186 L52 250'/%3E%3Cpath d='M96 -10 L110 40 L96 78 L124 108 L112 158 L138 206 L126 250'/%3E%3Cpath d='M186 -10 L172 52 L196 94 L178 142 L202 196 L190 250'/%3E%3Cpath d='M-10 128 L44 118 L82 140 L124 126 L164 148 L212 134 L250 150'/%3E%3Cpath d='M64 62 L92 86 L68 112 L98 138 L74 168'/%3E%3C/g%3E%3C/svg%3E");
+  --orn-yuwei: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 8'%3E%3Cpath d='M0 0h24l-9 4-3 4-3-4z'/%3E%3C/svg%3E");
 
   --sp-1: 4px;
   --sp-2: 8px;
@@ -84,8 +76,10 @@
   --r-pill: 0;
 
   --tile-gap: 10px;
-  --tile-line: var(--line-1);
-  --frame-inset: 3px;
+  --frame-inset: 5px;
+  --surface-inset: 3px;
+  --frame-w: 2px;
+  --seal-tilt: -2.5deg;
 
   --ctl-sm: 28px;
   --ctl-md: 32px;
@@ -100,9 +94,9 @@
   --fs-title: 20px;
 
   --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans TC", system-ui, sans-serif;
-  --font-display: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", "SimSun", Georgia, serif;
+  --font-display: "Source Han Serif TC", "Source Han Serif SC", "Noto Serif TC", "Songti TC", "Songti SC", "SimSun", Georgia, serif;
   --font-mono: ui-monospace, "Cascadia Mono", "Sarasa Mono TC", Consolas, "Courier New", monospace;
-  --font-reading: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", Georgia, "SimSun", serif;
+  --font-reading: "Source Han Serif TC", "Source Han Serif SC", "Noto Serif TC", "Songti TC", "Songti SC", Georgia, "SimSun", serif;
   --rd-scale: 1;
   --rd-leading: 1.85;
   --rd-fs: calc(16px * var(--rd-scale));
@@ -167,5 +161,5 @@
   --frame-bg: var(--bg-elev);
 
   --focus-ring: 2px solid var(--accent);
-  --focus-offset: 2px;
+  --focus-offset: 1px;
 }

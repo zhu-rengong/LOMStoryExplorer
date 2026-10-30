@@ -1,3 +1,20 @@
+@keyframes ink-in {
+  from { opacity: 0; transform: translateY(-1px); }
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+}
+
+.branch.is-open > .branch-body,
+.option.is-open > .option-body {
+  animation: ink-in var(--t-base) var(--ease);
+}
+
+.toast {
+  animation: toast-in var(--t-slow) var(--ease);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 1ms !important;
@@ -6,4 +23,7 @@
   }
   .reader-body { scroll-behavior: auto; }
   .sk-line { animation: none; }
+  .say,
+  .branch.is-open > .branch-body,
+  .option.is-open > .option-body { animation: none; }
 }
