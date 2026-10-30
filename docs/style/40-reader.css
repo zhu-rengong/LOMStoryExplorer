@@ -486,20 +486,17 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   color: var(--control-fg);
   cursor: pointer;
 }
-.cx-var.is-link:hover,
-.cx-var.is-link:focus-visible {
-  border-color: var(--reader-accent);
-  background: var(--reader-accent-soft);
-  color: var(--reader-accent);
+.cx-var.is-link:hover {
+  border-color: var(--control-border-hover);
+  background: var(--control-bg-hover);
+  color: var(--control-fg-hover);
 }
 .cx-var.is-link:active {
-  border-color: var(--reader-accent);
   background: var(--control-bg-active);
-  color: var(--reader-accent);
 }
 .cx-var.is-link:hover .cx-name {
   text-decoration: underline;
-  text-decoration-color: var(--reader-accent);
+  text-decoration-color: currentColor;
   text-decoration-thickness: 1px;
   text-underline-offset: 2px;
 }
@@ -710,10 +707,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   text-overflow: ellipsis;
   font-family: var(--rd-font-label, var(--font-mono));
 }
-.reader-body .meta-action:active {
-  color: var(--reader-accent);
-  border-color: var(--reader-accent);
-}
 
 .is-flash {
   animation: flash-beat 1.4s var(--ease);
@@ -793,10 +786,7 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   height: auto;
   min-height: var(--ctl-sm);
   padding: 4px 12px;
-  border: 1px solid var(--control-border);
   border-radius: var(--r-2);
-  background: transparent;
-  color: var(--control-fg);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   line-height: 1;
@@ -831,6 +821,8 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 .reader-actions .btn-icon,
 .reader-foot .btn-icon,
 .reader-body .cond-lookup {
+  border-width: 1px;
+  border-style: solid;
   border-color: transparent;
 }
 
@@ -838,12 +830,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   min-height: 0;
   padding: 0 6px;
   line-height: 1.6;
-}
-
-.reader-body .cx-var.is-link:active {
-  border-color: var(--control-border-hover);
-  background: var(--control-bg-active);
-  color: var(--control-fg-hover);
 }
 
 .reader-body .branch-head .cond .cx-var,
