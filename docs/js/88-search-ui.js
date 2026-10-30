@@ -3,13 +3,14 @@
 
   const SR = window.SR;
 
-  SR.define("searchUi", ["store", "graph", "i18n", "text", "search", "overlay", "ui"],
-    ({ store, graph, i18n, text, search, overlay, ui }) => {
+  SR.define("searchUi", ["store", "graph", "i18n", "text", "search", "overlay", "ui", "reader"],
+    ({ store, graph, i18n, text, search, overlay, ui, reader }) => {
       const $ = ui.$;
 
       let hits = [];
       let active = 0;
       let timer = null;
+      let lastQuery = "";
 
       const scoped = () => store.state.chapterFilter.size > 0 || !!store.state.filterSet;
 
@@ -80,6 +81,7 @@
         const box = $("searchResults");
         if (!input || !box) return 0;
         const query = input.value.trim();
+        lastQuery = query;
         store.setQuery(query);
         if (!query) {
           hide();
@@ -126,6 +128,7 @@
           if (hit.snippet) item.appendChild(markSnippet(hit.snippet, query));
           item.addEventListener("click", () => {
             hide();
+            reader.focusText(hit.id, query);
             store.select(hit.id, { history: true });
           });
           frag.appendChild(item);
@@ -160,6 +163,7 @@
         const hit = hits[active] || hits[0];
         if (!hit) return false;
         hide();
+        reader.focusText(hit.id, lastQuery);
         store.select(hit.id, { history: true });
         return true;
       };

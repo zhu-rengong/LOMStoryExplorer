@@ -348,20 +348,11 @@
         const forward = $("forwardBtn");
         if (forward) forward.addEventListener("click", () => store.forward());
 
-        const toTop = $("toTopBtn");
-        if (toTop) {
-          toTop.addEventListener("click", () => {
-            const body = $("readerBody");
-            if (body) body.scrollTo({ top: 0, behavior: "smooth" });
-          });
-        }
-
         const body = $("readerBody");
         if (body) {
           body.addEventListener("scroll", () => {
             const node = store.selected();
             if (node) store.rememberPosition(node.id, reader.scrollFraction());
-            reader.updateToTop();
           }, { passive: true });
         }
 

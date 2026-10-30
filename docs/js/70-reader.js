@@ -7,16 +7,76 @@
     ["store", "graph", "i18n", "text", "beats", "panels", "overlay", "ui"],
     ({ store, graph, i18n, text, beats, panels, overlay, ui }) => {
       const $ = ui.$;
+      const HIT_SELECTOR = ".say .what, .option-text, .lore-p";
       const scrollMemory = new Map();
       let nextTargetsCache = [];
       let readingId = "";
+      let pendingHit = null;
+      let flashTimer = 0;
 
       const isMobile = () => store.state.layout === "mobile";
 
-      const updateToTop = () => {
+      const revealHit = (target) => {
         const body = $("readerBody");
-        const button = $("toTopBtn");
-        if (button && body) button.hidden = body.scrollTop < 320;
+        let current = target.parentElement;
+        while (current && current !== body) {
+          const foldable = current.classList.contains("option")
+            || current.classList.contains("branch");
+          if (foldable && !current.classList.contains("is-open")) {
+            current.classList.add("is-open");
+            const head = current.firstElementChild;
+            if (head) head.setAttribute("aria-expanded", "true");
+          }
+          current = current.parentElement;
+        }
+      };
+
+      const scrollHit = (target) => {
+        const body = $("readerBody");
+        if (!body) return;
+        const bodyRect = body.getBoundingClientRect();
+        const rect = target.getBoundingClientRect();
+        const offset = rect.top - bodyRect.top - Math.max(0, (body.clientHeight - rect.height) / 2);
+        body.style.scrollBehavior = "auto";
+        body.scrollTop = Math.max(0, body.scrollTop + offset);
+        requestAnimationFrame(() => {
+          body.style.scrollBehavior = "";
+        });
+      };
+
+      const flashHit = (target) => {
+        target.classList.remove("is-flash");
+        void target.offsetWidth;
+        target.classList.add("is-flash");
+        clearTimeout(flashTimer);
+        flashTimer = setTimeout(() => target.classList.remove("is-flash"), 1500);
+      };
+
+      const applyHit = (node) => {
+        if (!pendingHit) return;
+        if (pendingHit.id !== node.id) {
+          pendingHit = null;
+          return;
+        }
+        const body = $("readerBody");
+        if (!body) return;
+        let target = null;
+        for (const element of body.querySelectorAll(HIT_SELECTOR)) {
+          if (element.textContent.toLowerCase().includes(pendingHit.query)) {
+            target = element;
+            break;
+          }
+        }
+        if (!target) return;
+        pendingHit = null;
+        revealHit(target);
+        scrollHit(target);
+        flashHit(target);
+      };
+
+      const focusText = (id, query) => {
+        const needle = String(query || "").trim().toLowerCase();
+        pendingHit = id && needle ? { id, query: needle } : null;
       };
 
       const scrollFraction = () => {
@@ -208,7 +268,6 @@
           body.setAttribute("aria-busy", "true");
           body.replaceChildren(content);
           if (!opts.keepScroll) body.scrollTop = 0;
-          updateToTop();
           text.ensureStory(lang, node.id).then((ok) => {
             if (!store.selected() || store.selected().id !== node.id) return;
             if (!ok && text.shardState(lang, node.id) !== "ready") {
@@ -247,7 +306,7 @@
             body.scrollTop = fraction > 0 && max > 0 ? fraction * max : 0;
           }
         }
-        updateToTop();
+        applyHit(node);
         prefetchNeighbors(node);
         readerPanel.classList.add("is-open");
         if (isMobile() && !document.body.dataset.sheet) document.body.dataset.sheet = "half";
@@ -270,6 +329,7 @@
         clearScrollMemory,
         closeNextMenu,
         edgeLabelOf,
+        focusText,
         nextTargets,
         render,
         renderFoot,
@@ -277,7 +337,6 @@
         scrollFraction,
         stepNext,
         syncBookmark,
-        updateToTop,
       };
     });
 })();
