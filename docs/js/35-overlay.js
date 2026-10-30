@@ -188,18 +188,24 @@
       }
 
       const trigger = triggerOf(def, opts.trigger);
+      const previous = def.trigger;
+      if (previous && previous !== trigger && previous.setAttribute) {
+        previous.setAttribute("aria-expanded", "false");
+      }
       if (trigger) def.trigger = trigger;
       panel.hidden = false;
       panel.setAttribute("aria-hidden", "false");
       if (trigger && trigger.setAttribute) trigger.setAttribute("aria-expanded", "true");
 
-      const existing = isOpen(key);
+      const existing = stack.find((layer) => layer.key === key);
       if (!existing) {
         stack.push({
           key,
           trigger: trigger || document.activeElement,
           focusInside: panel.contains(document.activeElement),
         });
+      } else if (trigger) {
+        existing.trigger = trigger;
       }
 
       const placement = opts.placement || def.placement;

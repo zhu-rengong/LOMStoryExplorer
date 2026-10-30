@@ -498,6 +498,16 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   background: var(--reader-accent-soft);
   color: var(--reader-accent);
 }
+.cx-var.is-link:active {
+  border-color: var(--reader-accent);
+  background: var(--control-bg-active);
+  color: var(--reader-accent);
+}
+.cx-var.is-link[aria-expanded="true"] {
+  border-color: var(--reader-accent);
+  background: var(--reader-accent-soft);
+  color: var(--reader-accent);
+}
 .cx-var.is-link:hover .cx-name {
   text-decoration: underline;
   text-decoration-color: var(--reader-accent);
@@ -686,6 +696,16 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
 }
 .reader-body .chip-stat.is-link:hover {
+  color: var(--reader-accent);
+  border-color: var(--reader-accent);
+  background: var(--reader-accent-soft);
+}
+.reader-body .chip-stat.is-link:active {
+  color: var(--reader-accent);
+  border-color: var(--reader-accent);
+  background: var(--control-bg-active);
+}
+.reader-body .chip-stat.is-link[aria-expanded="true"] {
   color: var(--reader-accent);
   border-color: var(--reader-accent);
   background: var(--reader-accent-soft);
