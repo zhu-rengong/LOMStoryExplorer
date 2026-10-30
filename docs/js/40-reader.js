@@ -374,7 +374,7 @@
     if (!nodeById.has(target)) {
       return el("span", "jump dynamic", `▷ ${target}（${t("jumpMissing")}）`);
     }
-    const button = el("button", "jump btn btn-sm btn-primary");
+    const button = el("button", "jump btn btn-sm btn-tint");
     button.appendChild(el("span", "arrow", "→"));
     button.appendChild(document.createTextNode(target));
     if (label) button.appendChild(el("span", "option-cond", `  ${label}`));

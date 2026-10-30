@@ -1,72 +1,75 @@
 :root {
-  --gold: #C8A96A;
-  --crimson: #B4453B;
-  --teal: #6E8B8F;
-  --moss: #7FA36B;
-  --gold-1: rgba(200, 169, 106, .14);
-  --gold-2: rgba(200, 169, 106, .30);
-  --gold-3: rgba(200, 169, 106, .58);
-  --crimson-1: rgba(180, 69, 59, .12);
-  --crimson-2: rgba(180, 69, 59, .34);
-  --teal-1: rgba(79, 113, 117, .12);
-  --teal-2: rgba(79, 113, 117, .38);
+  --gold: #9A7B4F;
+  --crimson: #9C3A28;
+  --teal: #47665F;
+  --moss: #6F8A5E;
+  --gold-1: rgba(154, 123, 79, .14);
+  --gold-2: rgba(154, 123, 79, .30);
+  --gold-3: rgba(154, 123, 79, .58);
+  --crimson-1: rgba(156, 58, 40, .12);
+  --crimson-2: rgba(156, 58, 40, .32);
+  --teal-1: rgba(71, 102, 95, .12);
+  --teal-2: rgba(71, 102, 95, .34);
 }
 
 :root {
-  --bg-page: #E2D6BF;
-  --bg-panel: #EBE1CD;
-  --bg-elev: #F5EDDD;
-  --bg-hover: rgba(42, 34, 24, .06);
-  --bg-active: rgba(42, 34, 24, .11);
-  --bg-field: #FFFCF4;
-  --bg-scrim: rgba(38, 30, 20, .46);
+  --bg-page: #E6DAC1;
+  --bg-panel: #EFE5D0;
+  --bg-elev: #F7EFDC;
+  --bg-hover: rgba(58, 45, 30, .055);
+  --bg-active: rgba(58, 45, 30, .10);
+  --bg-field: #FBF5E5;
+  --bg-scrim: rgba(32, 25, 16, .48);
 
-  --fg-1: #2B251C;
-  --fg-2: #6B6152;
-  --fg-3: #6A6050;
-  --fg-invert: #FBF6EA;
+  --fg-1: #292319;
+  --fg-2: #5C5242;
+  --fg-3: #7A6E5A;
+  --fg-invert: #F8F0DF;
 
-  --line-1: rgba(43, 37, 28, .16);
-  --line-2: rgba(43, 37, 28, .28);
-  --line-3: rgba(43, 37, 28, .42);
+  --line-1: rgba(58, 45, 30, .14);
+  --line-2: rgba(58, 45, 30, .26);
+  --line-3: rgba(58, 45, 30, .40);
 
-  --accent: #A87C36;
-  --accent-strong: #8A611F;
-  --accent-soft: #E4D4B4;
-  --accent-line: #A87C36;
-  --danger: #A8443A;
-  --danger-soft: #EFD9D3;
-  --cool: #3F6C70;
-  --cool-soft: #DCE6E4;
+  --accent: #9C3A28;
+  --accent-strong: #7C2B1C;
+  --accent-soft: #EBD9CE;
+  --accent-line: #B0715D;
+  --danger: #8E2F22;
+  --danger-soft: #EAD4CC;
+  --cool: #47665F;
+  --cool-soft: #DCE6DE;
 
-  --reader-bg: #FFFBF1;
-  --reader-bg-2: #F6EEDC;
-  --reader-card: #FDFAF2;
-  --reader-card-hover: #FFFDF7;
-  --reader-fg: #241F18;
-  --reader-fg-2: #655C4D;
-  --reader-fg-3: #776D5D;
-  --reader-line: rgba(64, 52, 38, .18);
-  --reader-line-2: rgba(64, 52, 38, .32);
-  --reader-accent: #9E3F2B;
-  --reader-accent-soft: #F3E2DA;
-  --think-ghost: rgba(43, 37, 28, .20);
+  --reader-bg: #FBF4E2;
+  --reader-bg-2: #F2E7CF;
+  --reader-card: #F8F0DC;
+  --reader-card-hover: #FCF6E8;
+  --reader-fg: #262017;
+  --reader-fg-2: #5F5544;
+  --reader-fg-3: #7C705A;
+  --reader-line: rgba(72, 58, 38, .16);
+  --reader-line-2: rgba(72, 58, 38, .30);
+  --reader-accent: #9C3A28;
+  --reader-accent-soft: #F0DED3;
+  --think-ghost: rgba(41, 35, 25, .18);
 
-  --seal-bg: #A8443A;
-  --seal-fg: #FBEFE0;
+  --seal-bg: #9C3A28;
+  --seal-fg: #F7EEDC;
+  --seal-ring: rgba(247, 238, 220, .22);
 
-  --reader-bg-veil: #FBF6E9;
-  --accent-wash: #F3EAD8;
-  --crimson-line: #C7958A;
-  --crimson-wash: #F6E4DC;
-  --teal-line: #9DBCB8;
-  --teal-wash: #E2ECEA;
+  --reader-bg-veil: #F6ECD7;
+  --accent-wash: #F1E6CE;
+  --crimson-line: #C08B7B;
+  --crimson-wash: #F3E1D9;
+  --teal-line: #9EB6AB;
+  --teal-wash: #E3EBE2;
 
-  --spk-0: #8A6A2E;
-  --spk-1: #A9522F;
-  --spk-2: #3F6C70;
+  --spk-0: #8A5A2E;
+  --spk-1: #A34A2F;
+  --spk-2: #3F605C;
 
-  --on-accent: #FFF7EA;
+  --on-accent: #FBF5E6;
+  --texture-line: rgba(90, 70, 45, .035);
+  --vignette: rgba(50, 38, 22, .05);
 
   --sp-1: 4px;
   --sp-2: 8px;
@@ -80,8 +83,9 @@
   --r-3: 0;
   --r-pill: 0;
 
-  --tile-gap: 8px;
+  --tile-gap: 10px;
   --tile-line: var(--line-1);
+  --frame-inset: 3px;
 
   --ctl-sm: 28px;
   --ctl-md: 32px;
@@ -96,6 +100,7 @@
   --fs-title: 20px;
 
   --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans TC", system-ui, sans-serif;
+  --font-display: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", "SimSun", Georgia, serif;
   --font-mono: ui-monospace, "Cascadia Mono", "Sarasa Mono TC", Consolas, "Courier New", monospace;
   --font-reading: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", Georgia, "SimSun", serif;
   --rd-scale: 1;
@@ -113,12 +118,12 @@
   --rd-pad-y: 8px;
   --rd-indent: var(--rd-pad);
 
-  --row-h: 32px;
-  --panel-head-h: 40px;
-  --topbar-h: 56px;
-  --rail-w: 280px;
-  --reader-measure: 860px;
-  --scrollbar-w: 10px;
+  --row-h: 34px;
+  --panel-head-h: 44px;
+  --topbar-h: 60px;
+  --rail-w: 300px;
+  --reader-measure: 840px;
+  --scrollbar-w: 8px;
 
   --z-float: 10;
   --z-scrim: 30;
@@ -157,9 +162,10 @@
 
   --pop-bg: var(--bg-elev);
   --pop-border: var(--line-2);
-  --pop-pad: var(--sp-1);
+  --pop-pad: 6px;
   --pop-head-h: var(--panel-head-h);
+  --frame-bg: var(--bg-elev);
 
   --focus-ring: 2px solid var(--accent);
-  --focus-offset: 1px;
+  --focus-offset: 2px;
 }

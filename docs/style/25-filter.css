@@ -1,12 +1,12 @@
 .filter-panel {
   position: absolute;
   right: 0;
-  top: calc(100% + 4px);
-  width: 440px;
+  top: calc(100% + 6px);
+  width: 460px;
   max-width: calc(100vw - 24px);
   max-height: 72vh;
   overflow-y: auto;
-  padding: var(--sp-3);
+  padding: 14px;
   z-index: var(--z-drawer);
 }
 
@@ -17,7 +17,7 @@
   position: absolute;
   left: 0;
   right: 0;
-  top: calc(100% + 4px);
+  top: calc(100% + 6px);
   max-height: 268px;
   overflow-y: auto;
   padding: var(--pop-pad);
@@ -51,19 +51,29 @@
 }
 .suggest-item .sg-count { flex: none; font-size: var(--fs-micro); color: var(--fg-3); font-variant-numeric: tabular-nums; }
 
-.filter-results { margin-top: var(--sp-3); padding-top: var(--sp-2); border-top: 1px solid var(--line-1); }
+.filter-results {
+  margin-top: var(--sp-3);
+  padding-top: var(--sp-2);
+  border-top: 3px double var(--line-1);
+}
 .filter-results-title {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: var(--sp-1);
+  font-family: var(--font-display);
   font-size: var(--fs-micro);
-  letter-spacing: .16em;
+  letter-spacing: .18em;
   color: var(--fg-3);
 }
 .filter-results-list { max-height: 208px; overflow-y: auto; }
 .filter-results-more,
-.filter-results-empty { padding: 8px 4px; font-size: var(--fs-xs); color: var(--fg-3); }
+.filter-results-empty {
+  padding: 8px 4px;
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  color: var(--fg-3);
+}
 
 .result-item {
   display: flex;
@@ -82,6 +92,7 @@
 .result-item .tchap {
   margin-left: auto;
   max-width: 46%;
+  font-family: var(--font-display);
   font-size: var(--fs-xs);
   color: var(--fg-3);
   overflow: hidden;
@@ -94,7 +105,13 @@
 .filter-status.is-ok { color: var(--cool); }
 
 .filter-section { margin-top: var(--sp-3); }
-.filter-label { margin-bottom: var(--sp-1); font-size: var(--fs-micro); letter-spacing: .16em; color: var(--fg-3); }
+.filter-label {
+  margin-bottom: var(--sp-1);
+  font-family: var(--font-display);
+  font-size: var(--fs-micro);
+  letter-spacing: .18em;
+  color: var(--fg-3);
+}
 .filter-chips { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
 
 .filter-foot {
@@ -103,6 +120,6 @@
   justify-content: space-between;
   margin-top: var(--sp-3);
   padding-top: var(--sp-2);
-  border-top: 1px solid var(--line-1);
+  border-top: 3px double var(--line-1);
 }
-.filter-count { font-size: var(--fs-xs); color: var(--fg-3); font-variant-numeric: tabular-nums; }
+.filter-count { font-family: var(--font-mono); font-size: var(--fs-xs); color: var(--fg-3); font-variant-numeric: tabular-nums; }

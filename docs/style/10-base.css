@@ -9,7 +9,7 @@ svg {
   width: 16px; height: 16px;
   fill: none;
   stroke: currentColor;
-  stroke-width: 1.5;
+  stroke-width: 1.35;
   stroke-linecap: round;
   stroke-linejoin: round;
   flex: none;
@@ -34,4 +34,4 @@ svg {
   border: 0;
   border-radius: 0;
 }
-*::-webkit-scrollbar-thumb:hover { background: var(--line-3); }
+*::-webkit-scrollbar-thumb:hover { background: var(--accent); }
