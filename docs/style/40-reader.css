@@ -837,14 +837,3 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   background: var(--control-bg-active);
   color: var(--control-fg-hover);
 }
-
-#bookmarkBtn[aria-pressed="true"],
-#footBookmark[aria-pressed="true"] {
-  color: var(--control-on-fg);
-}
-
-#bookmarkBtn[aria-pressed="true"]:hover,
-#footBookmark[aria-pressed="true"]:hover {
-  border-color: transparent;
-  background-color: transparent;
-}
