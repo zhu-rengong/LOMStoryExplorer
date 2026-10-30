@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any
 
 from ..cache import write_json
+from ..config import SCHEMA_VERSION
 
 
 def compose(*, generated: str, scripts: int, edge_counts: dict[str, int],
@@ -13,7 +14,7 @@ def compose(*, generated: str, scripts: int, edge_counts: dict[str, int],
             languages: dict[str, Any], dynamic: list[str], analysis: dict[str, Any],
             artifacts: list[dict[str, Any]]) -> dict[str, Any]:
     return {
-        "schema": 2,
+        "schema": SCHEMA_VERSION,
         "generated": generated,
         "scripts": scripts,
         "edges": edge_counts,

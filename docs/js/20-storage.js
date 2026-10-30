@@ -98,6 +98,12 @@
       positionTimer = setTimeout(savePositions, 300);
     };
 
+    window.addEventListener("beforeunload", () => {
+      if (pendingSession) write(SESSION_KEY, pendingSession);
+      savePositions();
+      saveBookmarks();
+    });
+
     loadBookmarks();
     loadPositions();
 
