@@ -102,6 +102,8 @@
     pickerState.active = 0;
     if (pickerSearch) pickerSearch.value = "";
     renderPickerList("");
+    const api = window.StorySettings;
+    if (api && api.ensureFamilies) api.ensureFamilies();
     overlay.open("fontPicker", {
       trigger: anchor,
       keep: ["settings"],

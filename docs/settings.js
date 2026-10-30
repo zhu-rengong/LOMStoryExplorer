@@ -236,14 +236,20 @@
 
   const FONT_BASELINES = ["monospace", "serif", "sans-serif"];
 
+  const FONT_NOISE = /Wingdings|Webdings|Marlett|Symbol|Segoe MDL2|Segoe Fluent|Segoe UI Emoji|Segoe UI Symbol|Bookshelf Symbol|MS Reference|MT Extra|MS Outlook/i;
+
+  const FONT_CJK_HINT = /[\u3400-\u9fff]|YaHei|JhengHei|SimSun|SimHei|KaiTi|FangSong|DengXian|YouYuan|LiSu|MingLiU|Songti|Yuanti|Heiti|PingFang|Hiragino|Noto|Source Han|Sarasa|LXGW|STKaiti|STSong|STXihei|STZhongsong|DFKai|BiauKai|Yu Gothic|Yu Mincho|Meiryo|MS Gothic|MS Mincho|Malgun|Nanum/i;
+
   let detectedFamilies = null;
+
+  let familiesPending = null;
 
   const measureWidth = (ctx, font) => {
     ctx.font = `72px ${font}`;
     return ctx.measureText(FONT_PROBE_TEXT).width;
   };
 
-  const detectFamilies = () => {
+  const probeFamilies = () => {
     try {
       const ctx = document.createElement("canvas").getContext("2d");
       if (!ctx) return null;
@@ -263,20 +269,46 @@
     }
   };
 
-  const publishFamilies = () => {
-    const found = detectFamilies();
-    if (!found) return;
-    detectedFamilies = found;
-    window.dispatchEvent(new CustomEvent("sr:fonts", { detail: { families: found } }));
+  const orderFamilies = (names) => {
+    const seen = new Set();
+    const unique = [];
+    for (const name of names) {
+      const clean = String(name || "").trim();
+      if (!clean || clean.startsWith("@") || FONT_NOISE.test(clean)) continue;
+      const key = clean.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      unique.push(clean);
+    }
+    const cjk = unique.filter((name) => FONT_CJK_HINT.test(name)).sort((a, b) => a.localeCompare(b));
+    const rest = unique.filter((name) => !FONT_CJK_HINT.test(name)).sort((a, b) => a.localeCompare(b));
+    return cjk.concat(rest);
   };
 
-  const scheduleFontDetection = () => {
-    const run = () => {
-      if (window.requestIdleCallback) window.requestIdleCallback(publishFamilies, { timeout: 1200 });
-      else setTimeout(publishFamilies, 120);
-    };
-    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run, { once: true });
-    else run();
+  const enumerateFamilies = async () => {
+    if (typeof window.queryLocalFonts !== "function") return null;
+    try {
+      const fonts = await window.queryLocalFonts();
+      const list = orderFamilies(fonts.map((font) => font.family));
+      return list.length ? list : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const ensureFamilies = () => {
+    if (detectedFamilies) return Promise.resolve(detectedFamilies);
+    if (familiesPending) return familiesPending;
+    familiesPending = (async () => {
+      const found = (await enumerateFamilies()) || probeFamilies();
+      if (found && found.length) {
+        detectedFamilies = found;
+        window.dispatchEvent(new CustomEvent("sr:fonts", { detail: { families: found } }));
+      }
+      familiesPending = null;
+      return detectedFamilies || FONT_CANDIDATES;
+    })();
+    return familiesPending;
   };
 
   const families = () => detectedFamilies || FONT_CANDIDATES;
@@ -301,6 +333,7 @@
     presets: { reading: READING, ui: UI, types: TYPES, weights: WEIGHTS },
     defaults: clone(DEFAULTS),
     get: snapshot,
+    ensureFamilies: ensureFamilies,
     families: families,
     labelOf: labelOf,
     set: (patch) => {
@@ -359,5 +392,4 @@
 
   restore();
   apply();
-  scheduleFontDetection();
 })();
