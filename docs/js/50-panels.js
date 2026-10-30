@@ -92,8 +92,6 @@
     row.title = node.label;
     if (node.kind === "option") {
       row.appendChild(el("span", "ol-idx", String(node.index || "")));
-    } else {
-      row.appendChild(el("span", "ol-tag", "◇"));
     }
     row.appendChild(el("span", "ol-label", node.label));
     if (node.lock) row.appendChild(el("span", "ol-badge ol-lock", `🔒 ${node.lock}`));

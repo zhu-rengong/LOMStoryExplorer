@@ -198,7 +198,6 @@
 
     if (payload.branches) {
       const headRow = el("div", "bp-head");
-      headRow.appendChild(el("span", "bp-mark", "◇"));
       headRow.appendChild(el("span", "bp-title", payload.title || ""));
       node.appendChild(headRow);
     }

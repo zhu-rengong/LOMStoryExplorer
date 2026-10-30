@@ -217,16 +217,36 @@
     const beatKey = `bt${ctx.seq++}`;
     box.dataset.beat = beatKey;
     const head = el("div", "choice-head");
-    head.appendChild(document.createTextNode(t("choiceHead", { n: branches.length })));
-    const expand = el("button", "link-btn", t("expandAll"));
-    expand.addEventListener("click", () => {
-      const open = expand.textContent === t("expandAll");
+    const toggle = el("button", "choice-toggle");
+    toggle.type = "button";
+    toggle.setAttribute("aria-expanded", "false");
+    const toggleIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    const toggleUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    toggleUse.setAttribute("href", "#i-chevron");
+    toggleIcon.appendChild(toggleUse);
+    toggle.appendChild(toggleIcon);
+
+    const syncToggle = () => {
+      const options = box.querySelectorAll(".option");
+      let open = options.length > 0;
+      options.forEach((option) => {
+        if (!option.classList.contains("is-open")) open = false;
+      });
+      const label = open ? t("collapseAll") : t("expandAll");
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      toggle.title = label;
+      toggle.setAttribute("aria-label", label);
+    };
+    box.syncToggle = syncToggle;
+
+    toggle.addEventListener("click", () => {
+      const open = toggle.getAttribute("aria-expanded") !== "true";
       box.querySelectorAll(".option").forEach((option) => {
         option.classList.toggle("is-open", open);
       });
-      expand.textContent = open ? t("collapseAll") : t("expandAll");
+      syncToggle();
     });
-    head.appendChild(expand);
+    head.appendChild(toggle);
     box.appendChild(head);
 
     branches.forEach((branch, index) => {
@@ -259,11 +279,15 @@
 
       const bodyEl = el("div", "option-body");
       bodyEl.appendChild(renderBeats(body, ctx));
-      button.addEventListener("click", () => option.classList.toggle("is-open"));
+      button.addEventListener("click", () => {
+        option.classList.toggle("is-open");
+        syncToggle();
+      });
       option.appendChild(button);
       option.appendChild(bodyEl);
       box.appendChild(option);
     });
+    syncToggle();
     return box;
   };
 
@@ -295,6 +319,8 @@
       }
       node = node.parentElement;
     }
+    const choice = target.closest(".choice");
+    if (choice && typeof choice.syncToggle === "function") choice.syncToggle();
     return target;
   };
 
@@ -332,7 +358,6 @@
     head.setAttribute("role", "button");
     head.tabIndex = 0;
     head.setAttribute("aria-expanded", collapsed ? "false" : "true");
-    head.appendChild(el("span", null, "◇"));
     const cond = el("span", "cond", label);
     if (label) {
       cond.title = label;

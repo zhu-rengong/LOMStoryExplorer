@@ -103,17 +103,19 @@
   --rd-fs-sm: calc(14.5px * var(--rd-scale));
   --rd-fs-xs: calc(11.5px * var(--rd-scale));
 
-  --rd-gap-1: 6px;
-  --rd-gap-2: 10px;
-  --rd-gap-3: 15px;
-  --rd-gap-4: 22px;
+  --rd-gap-1: 4px;
+  --rd-gap-2: 8px;
+  --rd-gap-3: 16px;
+  --rd-gap-4: 24px;
 
   --rd-pad: 12px;
   --rd-pad-y: 8px;
   --rd-indent: var(--rd-pad);
 
+  --row-h: 32px;
+  --panel-head-h: 40px;
   --topbar-h: 56px;
-  --rail-w: 272px;
+  --rail-w: 280px;
   --reader-measure: 860px;
 
   --z-float: 10;

@@ -3,7 +3,7 @@
   z-index: var(--z-float);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   height: var(--topbar-h);
   padding: 0 12px;
   flex: none;
@@ -14,8 +14,8 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  min-width: 196px;
+  gap: 8px;
+  min-width: 232px;
   flex: none;
 }
 
@@ -23,7 +23,7 @@
   position: relative;
   display: grid;
   place-items: center;
-  width: 30px; height: 30px;
+  width: 32px; height: 32px;
   flex: none;
   border-radius: 0;
   background: var(--seal-bg);
@@ -62,8 +62,8 @@
 
 .searchwrap {
   position: relative;
-  flex: 1 1 340px;
-  max-width: 560px;
+  flex: 1 1 320px;
+  max-width: 520px;
   margin: 0 auto;
   display: flex;
   align-items: center;
@@ -80,8 +80,8 @@
 
 .search-icon {
   position: absolute;
-  left: 12px;
-  width: 15px; height: 15px;
+  left: 8px;
+  width: 16px; height: 16px;
   stroke: var(--fg-3);
   pointer-events: none;
   transition: stroke var(--t-base);
@@ -89,8 +89,8 @@
 
 #search {
   width: 100%;
-  height: var(--ctl-lg);
-  padding: 0 14px 0 35px;
+  height: var(--ctl-md);
+  padding: 0 12px 0 32px;
   border-radius: 0;
   border: 1px solid var(--line-1);
   background: var(--bg-field);
@@ -109,7 +109,7 @@
 
 .dropdown {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 4px);
   left: 0;
   right: 0;
   max-height: min(58vh, 420px);
@@ -125,8 +125,9 @@
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
-  gap: 2px 8px;
-  padding: 7px 9px;
+  gap: 4px 8px;
+  padding: 8px 12px;
+  border-left: 2px solid transparent;
   border-radius: 0;
   cursor: pointer;
   transition: background var(--t-fast);
@@ -134,8 +135,7 @@
 .drop-item:hover { background-color: var(--bg-hover); }
 .drop-item.is-active {
   background-color: var(--accent-soft);
-  border-left: 2px solid var(--accent);
-  padding-left: 7px;
+  border-left-color: var(--accent);
 }
 
 .drop-item .did {
@@ -172,7 +172,7 @@
   justify-content: space-between;
   gap: 8px;
   margin-bottom: 4px;
-  padding: 6px 9px;
+  padding: 4px 12px;
   border-bottom: 1px solid var(--line-1);
   font-size: var(--fs-xs);
   color: var(--fg-3);
@@ -188,7 +188,7 @@
 .drop-scope button:hover { text-decoration: underline; }
 
 .drop-empty {
-  padding: 10px 9px;
+  padding: 12px;
   font-size: var(--fs-xs);
   color: var(--fg-3);
 }
@@ -205,15 +205,15 @@
 .tools {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   margin-left: auto;
   flex: none;
-  padding-left: 10px;
+  padding-left: 8px;
   border-left: 1px solid var(--line-1);
 }
 
 .tools .icon-btn { width: var(--ctl-md); height: var(--ctl-md); }
-.icon-btn svg, .tool-btn .ico { width: 17px; height: 17px; }
+.icon-btn svg, .tool-btn .ico { width: 16px; height: 16px; }
 
 .seg {
   display: inline-flex;
@@ -229,8 +229,8 @@
   background: transparent;
   color: var(--fg-3);
   height: 26px;
-  min-width: 26px;
-  padding: 0 10px;
+  min-width: 28px;
+  padding: 0 12px;
   border-radius: 0;
   font-size: var(--fs-sm);
   cursor: pointer;
@@ -248,9 +248,9 @@
 .tool-btn {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   height: var(--ctl-md);
-  padding: 0 11px;
+  padding: 0 12px;
   border-radius: 0;
   border: 1px solid var(--line-2);
   background: transparent;
@@ -312,16 +312,16 @@
 
 .filter-badge {
   position: absolute;
-  top: -1px;
-  right: -1px;
-  min-width: 15px;
-  height: 15px;
+  top: -4px;
+  right: -4px;
+  min-width: 16px;
+  height: 16px;
   padding: 0 4px;
   border-radius: 0;
   background: var(--accent);
   color: var(--fg-invert);
-  font-size: 10px;
-  line-height: 15px;
+  font-size: var(--fs-micro);
+  line-height: 14px;
   text-align: center;
   font-variant-numeric: tabular-nums;
   border: 1px solid var(--bg-panel);
@@ -331,9 +331,9 @@
 
 .menu {
   position: absolute;
-  top: calc(100% + 6px);
+  top: calc(100% + 4px);
   right: 0;
-  min-width: 184px;
+  min-width: 192px;
   padding: 4px;
   border-radius: 0;
   border: 1px solid var(--line-2);
@@ -352,8 +352,8 @@
   justify-content: space-between;
   gap: var(--sp-2);
   width: 100%;
-  height: var(--ctl-md);
-  padding: 0 10px;
+  height: var(--row-h);
+  padding: 0 12px;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -367,7 +367,7 @@
 .menu-item:active { background-color: var(--bg-active); color: var(--fg-1); }
 .menu-item.is-on { color: var(--accent-strong); }
 .menu-item.is-on::after { content: "✓"; font-size: var(--fs-sm); }
-.menu-sep { height: 1px; margin: 4px 6px; background: var(--line-1); }
+.menu-sep { height: 1px; margin: 4px 8px; background: var(--line-1); }
 
 .menu-wide {
   width: 340px;
@@ -389,7 +389,7 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  padding: 7px 10px 5px;
+  padding: 8px 12px 4px;
   font-size: var(--fs-micro);
   letter-spacing: .16em;
   color: var(--fg-3);
@@ -397,16 +397,16 @@
   font-variant-numeric: tabular-nums;
 }
 
-.menu-list { max-height: 260px; overflow-y: auto; padding-bottom: 2px; }
-.menu-empty { padding: 10px; font-size: var(--fs-sm); color: var(--fg-3); }
+.menu-list { max-height: 260px; overflow-y: auto; padding-bottom: 4px; }
+.menu-empty { padding: 12px; font-size: var(--fs-sm); color: var(--fg-3); }
 
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
   width: 100%;
-  min-height: 30px;
-  padding: 0 10px;
+  min-height: var(--row-h);
+  padding: 0 12px;
   border: 0;
   border-radius: 0;
   background: none;
@@ -423,7 +423,7 @@
   min-width: 0;
   color: var(--accent-strong);
   font-family: var(--font-mono);
-  font-size: 11.5px;
+  font-size: var(--fs-sm);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -439,7 +439,7 @@
 
 .nav-badge {
   flex: none;
-  padding: 0 5px;
+  padding: 0 4px;
   border-radius: 0;
   border: 1px solid var(--teal-line);
   background: var(--teal-wash);
