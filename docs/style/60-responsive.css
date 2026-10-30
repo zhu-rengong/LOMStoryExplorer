@@ -48,12 +48,18 @@ body[data-layout="mobile"] .more-wrap { display: inline-flex; }
 body[data-layout="compact"] .reader-grip,
 body[data-layout="mobile"] .reader-grip { display: none; }
 
+body[data-layout="compact"] #reader,
+body[data-layout="mobile"] #reader {
+  width: auto;
+  justify-self: stretch;
+}
+
 body[data-layout="mobile"] #reader { padding-bottom: env(safe-area-inset-bottom); }
 
 body[data-layout="mobile"] .reader-head { padding: 4px 14px 8px; }
 body[data-layout="mobile"] .reader-head h2 { font-size: var(--fs-md); }
 body[data-layout="mobile"] .reader-body { padding: 12px 15px 20px; }
-body[data-layout="mobile"] .reader-foot { width: auto; margin: 0 10px 10px; gap: 8px; }
+body[data-layout="mobile"] .reader-foot { margin: 0 10px 10px; gap: 8px; }
 
 body[data-layout="mobile"] .reader-foot .foot-btn { height: 40px; padding: 0 11px; }
 body[data-layout="mobile"] .foot-bookmark { display: inline-flex; }

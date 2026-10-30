@@ -42,9 +42,9 @@
 
   const DEFAULT_TYPE = { font: "", scale: 100, weight: 400 };
 
-  const MEASURE_MIN = 480;
-  const MEASURE_MAX = 1280;
-  const MEASURE_DEFAULT = 820;
+  const MEASURE_MIN = 520;
+  const MEASURE_MAX = 1400;
+  const MEASURE_DEFAULT = 860;
 
   const TYPE_OVERRIDES = {
     speaker: { font: "kai", scale: 150 },

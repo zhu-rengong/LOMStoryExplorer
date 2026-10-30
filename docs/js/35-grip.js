@@ -3,22 +3,39 @@
   const SR = window.SR;
   if (!SR || !SR.core) return;
 
-  const main = document.querySelector(".reader-main");
+  const reader = document.getElementById("reader");
+  const stage = document.getElementById("main");
+  const rail = document.getElementById("chapterRail");
   const grips = Array.from(document.querySelectorAll(".reader-grip"));
-  if (!main || !grips.length) return;
+  if (!reader || !stage || !grips.length) return;
 
   const api = () => window.StorySettings;
 
   const range = () => {
     const settings = api();
     if (settings && settings.measureRange) return settings.measureRange;
-    return { min: 480, max: 1280, fallback: 820 };
+    return { min: 520, max: 1400, fallback: 860 };
   };
 
-  const measureNow = () => {
+  const savedMeasure = () => {
     const settings = api();
     const saved = settings && settings.get ? settings.get().measure : 0;
     return Number(saved) || range().fallback;
+  };
+
+  const widthNow = () => Math.round(reader.getBoundingClientRect().width);
+
+  const available = () => {
+    const overlay = SR.viewport && SR.viewport.isOverlayRail ? SR.viewport.isOverlayRail() : false;
+    const railWidth = !overlay && rail ? rail.getBoundingClientRect().width : 0;
+    return Math.max(0, stage.clientWidth - railWidth);
+  };
+
+  const clamp = (value) => {
+    const bounds = range();
+    const room = Math.max(bounds.min, Math.min(bounds.max, available() - 32));
+    const max = Math.max(room, Math.min(bounds.max, widthNow()));
+    return Math.round(Math.min(Math.max(value, bounds.min), max));
   };
 
   const paint = (value) => {
@@ -29,13 +46,6 @@
     paint(value);
     const settings = api();
     if (settings && settings.set) settings.set({ measure: value });
-  };
-
-  const clamp = (value) => {
-    const bounds = range();
-    const available = main.clientWidth - 48;
-    const max = Math.max(bounds.min, Math.min(bounds.max, available || bounds.max));
-    return Math.round(Math.min(Math.max(value, bounds.min), max));
   };
 
   let drag = null;
@@ -59,7 +69,7 @@
   grips.forEach((grip) => {
     grip.addEventListener("pointerdown", (event) => {
       if (event.button !== 0) return;
-      const start = measureNow();
+      const start = widthNow();
       drag = {
         edge: grip.dataset.edge === "left" ? "left" : "right",
         startX: event.clientX,
@@ -82,16 +92,17 @@
       if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
       event.preventDefault();
       const step = event.key === "ArrowRight" ? 20 : -20;
-      commit(clamp(measureNow() + step));
+      commit(clamp(widthNow() + step));
     });
   });
 
-  paint(measureNow());
+  paint(savedMeasure());
 
   SR.register("grip", {
+    available: available,
     clamp: clamp,
     commit: commit,
-    measureNow: measureNow,
     paint: paint,
+    widthNow: widthNow,
   });
 })();
