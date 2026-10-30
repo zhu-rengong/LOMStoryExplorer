@@ -389,6 +389,7 @@
     const frag = document.createDocumentFragment();
     let metaBuffer = [];
     let branchBuffer = [];
+    let branchGroup = null;
 
     const flushMeta = () => {
       if (metaBuffer.length === 0) return;
@@ -410,6 +411,7 @@
       const group = el("div", "branch-group");
       branchBuffer.forEach((box) => group.appendChild(box));
       branchBuffer = [];
+      branchGroup = null;
       frag.appendChild(group);
     };
 
@@ -418,6 +420,9 @@
 
       if (tag === "br") {
         flushMeta();
+        const group = beat.length > 4 ? beat[4] : null;
+        if (branchBuffer.length > 0 && group !== branchGroup) flushBranches();
+        branchGroup = group;
         branchBuffer.push(renderBranch(beat[1], beat[2], ctx, true, beat[3] || "if"));
         continue;
       }
@@ -538,19 +543,15 @@
     state.nextTargets = targets;
     const btn = $("nextBtn");
     const label = $("nextLabel");
-    const caret = btn ? btn.querySelector(".caret") : null;
     if (!btn || !label) return;
     btn.disabled = targets.length === 0;
     btn.classList.toggle("is-end", targets.length === 0);
     if (targets.length === 0) {
       label.textContent = t("recentEnd");
-      if (caret) caret.hidden = true;
     } else if (targets.length === 1) {
       label.textContent = t("recentNext");
-      if (caret) caret.hidden = true;
     } else {
       label.textContent = t("recentContinue");
-      if (caret) caret.hidden = false;
     }
     closeNextMenu();
   };

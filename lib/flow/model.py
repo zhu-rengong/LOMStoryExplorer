@@ -5,7 +5,7 @@ from typing import Any
 
 from .. import lua as L
 
-FLOW_VERSION = 8
+FLOW_VERSION = 9
 
 
 @dataclass(frozen=True)

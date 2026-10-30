@@ -82,13 +82,15 @@ class StmtMixin:
                 state.env[target.obj.id] = {key: value}
 
     def _emit_if(self, stmt: L.If, state: State, beats: list[list[Any]], label: str) -> None:
+        group = self._branch_seq
+        self._branch_seq += 1
         for cond, body in stmt.clauses:
             cond_label = "其他情況" if cond is None else self._cond_label(cond, state)
             kind = "if" if cond is None else self._cond_kind(cond, state)
             sub: list[list[Any]] = []
             child = f"{label} › {cond_label}" if label else cond_label
             self._block(body, state.clone(), sub, child)
-            beats.append(["branch", cond_label, sub, kind])
+            beats.append(["branch", cond_label, sub, kind, group])
 
     def _if_uses_choice(self, stmt: L.If, var: str) -> bool:
         for cond, _ in stmt.clauses:

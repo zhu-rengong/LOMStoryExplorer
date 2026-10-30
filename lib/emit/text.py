@@ -216,6 +216,8 @@ class Renderer:
                 row = ["br", self._cn(beat[1]), self.beats(beat[2])]
                 if len(beat) > 3 and beat[3]:
                     row.append(beat[3])
+                if len(beat) > 4:
+                    row.append(beat[4])
                 out.append(row)
             elif tag == "jump":
                 target = beat[1] or ""

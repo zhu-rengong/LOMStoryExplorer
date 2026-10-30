@@ -23,6 +23,7 @@ class Analyzer(StmtMixin, CallsMixin, BeatsMixin, ExprMixin):
         self.option_count = 0
         self.read_marks: set[str] = set()
         self._edge_keys: set[tuple] = set()
+        self._branch_seq = 0
 
     def analyze(self, source: str) -> dict[str, Any]:
         stmts = L.parse(source)
