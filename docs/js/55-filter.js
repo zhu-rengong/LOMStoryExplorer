@@ -193,7 +193,7 @@
     const list = el("div", "filter-results-list");
     ids.slice(0, FILTER_RESULT_LIMIT).forEach((index) => {
       const node = nodes[index];
-      const item = el("button", `result-item${state.selected && state.selected.i === index ? " is-current" : ""}`);
+      const item = el("button", `result-item row row-sm${state.selected && state.selected.i === index ? " is-current" : ""}`);
       item.type = "button";
       item.dataset.id = node.id;
       item.appendChild(el("span", "ri-id", node.id));
@@ -313,10 +313,10 @@
 
     box.replaceChildren();
     if (!suggestState.items.length) {
-      box.appendChild(el("div", "suggest-empty", t("suggestEmpty")));
+      box.appendChild(el("div", "suggest-empty popover-empty", t("suggestEmpty")));
     } else {
       suggestState.items.forEach((item, index) => {
-        const row = el("button", `suggest-item${index === 0 ? " is-active" : ""}`);
+        const row = el("button", `suggest-item row row-sm row-accent${index === 0 ? " is-active" : ""}`);
         row.type = "button";
         row.setAttribute("role", "option");
         const shown = item.kind === "logic" ? item.value : item.value + (item.kind === "field" ? ":" : "");
@@ -393,7 +393,7 @@
     if (fieldBox && window.StoryQuery) {
       const frag = document.createDocumentFragment();
       window.StoryQuery.fields().forEach((field) => {
-        const chip = el("button", "filter-chip", t(FIELD_LABEL_KEYS[field.id] || field.id));
+        const chip = el("button", "filter-chip chip chip-mono", t(FIELD_LABEL_KEYS[field.id] || field.id));
         chip.type = "button";
         chip.dataset.insert = `${field.id}:`;
         frag.appendChild(chip);
@@ -410,7 +410,7 @@
     const opBox = $("filterOpChips");
     if (opBox) {
       ["AND", "OR", "NOT", "(", ")"].forEach((op) => {
-        const chip = el("button", "filter-chip", op);
+        const chip = el("button", "filter-chip chip chip-mono", op);
         chip.type = "button";
         chip.dataset.insert = op === "(" || op === ")" ? op : ` ${op} `;
         opBox.appendChild(chip);
@@ -426,7 +426,7 @@
     const exBox = $("filterExampleChips");
     if (exBox) {
       FILTER_EXAMPLES.forEach((example) => {
-        const chip = el("button", "filter-chip", t(example.key));
+        const chip = el("button", "filter-chip chip chip-mono", t(example.key));
         chip.type = "button";
         chip.dataset.expr = example.expr;
         exBox.appendChild(chip);

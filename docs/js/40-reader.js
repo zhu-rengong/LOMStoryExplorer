@@ -69,7 +69,7 @@
   const entryBadge = (node) => {
     const label = entryLabel(node);
     if (!label) return null;
-    const badge = el("span", `entry-badge is-${node.entry}`, label);
+    const badge = el("span", `entry-badge badge ${node.entry === "combat" ? "badge-danger" : "badge-cool"} is-${node.entry}`, label);
     badge.title = t("entrySourceTitle", { name: label });
     return badge;
   };
@@ -180,7 +180,7 @@
   const textFailedCard = (node) => {
     const card = el("div", "reader-skeleton is-failed");
     card.appendChild(el("span", "sk-caption", t("loadTextFailed")));
-    const btn = el("button", "tool-btn", t("loadTextRetry"));
+    const btn = el("button", "tool-btn btn", t("loadTextRetry"));
     btn.type = "button";
     btn.addEventListener("click", () => {
       if (window.StoryText) window.StoryText.retry(state.lang, node.id);
@@ -225,7 +225,7 @@
 
       const option = el("div", "option");
       option.dataset.opt = `${beatKey}:${index}`;
-      const button = el("button", "option-head");
+      const button = el("button", "option-head row");
       button.appendChild(el("span", "option-idx", String(index + 1)));
 
       const main = el("span", "option-main");
@@ -315,7 +315,7 @@
   const renderBranch = (label, beats, ctx, collapsed, kind) => {
     const box = el("div", `branch${collapsed ? "" : " is-open"}`);
     box.dataset.beat = `bt${ctx.seq++}`;
-    const head = el("div", "branch-head");
+    const head = el("div", "branch-head row row-sm");
     head.setAttribute("role", "button");
     head.tabIndex = 0;
     head.setAttribute("aria-expanded", collapsed ? "false" : "true");
@@ -329,7 +329,7 @@
 
     const target = lookupTargetOf(extractKey(label) || label);
     if (target) {
-      const lookupBtn = el("button", "cond-lookup");
+      const lookupBtn = el("button", "cond-lookup btn-icon");
       lookupBtn.type = "button";
       lookupBtn.title = t("condLookup");
       lookupBtn.setAttribute("aria-label", t("condLookup"));
@@ -374,7 +374,7 @@
     if (!nodeById.has(target)) {
       return el("span", "jump dynamic", `▷ ${target}（${t("jumpMissing")}）`);
     }
-    const button = el("button", "jump");
+    const button = el("button", "jump btn btn-sm");
     button.appendChild(el("span", "arrow", "→"));
     button.appendChild(document.createTextNode(target));
     if (label) button.appendChild(el("span", "option-cond", `  ${label}`));
@@ -396,7 +396,7 @@
       const group = el("div", "meta-group");
       const chips = el("div", "meta-chips");
       metaBuffer.forEach((text) => {
-        const chip = el("span", "chip-stat", text);
+        const chip = el("span", "chip-stat chip chip-sm", text);
         if (text.length > 24) chip.title = text;
         attachLookupAnchor(chip, extractKey(text) || text);
         chips.appendChild(chip);
@@ -485,15 +485,15 @@
     const targets = state.nextTargets || nextTargets(node);
     menu.replaceChildren();
     menu.appendChild(el("div", "menu-head", t("recentChoices")));
-    const list = el("div", "menu-list");
+    const list = el("div", "menu-list popover-list");
     targets.forEach((item) => {
-      const row = el("button", "nav-item");
+      const row = el("button", "nav-item row");
       row.type = "button";
       row.appendChild(el("span", "nav-id", item.node.id));
       const text = stripRich(edgeLabelOf(item.edge)) || chapterTitle(chapterOf(item.node));
       row.appendChild(el("span", "nav-label", text));
-      if (item.edge.kind === 1) row.appendChild(el("span", "nav-badge", t("navInferred")));
-      else if (item.edge.kind === 2) row.appendChild(el("span", "nav-badge temp", t("navTemp")));
+      if (item.edge.kind === 1) row.appendChild(el("span", "nav-badge badge badge-cool", t("navInferred")));
+      else if (item.edge.kind === 2) row.appendChild(el("span", "nav-badge badge badge-accent", t("navTemp")));
       row.addEventListener("click", () => {
         closeNextMenu();
         navigateTo(item.node.id);

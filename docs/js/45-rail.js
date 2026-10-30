@@ -41,7 +41,7 @@
 
   const railRow = (id, extras) => {
     const node = nodeById.get(id);
-    const row = el("div", "rail-item");
+    const row = el("div", "rail-item row row-tall");
     row.setAttribute("role", "option");
     row.tabIndex = 0;
     if (!node) {
@@ -79,7 +79,7 @@
       frag.appendChild(el("p", "rail-group", `${t("railTabBookmarks")} · ${ids.length}`));
       ids.forEach((id) => {
         const row = railRow(id);
-        const del = el("button", "ri-del");
+        const del = el("button", "ri-del btn btn-icon btn-sm");
         del.type = "button";
         del.title = t("bookmarkRemove");
         del.innerHTML = '<svg><use href="#i-close"/></svg>';
@@ -90,7 +90,7 @@
         row.appendChild(del);
         frag.appendChild(row);
       });
-      const clear = el("button", "link-btn", t("bookmarkClear"));
+      const clear = el("button", "link-btn btn-link", t("bookmarkClear"));
       clear.type = "button";
       clear.addEventListener("click", () => {
         bookmarkSet.clear();
@@ -134,7 +134,7 @@
         if (!members.length) return;
       }
 
-      const head = el("div", `rail-item rail-chap${index === open ? " is-open" : ""}`);
+      const head = el("div", `rail-item rail-chap row row-tall${index === open ? " is-open" : ""}`);
       head.setAttribute("role", "button");
       head.tabIndex = 0;
       head.appendChild(el("span", "ri-id", chapterTitle(chapter)));

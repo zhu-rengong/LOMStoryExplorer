@@ -2,21 +2,6 @@
 
 html, body { height: 100%; margin: 0; }
 
-body {
-  display: flex;
-  flex-direction: column;
-  gap: var(--tile-gap);
-  padding: var(--tile-gap);
-  background: var(--bg-page);
-  color: var(--fg-1);
-  font-family: var(--font-ui);
-  font-size: var(--fs-md);
-  line-height: 1.55;
-  overflow: hidden;
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-}
-
 button, input, select { font: inherit; color: inherit; }
 h1, h2, h3, h4, p { margin: 0; }
 
@@ -35,8 +20,8 @@ svg {
 .sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 
 :focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+  outline: var(--focus-ring);
+  outline-offset: var(--focus-offset);
   border-radius: 0;
 }
 

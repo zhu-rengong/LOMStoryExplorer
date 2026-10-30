@@ -1,0 +1,27 @@
+body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tile-gap);
+  padding: var(--tile-gap);
+  background: var(--bg-page);
+  color: var(--fg-1);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  line-height: 1.55;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: var(--tile-gap);
+  grid-template-columns: var(--rail-w) minmax(0, 1fr);
+}
+
+body[data-layout="compact"] #main,
+body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }

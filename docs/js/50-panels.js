@@ -88,14 +88,14 @@
     box.dataset.depth = String(Math.min(depth, 4));
     if (depth) box.classList.add("is-nested");
 
-    const row = el("div", "outline-item ol-head");
+    const row = el("div", "outline-item ol-head row row-sm row-accent");
     row.title = node.label;
     if (node.kind === "option") {
       row.appendChild(el("span", "ol-idx", String(node.index || "")));
     }
     row.appendChild(el("span", "ol-label", node.label));
-    if (node.lock) row.appendChild(el("span", "ol-badge ol-lock", `🔒 ${node.lock}`));
-    else if (node.note) row.appendChild(el("span", "ol-badge ol-note", node.note));
+    if (node.lock) row.appendChild(el("span", "ol-badge ol-lock badge", `🔒 ${node.lock}`));
+    else if (node.note) row.appendChild(el("span", "ol-badge ol-note badge badge-neutral", node.note));
 
     if (key) {
       row.dataset.key = key;
@@ -315,7 +315,7 @@
     }
 
     const rowOf = (node) => {
-      const row = el("div", "lookup-item");
+      const row = el("div", "lookup-item row row-tall row-accent");
       row.setAttribute("role", "option");
       const top = el("div", "li-top");
       top.appendChild(el("span", "li-id", node.id));
@@ -331,7 +331,7 @@
     };
 
     if (!items.length) {
-      list.appendChild(el("p", "lookup-empty", t("lookupEmpty")));
+      list.appendChild(el("p", "lookup-empty popover-empty", t("lookupEmpty")));
     } else if (groups) {
       if (groups.writes.length) {
         list.appendChild(el("p", "lookup-group", t("lookupGroupWrites", { n: groups.writes.length })));

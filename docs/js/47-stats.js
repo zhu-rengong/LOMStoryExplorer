@@ -102,7 +102,7 @@
     const body = $("statsBody");
     if (!body) return;
     body.replaceChildren();
-    body.appendChild(el("p", className || "stats-empty", text));
+    body.appendChild(el("p", className || "stats-empty popover-empty", text));
   };
 
   const statCard = (labelKey, value) => {
@@ -139,7 +139,7 @@
   const storyRow = (id, pair) => {
     const row = el("tr", "stats-story");
     const nameCell = el("td", "name");
-    const btn = el("button", "stats-open", id);
+    const btn = el("button", "stats-open btn-link", id);
     btn.type = "button";
     btn.title = t("statsOpen");
     btn.addEventListener("click", () => {
@@ -163,7 +163,7 @@
 
     const nameCell = el("th", "name");
     nameCell.scope = "row";
-    const btn = el("button", "stats-expand");
+    const btn = el("button", "stats-expand row");
     btn.type = "button";
     btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
     btn.appendChild(el("span", "stats-name", chapterTitle(chapter)));
@@ -248,7 +248,7 @@
       items.push({ id: kind, key: KIND_LABEL[kind] });
     });
     items.forEach((item) => {
-      const btn = el("button", `stats-kind${item.id === activeKind ? " is-on" : ""}`, t(item.key));
+      const btn = el("button", `stats-kind chip${item.id === activeKind ? " is-on" : ""}`, t(item.key));
       btn.type = "button";
       btn.setAttribute("aria-pressed", item.id === activeKind ? "true" : "false");
       btn.addEventListener("click", () => {

@@ -8,6 +8,8 @@
 <link rel="stylesheet" href="style/00-tokens.css">
 <link rel="stylesheet" href="style/05-theme.css">
 <link rel="stylesheet" href="style/10-base.css">
+<link rel="stylesheet" href="style/15-controls.css">
+<link rel="stylesheet" href="style/18-layout.css">
 <link rel="stylesheet" href="style/20-topbar.css">
 <link rel="stylesheet" href="style/25-filter.css">
 <link rel="stylesheet" href="style/30-rail.css">
@@ -15,7 +17,6 @@
 <link rel="stylesheet" href="style/50-panels.css">
 <link rel="stylesheet" href="style/60-responsive.css">
 <link rel="stylesheet" href="style/90-motion.css">
-<link rel="stylesheet" href="style/95-extras.css">
 <script src="theme.js"></script>
 <script src="settings.js"></script>
 </head>
@@ -43,7 +44,7 @@
 </svg>
 
 <header class="topbar">
-  <button id="railToggle" class="icon-btn rail-toggle" data-i18n-title="railToggleTitle" title="目錄欄">
+  <button id="railToggle" class="icon-btn btn btn-icon rail-toggle" data-i18n-title="railToggleTitle" title="目錄欄">
     <svg><use href="#i-panel"/></svg>
   </button>
 
@@ -58,30 +59,30 @@
   <div class="searchwrap">
     <div class="search-field">
       <svg class="search-icon"><use href="#i-search"/></svg>
-      <input id="search" type="search" autocomplete="off" spellcheck="false" role="combobox"
+      <input id="search" class="input input-search" type="search" autocomplete="off" spellcheck="false" role="combobox"
              aria-expanded="false" aria-controls="searchResults"
              data-i18n-placeholder="searchPlaceholder" data-i18n-title="searchTitle"
              placeholder="搜尋劇本 id 或正文關鍵詞（/ 聚焦）" aria-label="搜尋劇本">
-      <div id="searchResults" class="dropdown" role="listbox" hidden></div>
+      <div id="searchResults" class="dropdown surface popover" role="listbox" hidden></div>
     </div>
 
     <div class="menu-wrap" id="filterWrap">
-      <button id="filterBtn" class="tool-btn" aria-haspopup="dialog" aria-expanded="false"
+      <button id="filterBtn" class="tool-btn btn" aria-haspopup="dialog" aria-expanded="false"
               data-i18n-title="filterBtnTitle" title="用條件篩選劇本">
         <svg class="ico"><use href="#i-filter"/></svg>
         <span class="tb-label" data-i18n="filterBtn">篩選</span>
-        <span id="filterBadge" class="filter-badge" hidden>0</span>
+        <span id="filterBadge" class="filter-badge badge badge-num badge-solid" hidden>0</span>
       </button>
-      <div id="filterPanel" class="filter-panel" role="dialog" aria-label="篩選" hidden>
+      <div id="filterPanel" class="filter-panel surface popover" role="dialog" aria-label="篩選" hidden>
         <div class="filter-row">
           <div class="filter-input-wrap">
-            <input id="filterExpr" class="filter-expr" type="text" spellcheck="false" autocomplete="off"
+            <input id="filterExpr" class="filter-expr input input-mono" type="text" spellcheck="false" autocomplete="off"
                    role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="filterSuggest"
                    data-i18n-placeholder="filterPlaceholder"
                    placeholder="speaker:master AND (dice:yes OR lock:yes)">
-            <div id="filterSuggest" class="filter-suggest" role="listbox" hidden></div>
+            <div id="filterSuggest" class="filter-suggest surface popover" role="listbox" hidden></div>
           </div>
-          <button id="filterApply" class="tool-btn primary" data-i18n="filterApply">套用</button>
+          <button id="filterApply" class="tool-btn btn btn-primary" data-i18n="filterApply">套用</button>
         </div>
         <div id="filterStatus" class="filter-status"></div>
 
@@ -102,62 +103,62 @@
 
         <div class="filter-foot">
           <span id="filterCount" class="filter-count"></span>
-          <button id="filterClear" class="link-btn" data-i18n="filterClear">清除</button>
+          <button id="filterClear" class="link-btn btn-link" data-i18n="filterClear">清除</button>
         </div>
       </div>
     </div>
   </div>
 
   <div class="tools" id="toolbar">
-    <div class="seg" id="langSeg" role="group" aria-label="語言 / 语言">
-      <button class="seg-btn is-on" data-lang="zh-tw" title="繁體中文">繁</button>
-      <button class="seg-btn" data-lang="zh-cn" title="简体中文">簡</button>
+    <div class="seg tabs" id="langSeg" role="group" aria-label="語言 / 语言">
+      <button class="seg-btn tab is-on" data-lang="zh-tw" title="繁體中文">繁</button>
+      <button class="seg-btn tab" data-lang="zh-cn" title="简体中文">簡</button>
     </div>
 
-    <button id="statsBtn" class="tool-btn" aria-haspopup="dialog" aria-expanded="false"
+    <button id="statsBtn" class="tool-btn btn" aria-haspopup="dialog" aria-expanded="false"
             data-i18n-title="statsBtnTitle" title="統計全站正文字數">
       <svg class="ico"><use href="#i-stats"/></svg>
       <span class="tb-label" data-i18n="statsBtn">字數</span>
     </button>
 
-    <button id="helpBtn" class="icon-btn" aria-haspopup="dialog" aria-expanded="false"
+    <button id="helpBtn" class="icon-btn btn btn-icon" aria-haspopup="dialog" aria-expanded="false"
             data-i18n-title="helpTitle" title="快捷鍵一覽（?）">
       <svg><use href="#i-help"/></svg>
     </button>
 
-    <button id="settingsBtn" class="icon-btn" aria-haspopup="dialog" aria-expanded="false"
+    <button id="settingsBtn" class="icon-btn btn btn-icon" aria-haspopup="dialog" aria-expanded="false"
             data-i18n-title="settingsBtnTitle" title="閱讀設定">
       <svg><use href="#i-gear"/></svg>
     </button>
 
     <div class="menu-wrap more-wrap" id="moreWrap">
-      <button id="moreBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false"
+      <button id="moreBtn" class="icon-btn btn btn-icon" aria-haspopup="true" aria-expanded="false"
               data-i18n-title="moreTitle" title="更多">
         <svg><use href="#i-more"/></svg>
       </button>
-      <div id="moreMenu" class="menu" role="menu" hidden></div>
+      <div id="moreMenu" class="menu surface popover" role="menu" hidden></div>
     </div>
   </div>
 </header>
 
 <main id="main">
   <aside id="chapterRail" aria-label="目錄與書籤">
-    <div class="rail-head">
+    <div class="rail-head panel-head">
       <span class="rail-title" data-i18n="railTitle">書目</span>
       <span id="railCount" class="rail-count"></span>
-      <button id="railClose" class="icon-btn rail-close" data-i18n-title="closeTitle" title="收起">
+      <button id="railClose" class="icon-btn btn btn-icon rail-close" data-i18n-title="closeTitle" title="收起">
         <svg><use href="#i-close"/></svg>
       </button>
     </div>
-    <div class="rail-tabs" role="tablist" aria-label="左欄視圖">
-      <button id="railTabBookmarks" class="rail-tab" data-rail="bookmarks" role="tab"
+    <div class="rail-tabs tabs" role="tablist" aria-label="左欄視圖">
+      <button id="railTabBookmarks" class="rail-tab tab" data-rail="bookmarks" role="tab"
               aria-selected="false" data-i18n="railTabBookmarks">書籤</button>
-      <button id="railTabOutline" class="rail-tab is-on" data-rail="outline" role="tab"
+      <button id="railTabOutline" class="rail-tab tab is-on" data-rail="outline" role="tab"
               aria-selected="true" data-i18n="railTabOutline">目錄</button>
     </div>
     <div id="railSearchBox" class="rail-search">
       <svg><use href="#i-search"/></svg>
-      <input id="railSearch" type="search" autocomplete="off" spellcheck="false"
+      <input id="railSearch" class="input input-search" type="search" autocomplete="off" spellcheck="false"
              data-i18n-placeholder="railSearchPlaceholder" placeholder="篩選目錄…" aria-label="篩選目錄">
     </div>
     <div id="chapterList" class="rail-list"></div>
@@ -171,34 +172,34 @@
         <p id="nodeChapter" class="crumb" hidden></p>
         <h2 id="nodeTitle" data-i18n="readerEmptyTitle">尚未選擇劇本</h2>
         <div class="reader-actions">
-          <button class="icon-btn" id="backBtn" data-i18n-title="backTitle" title="上一處（←）" disabled>
+          <button class="icon-btn btn btn-icon" id="backBtn" data-i18n-title="backTitle" title="上一處（←）" disabled>
             <svg><use href="#i-back"/></svg>
           </button>
-          <button class="icon-btn" id="forwardBtn" data-i18n-title="forwardTitle" title="下一處（→）" disabled>
+          <button class="icon-btn btn btn-icon" id="forwardBtn" data-i18n-title="forwardTitle" title="下一處（→）" disabled>
             <svg><use href="#i-forward"/></svg>
           </button>
-          <button class="icon-btn" id="outlineBtn" aria-pressed="false"
+          <button class="icon-btn btn btn-icon" id="outlineBtn" aria-pressed="false"
                   data-i18n-title="outlineToggleTitle" title="分支大綱">
             <svg><use href="#i-tree"/></svg>
           </button>
           <div class="menu-wrap reader-nav" id="navWrap">
-            <button id="navBtn" class="icon-btn" aria-haspopup="true" aria-expanded="false"
+            <button id="navBtn" class="icon-btn btn btn-icon" aria-haspopup="true" aria-expanded="false"
                     data-i18n-title="navBtnTitle" title="跳到相連劇本" disabled>
               <svg><use href="#i-jump"/></svg>
             </button>
-            <div id="navMenu" class="menu menu-wide" role="menu" hidden></div>
+            <div id="navMenu" class="menu menu-wide surface popover" role="menu" hidden></div>
           </div>
-          <button class="icon-btn" id="bookmarkBtn" aria-pressed="false"
+          <button class="icon-btn btn btn-icon" id="bookmarkBtn" aria-pressed="false"
                   data-i18n-title="bookmarkAdd" title="加入書籤">
             <svg><use href="#i-star"/></svg>
           </button>
           <div class="menu-wrap reader-more">
-            <button class="icon-btn" id="readerMoreBtn" aria-haspopup="true" aria-expanded="false"
+            <button class="icon-btn btn btn-icon" id="readerMoreBtn" aria-haspopup="true" aria-expanded="false"
                     data-i18n-title="moreTitle" title="更多">
               <svg><use href="#i-more"/></svg>
             </button>
-            <div id="readerMore" class="menu" role="menu" hidden>
-              <button class="menu-item" id="copyBtn" data-i18n="copyTitle" data-i18n-title="copyTitle">複製劇本 id</button>
+            <div id="readerMore" class="menu surface popover" role="menu" hidden>
+              <button class="menu-item row" id="copyBtn" data-i18n="copyTitle" data-i18n-title="copyTitle">複製劇本 id</button>
             </div>
           </div>
         </div>
@@ -217,44 +218,44 @@
          tabindex="0" data-i18n-title="gripTitle" title="拖動調整閱讀寬度"></div>
     <div class="reader-grip" data-edge="right" role="separator" aria-orientation="vertical"
          tabindex="0" data-i18n-title="gripTitle" title="拖動調整閱讀寬度"></div>
-    <div id="outlinePanel" class="outline-panel" role="dialog" aria-label="分支大綱" hidden>
-      <header class="outline-head">
+    <div id="outlinePanel" class="outline-panel surface popover" role="dialog" aria-label="分支大綱" hidden>
+      <header class="outline-head panel-head popover-head">
         <span class="outline-title" data-i18n="outlineTitle">大綱</span>
-        <button id="outlineClose" class="icon-btn" data-i18n-title="closeTitle" title="關閉">
+        <button id="outlineClose" class="icon-btn btn btn-icon" data-i18n-title="closeTitle" title="關閉">
           <svg><use href="#i-close"/></svg>
         </button>
       </header>
-      <div id="outlineList" class="outline-list"></div>
+      <div id="outlineList" class="outline-list popover-list"></div>
     </div>
 
     <footer id="readerFoot" class="reader-foot" hidden>
-      <button id="prevBtn" class="foot-btn" data-i18n-title="recentPrev" title="上一篇">
+      <button id="prevBtn" class="foot-btn btn btn-sm" data-i18n-title="recentPrev" title="上一篇">
         <svg><use href="#i-back"/></svg><span data-i18n="recentPrev">上一篇</span>
       </button>
       <span id="footPos" class="foot-pos"></span>
-      <button id="footBookmark" class="foot-btn foot-bookmark" aria-pressed="false"
+      <button id="footBookmark" class="foot-btn btn foot-bookmark" aria-pressed="false"
               data-i18n-title="bookmarkAdd" title="加入書籤">
         <svg><use href="#i-star"/></svg>
       </button>
       <div class="foot-next-wrap">
-        <button id="nextBtn" class="foot-btn" data-i18n-title="recentContinueTitle" title="沿劇情續接下一篇">
+        <button id="nextBtn" class="foot-btn btn btn-sm" data-i18n-title="recentContinueTitle" title="沿劇情續接下一篇">
           <span id="nextLabel" data-i18n="recentContinue">續讀</span>
         </button>
-        <div id="nextMenu" class="menu menu-wide foot-menu" role="menu" hidden></div>
+        <div id="nextMenu" class="menu menu-wide foot-menu surface popover" role="menu" hidden></div>
       </div>
     </footer>
 
-    <button id="toTopBtn" class="to-top" data-i18n-title="toTopTitle" title="回到頂部" hidden>
+    <button id="toTopBtn" class="to-top btn btn-icon" data-i18n-title="toTopTitle" title="回到頂部" hidden>
       <svg><use href="#i-top"/></svg>
     </button>
   </section>
 </main>
 
 <div id="settingsScrim" class="scrim" hidden></div>
-<aside id="settingsDrawer" class="drawer" hidden aria-modal="true" role="dialog" aria-label="閱讀設定">
-  <header class="drawer-head">
+<aside id="settingsDrawer" class="drawer surface" hidden aria-modal="true" role="dialog" aria-label="閱讀設定">
+  <header class="drawer-head panel-head popover-head">
     <h2 data-i18n="settingsTitle">閱讀設定</h2>
-    <button id="settingsClose" class="icon-btn" data-i18n-title="closeTitle" title="關閉">
+    <button id="settingsClose" class="icon-btn btn btn-icon" data-i18n-title="closeTitle" title="關閉">
       <svg><use href="#i-close"/></svg>
     </button>
   </header>
@@ -262,30 +263,30 @@
   <div class="drawer-body">
     <section class="field">
       <h3 class="field-title" data-i18n="themeTitle">外觀</h3>
-      <div class="seg seg-wide" id="themeSeg" role="group" aria-label="外觀主題">
-        <button class="seg-btn" data-theme="paper" data-i18n="themePaper">宣紙</button>
-        <button class="seg-btn" data-theme="night" data-i18n="themeNight">墨夜</button>
-        <button class="seg-btn is-on" data-theme="auto" data-i18n="themeAuto">跟隨系統</button>
+      <div class="seg seg-wide tabs" id="themeSeg" role="group" aria-label="外觀主題">
+        <button class="seg-btn tab" data-theme="paper" data-i18n="themePaper">宣紙</button>
+        <button class="seg-btn tab" data-theme="night" data-i18n="themeNight">墨夜</button>
+        <button class="seg-btn tab is-on" data-theme="auto" data-i18n="themeAuto">跟隨系統</button>
       </div>
     </section>
 
     <section class="field">
       <h3 class="field-title" data-i18n="fontReading">正文字體</h3>
-      <button id="fontReadingTrigger" class="select font-trigger" aria-haspopup="listbox">
+      <button id="fontReadingTrigger" class="select input font-trigger" aria-haspopup="listbox">
         <span class="ft-name">宋體（預設）</span>
         <svg class="caret"><use href="#i-chevron"/></svg>
       </button>
-      <input id="fontReadingCustom" class="text-input" type="text" hidden
+      <input id="fontReadingCustom" class="text-input input input-sm" type="text" hidden
              data-i18n-placeholder="fontCustomPlaceholder" placeholder="輸入系統字體名，如 Noto Serif TC">
     </section>
 
     <section class="field">
       <h3 class="field-title" data-i18n="fontUi">介面字體</h3>
-      <button id="fontUiTrigger" class="select font-trigger" aria-haspopup="listbox">
+      <button id="fontUiTrigger" class="select input font-trigger" aria-haspopup="listbox">
         <span class="ft-name">系統預設</span>
         <svg class="caret"><use href="#i-chevron"/></svg>
       </button>
-      <input id="fontUiCustom" class="text-input" type="text" hidden
+      <input id="fontUiCustom" class="text-input input input-sm" type="text" hidden
              data-i18n-placeholder="fontCustomPlaceholder" placeholder="輸入系統字體名，如 Noto Sans TC">
     </section>
 
@@ -297,19 +298,19 @@
       <input id="fontScale" class="range" type="range" min="90" max="140" step="5" value="100"
              aria-label="正文字號">
       <div class="chip-row" id="scalePresets">
-        <button class="chip-btn" data-scale="90">90%</button>
-        <button class="chip-btn" data-scale="100">100%</button>
-        <button class="chip-btn" data-scale="115">115%</button>
-        <button class="chip-btn" data-scale="130">130%</button>
+        <button class="chip-btn chip chip-mono" data-scale="90">90%</button>
+        <button class="chip-btn chip chip-mono" data-scale="100">100%</button>
+        <button class="chip-btn chip chip-mono" data-scale="115">115%</button>
+        <button class="chip-btn chip chip-mono" data-scale="130">130%</button>
       </div>
     </section>
 
     <section class="field">
       <h3 class="field-title" data-i18n="lineHeight">行距</h3>
-      <div class="seg seg-wide" id="leadingSeg" role="group">
-        <button class="seg-btn" data-leading="1.7" data-i18n="leadingTight">緊湊</button>
-        <button class="seg-btn" data-leading="1.85" data-i18n="leadingNormal">標準</button>
-        <button class="seg-btn" data-leading="2.05" data-i18n="leadingLoose">寬鬆</button>
+      <div class="seg seg-wide tabs" id="leadingSeg" role="group">
+        <button class="seg-btn tab" data-leading="1.7" data-i18n="leadingTight">緊湊</button>
+        <button class="seg-btn tab" data-leading="1.85" data-i18n="leadingNormal">標準</button>
+        <button class="seg-btn tab" data-leading="2.05" data-i18n="leadingLoose">寬鬆</button>
       </div>
     </section>
 
@@ -322,11 +323,11 @@
 
       <div class="type-panel">
         <label class="sub-label" data-i18n="typeFont">字體</label>
-        <button id="typeFontTrigger" class="select font-trigger" aria-haspopup="listbox">
+        <button id="typeFontTrigger" class="select input font-trigger" aria-haspopup="listbox">
           <span class="ft-name">跟隨正文</span>
           <svg class="caret"><use href="#i-chevron"/></svg>
         </button>
-        <input id="typeFontCustom" class="text-input" type="text" hidden
+        <input id="typeFontCustom" class="text-input input input-sm" type="text" hidden
                data-i18n-placeholder="fontCustomPlaceholder" placeholder="輸入系統字體名">
 
         <div class="field-row sub-row">
@@ -337,10 +338,10 @@
                aria-label="類型字號">
 
         <label class="sub-label" data-i18n="typeWeight">字重</label>
-        <div class="seg seg-wide" id="weightSeg" role="group">
-          <button class="seg-btn" data-weight="400" data-i18n="weightRegular">常規</button>
-          <button class="seg-btn" data-weight="500" data-i18n="weightMedium">中等</button>
-          <button class="seg-btn" data-weight="600" data-i18n="weightBold">加粗</button>
+        <div class="seg seg-wide tabs" id="weightSeg" role="group">
+          <button class="seg-btn tab" data-weight="400" data-i18n="weightRegular">常規</button>
+          <button class="seg-btn tab" data-weight="500" data-i18n="weightMedium">中等</button>
+          <button class="seg-btn tab" data-weight="600" data-i18n="weightBold">加粗</button>
         </div>
       </div>
     </section>
@@ -385,42 +386,42 @@
   </div>
 
   <footer class="drawer-foot">
-    <button id="settingsReset" class="tool-btn" data-i18n="resetSettings">恢復預設</button>
-    <button id="settingsDone" class="tool-btn primary" data-i18n="done">完成</button>
+    <button id="settingsReset" class="tool-btn btn" data-i18n="resetSettings">恢復預設</button>
+    <button id="settingsDone" class="tool-btn btn btn-primary" data-i18n="done">完成</button>
   </footer>
 </aside>
 
-<div id="fontPicker" class="picker" hidden role="listbox" aria-label="字體">
+<div id="fontPicker" class="picker surface popover" hidden role="listbox" aria-label="字體">
   <div class="picker-search">
     <svg><use href="#i-search"/></svg>
-    <input id="fontPickerSearch" type="search" autocomplete="off" spellcheck="false"
+    <input id="fontPickerSearch" class="input input-search" type="search" autocomplete="off" spellcheck="false"
            data-i18n-placeholder="fontSearchPlaceholder" placeholder="搜尋字體…" aria-label="搜尋字體">
   </div>
-  <div id="fontPickerList" class="picker-list"></div>
+  <div id="fontPickerList" class="picker-list popover-list"></div>
 </div>
 
-<div id="lookupPanel" class="lookup" role="dialog" aria-label="出場劇本" hidden>
-  <header class="lookup-head">
-    <span id="lookupTitle" class="lookup-title"></span>
-    <button id="lookupClose" class="icon-btn" data-i18n-title="closeTitle" title="關閉">
+<div id="lookupPanel" class="lookup surface popover" role="dialog" aria-label="出場劇本" hidden>
+  <header class="lookup-head panel-head popover-head">
+    <span id="lookupTitle" class="lookup-title popover-title"></span>
+    <button id="lookupClose" class="icon-btn btn btn-icon" data-i18n-title="closeTitle" title="關閉">
       <svg><use href="#i-close"/></svg>
     </button>
   </header>
   <p id="lookupSub" class="lookup-sub"></p>
-  <div id="lookupList" class="lookup-list" role="listbox"></div>
+  <div id="lookupList" class="lookup-list popover-list" role="listbox"></div>
   <p class="lookup-hint" data-i18n="lookupHint">↑↓ 選擇 · Enter 跳轉 · Esc 關閉</p>
 </div>
 
-<div id="branchPreview" class="branch-preview" role="tooltip" hidden></div>
+<div id="branchPreview" class="branch-preview surface popover" role="tooltip" hidden></div>
 
-<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+<div id="toast" class="toast surface" role="status" aria-live="polite" hidden></div>
 
-<div id="ioStatus" class="io-status" role="status" aria-live="polite" hidden></div>
+<div id="ioStatus" class="io-status surface" role="status" aria-live="polite" hidden></div>
 
-<div id="helpPanel" class="help-panel" role="dialog" aria-modal="true" aria-labelledby="helpHeading" hidden>
-  <header class="help-head">
+<div id="helpPanel" class="help-panel surface" role="dialog" aria-modal="true" aria-labelledby="helpHeading" hidden>
+  <header class="help-head panel-head popover-head">
     <h2 id="helpHeading" data-i18n="helpTitle">快捷鍵</h2>
-    <button id="helpClose" class="icon-btn" data-i18n-title="closeTitle" title="關閉">
+    <button id="helpClose" class="icon-btn btn btn-icon" data-i18n-title="closeTitle" title="關閉">
       <svg><use href="#i-close"/></svg>
     </button>
   </header>
@@ -428,11 +429,11 @@
   <p class="help-hint" data-i18n="helpHint">按「?」或 Esc 關閉</p>
 </div>
 
-<div id="statsPanel" class="help-panel stats-panel" role="dialog" aria-modal="true"
+<div id="statsPanel" class="help-panel stats-panel surface" role="dialog" aria-modal="true"
      aria-labelledby="statsHeading" hidden>
-  <header class="help-head">
+  <header class="help-head panel-head popover-head">
     <h2 id="statsHeading" data-i18n="statsTitle">字數統計</h2>
-    <button id="statsClose" class="icon-btn" data-i18n-title="closeTitle" title="關閉">
+    <button id="statsClose" class="icon-btn btn btn-icon" data-i18n-title="closeTitle" title="關閉">
       <svg><use href="#i-close"/></svg>
     </button>
   </header>

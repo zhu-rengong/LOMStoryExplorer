@@ -51,25 +51,25 @@
     navMenu.replaceChildren();
     if (!node) return;
 
-    const list = el("div", "menu-list");
+    const list = el("div", "menu-list popover-list");
 
     const addGroup = (titleKey, edges, pick) => {
       list.appendChild(el("div", "menu-head", t(titleKey, { n: edges.length })));
       if (!edges.length) {
-        list.appendChild(el("div", "menu-empty", t("navEmpty")));
+        list.appendChild(el("div", "menu-empty popover-empty", t("navEmpty")));
         return;
       }
       edges.forEach((edge) => {
         const target = pick(edge);
         if (!target) return;
-        const item = el("button", "nav-item");
+        const item = el("button", "nav-item row");
         item.setAttribute("role", "menuitem");
         item.appendChild(el("span", "nav-id", target.id));
         const label = stripRich(edgeLabelOf(edge));
         if (label) item.appendChild(el("span", "nav-label", label));
-        if (edge.kind === 1) item.appendChild(el("span", "nav-badge", t("navInferred")));
-        else if (edge.kind === 2) item.appendChild(el("span", "nav-badge temp", t("navTemp")));
-        else if (edge.kind === 3) item.appendChild(el("span", "nav-badge", t("navPosition")));
+        if (edge.kind === 1) item.appendChild(el("span", "nav-badge badge badge-cool", t("navInferred")));
+        else if (edge.kind === 2) item.appendChild(el("span", "nav-badge badge badge-accent", t("navTemp")));
+        else if (edge.kind === 3) item.appendChild(el("span", "nav-badge badge badge-cool", t("navPosition")));
         item.addEventListener("click", () => {
           closeNav();
           navigateTo(target.id);
@@ -85,13 +85,13 @@
     navMenu.appendChild(list);
     navMenu.appendChild(el("div", "menu-sep"));
 
-    const only = el("button", "menu-item", t("navOnlyChapter"));
+    const only = el("button", "menu-item row", t("navOnlyChapter"));
     only.addEventListener("click", () => {
       closeNav();
       if (state.chapterFilter.size === 1 && state.chapterFilter.has(node.ch)) clearChapterFilter();
       else setOnlyChapter(node.ch);
     });
-    const clear = el("button", "menu-item", t("navClearFilter"));
+    const clear = el("button", "menu-item row", t("navClearFilter"));
     clear.addEventListener("click", () => {
       closeNav();
       clearChapterFilter();
@@ -237,7 +237,7 @@
     menu.replaceChildren();
 
     menu.appendChild(el("div", "menu-head", t("moreLang")));
-    const langBtn = el("button", "menu-item", state.lang === "zh-tw" ? "简体中文" : "繁體中文");
+    const langBtn = el("button", "menu-item row", state.lang === "zh-tw" ? "简体中文" : "繁體中文");
     langBtn.type = "button";
     langBtn.addEventListener("click", () => {
       closeMore();
@@ -246,13 +246,13 @@
     menu.appendChild(langBtn);
 
     menu.appendChild(el("div", "menu-sep"));
-    const statsRow = el("button", "menu-item", t("statsBtn"));
+    const statsRow = el("button", "menu-item row", t("statsBtn"));
     statsRow.type = "button";
     statsRow.addEventListener("click", () => {
       closeMore();
       SR.fwd("stats", "open")($("statsBtn"));
     });
-    const helpRow = el("button", "menu-item", t("helpTitle"));
+    const helpRow = el("button", "menu-item row", t("helpTitle"));
     helpRow.type = "button";
     helpRow.addEventListener("click", () => {
       closeMore();
@@ -266,7 +266,7 @@
       menu.appendChild(el("div", "menu-sep"));
       menu.appendChild(el("div", "menu-head", t("recentChoices")));
       targets.slice(0, 6).forEach((item) => {
-        const row = el("button", "nav-item");
+        const row = el("button", "nav-item row");
         row.type = "button";
         row.appendChild(el("span", "nav-id", item.node.id));
         row.appendChild(el("span", "nav-label",

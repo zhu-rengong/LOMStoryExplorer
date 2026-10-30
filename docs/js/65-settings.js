@@ -62,11 +62,11 @@
     if (pickerState.active >= items.length) pickerState.active = 0;
     pickerList.replaceChildren();
     if (!items.length) {
-      pickerList.appendChild(el("div", "picker-empty", t("fontNoMatch")));
+      pickerList.appendChild(el("div", "picker-empty popover-empty", t("fontNoMatch")));
       return;
     }
     items.forEach((item, index) => {
-      const btn = el("button", `picker-item${index === pickerState.active ? " is-active" : ""}`);
+      const btn = el("button", `picker-item row${index === pickerState.active ? " is-active" : ""}`);
       btn.type = "button";
       const name = el("span", "pi-name", item.name);
       if (item.family) name.style.fontFamily = `"${item.family.replace(/"/g, "")}"`;
@@ -222,7 +222,7 @@
     if (!tabs || !api) return;
     const frag = document.createDocumentFragment();
     api.presets.types.forEach((type) => {
-      const btn = el("button", "type-tab");
+      const btn = el("button", "type-tab chip");
       btn.type = "button";
       btn.setAttribute("role", "tab");
       btn.dataset.type = type.id;

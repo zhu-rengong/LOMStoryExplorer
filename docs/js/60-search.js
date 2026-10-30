@@ -115,7 +115,7 @@
     if (scoped) {
       const scopeRow = el("div", "drop-scope");
       scopeRow.appendChild(el("span", null, t("searchScoped")));
-      const clearBtn = el("button", null, t("searchClearFilters"));
+      const clearBtn = el("button", "btn-link", t("searchClearFilters"));
       clearBtn.type = "button";
       clearBtn.addEventListener("click", (event) => {
         event.stopPropagation();
@@ -127,12 +127,12 @@
     }
 
     if (hits.length === 0) {
-      frag.appendChild(el("div", "drop-empty", scoped ? t("searchNoHit") : t("searchEmpty")));
+      frag.appendChild(el("div", "drop-empty popover-empty", scoped ? t("searchNoHit") : t("searchEmpty")));
       if (scoped && query.length >= 2) {
         const outside = countOutsideHits(query);
         if (outside > 0) {
-          const more = el("div", "drop-empty");
-          const moreBtn = el("button", "drop-more", t("searchOutside", { n: outside }));
+          const more = el("div", "drop-empty popover-empty");
+          const moreBtn = el("button", "drop-more btn-link", t("searchOutside", { n: outside }));
           moreBtn.type = "button";
           moreBtn.addEventListener("click", (event) => {
             event.stopPropagation();
@@ -154,7 +154,7 @@
     state.searchActive = 0;
 
     hits.forEach((hit, index) => {
-      const item = el("div", "drop-item");
+      const item = el("div", "drop-item row row-tall row-accent");
       item.dataset.id = hit.id;
       if (index === 0) item.classList.add("is-active");
       item.appendChild(el("span", "did", hit.id));

@@ -134,3 +134,32 @@
   --t-base: 180ms;
   --t-slow: 240ms;
 }
+
+:root {
+  --control-h: var(--ctl-md);
+  --control-border: var(--line-2);
+  --control-border-hover: var(--line-3);
+  --control-bg-solid: var(--bg-field);
+  --control-fg: var(--fg-2);
+  --control-fg-hover: var(--fg-1);
+  --control-bg-hover: var(--bg-hover);
+  --control-bg-active: var(--bg-active);
+  --control-on-bg: var(--accent-soft);
+  --control-on-fg: var(--accent-strong);
+  --control-on-border: var(--accent-line);
+  --control-disabled: .4;
+
+  --row-hover-bg: var(--bg-hover);
+  --row-active-bg: var(--bg-active);
+  --row-pad: 12px;
+
+  --chip-fs: var(--fs-xs);
+
+  --pop-bg: var(--bg-elev);
+  --pop-border: var(--line-2);
+  --pop-pad: var(--sp-1);
+  --pop-head-h: var(--panel-head-h);
+
+  --focus-ring: 2px solid var(--accent);
+  --focus-offset: 1px;
+}
