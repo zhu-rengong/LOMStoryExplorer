@@ -1,0 +1,584 @@
+(() => {
+  "use strict";
+
+  const SR = window.SR;
+
+  SR.define("panels",
+    ["store", "graph", "i18n", "beats", "condexpr", "checkpoints", "overlay", "ui", "text"],
+    ({ store, graph, i18n, beats, condexpr, checkpoints, overlay, ui, text }) => {
+      const $ = ui.$;
+      const HOVER_OK = !(window.matchMedia && window.matchMedia("(hover: none)").matches);
+
+      const NAME_GROUP = { check: "checks", flag: "flags", rel: "rels", stat: "stats" };
+
+      const lookup = { items: [], active: 0, trigger: null, open: false, seq: 0 };
+
+      let facetSets = null;
+      let nameCache = { lang: "", index: null };
+      let preview = null;
+      let previewTimer = null;
+
+      const ensureFacetSets = () => {
+        if (facetSets) return facetSets;
+        const flags = new Set();
+        const checks = new Set();
+        for (const node of graph.nodes) {
+          for (const key of node.facets.flags) flags.add(key);
+          for (const key of node.facets.checks) checks.add(key);
+        }
+        facetSets = { flags, checks };
+        return facetSets;
+      };
+
+      const resetNameIndex = () => {
+        nameCache = { lang: "", index: null };
+      };
+
+      const ensureNameIndex = () => {
+        if (nameCache.lang === store.state.lang && nameCache.index) return nameCache.index;
+        const names = text.names(store.state.lang);
+        const index = { flags: {}, checks: {}, stats: {}, rels: {} };
+        for (const group of ["flags", "checks", "stats", "rels"]) {
+          const table = names[group] || {};
+          for (const key of Object.keys(table)) index[group][table[key]] = key;
+        }
+        nameCache = { lang: store.state.lang, index };
+        return index;
+      };
+
+      const lookupTargetOf = (value) => {
+        if (!value) return null;
+        const sets = ensureFacetSets();
+        const raw = String(value).trim();
+        let key = raw;
+        let kind = sets.flags.has(key) ? "flag" : sets.checks.has(key) ? "check" : "";
+        if (!kind) {
+          const index = ensureNameIndex();
+          const plain = raw.replace(/\s*[+-]\d+\s*$/, "").trim();
+          if (index.flags[plain]) {
+            kind = "flag";
+            key = index.flags[plain];
+          } else if (index.checks[plain]) {
+            kind = "check";
+            key = index.checks[plain];
+          } else if (index.stats[plain]) {
+            kind = "stat";
+            key = index.stats[plain];
+          } else if (index.rels[plain]) {
+            kind = "rel";
+            key = index.rels[plain];
+          }
+        }
+        return kind ? { kind, key } : null;
+      };
+
+      const attachLookupAnchor = (chip, value) => {
+        if (!chip || !value) return;
+        const target = lookupTargetOf(value);
+        if (!target) return;
+        chip.classList.add("is-link");
+        chip.setAttribute("role", "button");
+        chip.tabIndex = 0;
+        chip.title = i18n.t(target.kind === "flag" ? "lookupFlag"
+          : target.kind === "check" ? "lookupCheck"
+            : target.kind === "rel" ? "lookupRel" : "lookupStat");
+        const open = (event) => {
+          event.stopPropagation();
+          openLookup(target.kind, target.key, chip);
+        };
+        chip.addEventListener("click", open);
+        chip.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            open(event);
+          }
+        });
+      };
+
+      const lookupCount = (kind, key) => {
+        if (!key) return 0;
+        if (kind === "flag") {
+          const groups = graph.flagGroups(key);
+          return groups.writes.length + groups.reads.length;
+        }
+        return graph.lookup(kind, key).length;
+      };
+
+      const lookupItems = (kind, key) => {
+        if (kind === "flag") {
+          const groups = graph.flagGroups(key);
+          return { items: groups.writes.concat(groups.reads), groups };
+        }
+        return { items: graph.lookup(kind, key), groups: null };
+      };
+
+      const paintLookupActive = () => {
+        const list = $("lookupList");
+        if (!list) return;
+        const rows = list.querySelectorAll(".lookup-item");
+        rows.forEach((row, index) => row.classList.toggle("is-active", index === lookup.active));
+        const active = rows[lookup.active];
+        if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest" });
+      };
+
+      const moveLookup = (delta) => {
+        if (!lookup.items.length) return;
+        lookup.active = (lookup.active + delta + lookup.items.length) % lookup.items.length;
+        paintLookupActive();
+      };
+
+      const hideLookup = () => {
+        const panel = $("lookupPanel");
+        if (panel) panel.hidden = true;
+        lookup.open = false;
+      };
+
+      const closeLookup = () => {
+        if (!overlay.close("lookup")) hideLookup();
+      };
+
+      const chooseLookup = () => {
+        const node = lookup.items[lookup.active];
+        if (!node) return false;
+        closeLookup();
+        store.select(node.id, { history: true });
+        return true;
+      };
+
+      const positionLookup = (trigger) => {
+        const panel = $("lookupPanel");
+        if (!panel || !trigger || !trigger.getBoundingClientRect) return;
+        if (store.state.layout === "mobile") {
+          panel.style.left = "";
+          panel.style.top = "";
+          panel.style.position = "";
+          return;
+        }
+        overlay.place(panel, trigger, { align: "start", width: 330, fit: true });
+      };
+
+      const openLookup = (kind, key, trigger) => {
+        if (!key) return;
+        const panel = $("lookupPanel");
+        if (!panel) return;
+        const data = lookupItems(kind, key);
+        const titleKey = kind === "speaker" ? "lookupSpeaker"
+          : kind === "flag" ? "lookupFlag"
+            : kind === "check" ? "lookupCheck"
+              : kind === "rel" ? "lookupRel" : "lookupStat";
+        let name = kind === "speaker" ? beats.speakerName(key) : key;
+        if (kind !== "speaker") {
+          const table = (text.names(store.state.lang) || {})[NAME_GROUP[kind] || "stats"];
+          if (table && table[key]) name = table[key];
+        }
+
+        const title = $("lookupTitle");
+        if (title) title.textContent = i18n.t("lookupTitle", { name, n: data.items.length });
+        const sub = $("lookupSub");
+        if (sub) sub.textContent = i18n.t(titleKey);
+
+        const list = $("lookupList");
+        list.replaceChildren();
+        if (kind === "check") renderCondBlock(list, key);
+
+        const rowOf = (node) => {
+          const row = ui.el("div", "lookup-item row row-tall row-accent");
+          row.setAttribute("role", "option");
+          const top = ui.el("div", "li-top");
+          top.appendChild(ui.el("span", "li-id", node.id));
+          top.appendChild(ui.el("span", "li-ch", i18n.chapterTitle(graph.chapterOf(node))));
+          row.appendChild(top);
+          const first = beats.firstLineOf(node);
+          if (first) row.appendChild(ui.el("span", "li-text", first));
+          row.addEventListener("click", () => {
+            closeLookup();
+            store.select(node.id, { history: true });
+          });
+          return row;
+        };
+
+        if (!data.items.length) {
+          list.appendChild(ui.el("p", "lookup-empty popover-empty", i18n.t("lookupEmpty")));
+        } else if (data.groups) {
+          if (data.groups.writes.length) {
+            list.appendChild(ui.el("p", "lookup-group", i18n.t("lookupGroupWrites", { n: data.groups.writes.length })));
+            data.groups.writes.forEach((node) => list.appendChild(rowOf(node)));
+          }
+          if (data.groups.reads.length) {
+            list.appendChild(ui.el("p", "lookup-group", i18n.t("lookupGroupReads", { n: data.groups.reads.length })));
+            data.groups.reads.forEach((node) => list.appendChild(rowOf(node)));
+          } else {
+            list.appendChild(ui.el("p", "lookup-group-note", i18n.t("lookupGroupReadsEmpty")));
+          }
+        } else {
+          data.items.forEach((node) => list.appendChild(rowOf(node)));
+        }
+
+        lookup.items = data.items;
+        lookup.active = 0;
+        lookup.trigger = trigger || null;
+        lookup.open = true;
+        paintLookupActive();
+        panel.hidden = false;
+        overlay.open("lookup", { trigger: trigger || null });
+        positionLookup(trigger);
+      };
+
+      const condRow = (parent, content, result) => {
+        const row = ui.el("p", "lc-row");
+        const cond = ui.el("span", "lc-cond");
+        if (content && content.nodeType) cond.appendChild(content);
+        else cond.textContent = content;
+        row.appendChild(cond);
+        if (result) row.appendChild(ui.el("span", "lc-result", result));
+        parent.appendChild(row);
+      };
+
+      const fallbackRow = (parent, model, result) => {
+        const branches = model.branches || [];
+        const excluded = branches.map((branch) => (branch && branch.expr ? condexpr.label(branch.expr) : ""))
+          .filter(Boolean);
+        const chip = ui.el("span", "cx-fallback", i18n.t("lookupCondFallback"));
+        const hint = [i18n.t("cxFallbackHint", { n: branches.length })];
+        if (excluded.length) hint.push(excluded.join("；"));
+        chip.title = hint.join("\n");
+        chip.setAttribute("aria-label", chip.title);
+        condRow(parent, chip, result);
+      };
+
+      const branchRow = (parent, branch, result) => {
+        if (branch && branch.expr) {
+          const box = condexpr.render(branch.expr, { openLookup });
+          box.title = condexpr.label(branch.expr);
+          condRow(parent, box, result);
+          return;
+        }
+        condRow(parent, (branch && branch.text) || i18n.t("lookupCondEmpty"), result);
+      };
+
+      const renderCondModel = (body, model) => {
+        const kind = model.kind;
+        const branches = model.branches || [];
+        if (kind === "switch" || kind === "condition") {
+          branches.forEach((branch) => {
+            branchRow(body, branch, kind === "switch"
+              ? i18n.t("lookupCondResult", { n: branch.result })
+              : i18n.t("lookupCondTrue"));
+          });
+          if (kind === "switch" && model.fallback) {
+            fallbackRow(body, model, i18n.t("lookupCondResult", { n: model.fallback }));
+          }
+          if (model.useCount && (model.countItems || []).length) {
+            body.appendChild(ui.el("p", "lookup-cond-sub", i18n.t("lookupCondCount")));
+            model.countItems.forEach((item) => {
+              condRow(body, i18n.t("lookupCondCountRow", { n: item.value, op: item.op }),
+                i18n.t("lookupCondResult", { n: item.result }));
+            });
+          }
+        } else if (kind === "dice") {
+          if ((model.additions || []).length) {
+            body.appendChild(ui.el("p", "lookup-cond-sub", i18n.t("lookupCondAdditions")));
+            model.additions.forEach((value) => {
+              body.appendChild(ui.el("p", "lc-row lc-plain", value));
+            });
+          }
+          branches.forEach((branch) => {
+            branchRow(body, branch, i18n.t("lookupCondResult", { n: branch.result }));
+          });
+          if (model.fallback) {
+            fallbackRow(body, model, i18n.t("lookupCondResult", { n: model.fallback }));
+          }
+        } else if (kind === "position") {
+          body.appendChild(ui.el("p", "lookup-cond-sub",
+            i18n.t("lookupCondPrefix", { prefix: model.prefix || "—" })));
+          (model.candidates || []).slice(0, 12).forEach((item) => {
+            const label = item.note ? `${item.name}（${item.note}）` : item.name;
+            condRow(body, label, i18n.t("lookupCondWeight", { n: item.rate }));
+          });
+        } else if (kind === "flag") {
+          body.appendChild(ui.el("p", "lc-row lc-plain", i18n.t("lookupCondFlag", { n: model.default })));
+        } else {
+          body.appendChild(ui.el("p", "lookup-cond-muted", i18n.t("lookupCondEmpty")));
+        }
+        if (model.note) body.appendChild(ui.el("p", "lookup-cond-note", model.note));
+        if (!body.childNodes.length) {
+          body.appendChild(ui.el("p", "lookup-cond-muted", i18n.t("lookupCondEmpty")));
+        }
+      };
+
+      const renderCondBlock = (list, key) => {
+        const seq = ++lookup.seq;
+        const box = ui.el("div", "lookup-cond");
+        box.appendChild(ui.el("p", "lookup-cond-title", i18n.t("lookupCondTitle")));
+        const body = ui.el("div", "lookup-cond-body");
+        body.appendChild(ui.el("p", "lookup-cond-muted", i18n.t("lookupCondLoading")));
+        box.appendChild(body);
+        list.insertBefore(box, list.firstChild);
+
+        checkpoints.ensure(key).then(() => {
+          if (seq !== lookup.seq) return;
+          const model = checkpoints.get(key);
+          if (!model) {
+            box.remove();
+            if (lookup.open) overlay.reposition("lookup");
+            return;
+          }
+          body.replaceChildren();
+          renderCondModel(body, model);
+          if (lookup.open) overlay.reposition("lookup");
+        });
+      };
+
+      const previewEl = () => {
+        if (!preview) preview = $("branchPreview");
+        return preview;
+      };
+
+      const hideBranchPreview = () => {
+        if (previewTimer) {
+          clearTimeout(previewTimer);
+          previewTimer = null;
+        }
+        const node = previewEl();
+        if (node) node.hidden = true;
+      };
+
+      const showBranchPreview = (head, payload) => {
+        const node = previewEl();
+        if (!node || !head) return;
+        node.replaceChildren();
+        if (payload.branches) {
+          const header = ui.el("div", "bp-head");
+          header.appendChild(ui.el("span", "bp-title", payload.title || ""));
+          node.appendChild(header);
+        }
+        const data = payload.branches
+          ? beats.previewOfBranches(payload.branches)
+          : beats.beatsPreview(payload.beats || []);
+        if (!data.lines.length) {
+          node.appendChild(ui.el("div", "bp-empty", i18n.t("previewEmpty")));
+        } else {
+          data.lines.forEach((line) => {
+            const row = ui.el("div", `bp-line${line.kind ? ` is-${line.kind}` : ""}`);
+            if (line.who) row.appendChild(ui.el("span", "bp-who", line.who));
+            row.appendChild(document.createTextNode(line.text));
+            node.appendChild(row);
+          });
+          if (data.more > 0) node.appendChild(ui.el("div", "bp-foot", i18n.t("previewMore", { n: data.more })));
+        }
+        node.hidden = false;
+        overlay.place(node, head, { align: "start", gap: 6, width: 300, fit: true });
+      };
+
+      const bindBranchPreview = (head, box, getPayload) => {
+        if (!HOVER_OK) return;
+        let overVar = false;
+        head.addEventListener("mouseenter", () => {
+          if (box.classList.contains("is-open")) return;
+          if (previewTimer) {
+            clearTimeout(previewTimer);
+            previewTimer = null;
+          }
+          if (overVar) return;
+          showBranchPreview(head, getPayload());
+        });
+        head.addEventListener("mousemove", (event) => {
+          const target = event.target;
+          const now = !!(target && target.closest && target.closest(".cx-var"));
+          if (now === overVar) return;
+          overVar = now;
+          if (now) hideBranchPreview();
+          else if (!box.classList.contains("is-open")) showBranchPreview(head, getPayload());
+        });
+        head.addEventListener("mouseleave", () => {
+          previewTimer = setTimeout(hideBranchPreview, 120);
+        });
+        head.addEventListener("focus", () => {
+          if (box.classList.contains("is-open")) return;
+          showBranchPreview(head, getPayload());
+        });
+        head.addEventListener("blur", hideBranchPreview);
+      };
+
+      const foldHeadOf = (box) => {
+        for (const child of box.children) {
+          if (!child.classList) continue;
+          if (child.classList.contains("option-head") || child.classList.contains("branch-head")) {
+            return child;
+          }
+        }
+        return null;
+      };
+
+      const revealBeat = (key) => {
+        const body = $("readerBody");
+        if (!key || !body) return null;
+        const selector = String(key).indexOf(":") >= 0
+          ? `[data-opt="${key}"]`
+          : `[data-beat="${key}"]`;
+        const target = body.querySelector(selector);
+        if (!target) return null;
+        let node = target.parentElement;
+        while (node && node !== body) {
+          const list = node.classList;
+          if (list && (list.contains("option") || list.contains("branch")) && !list.contains("is-open")) {
+            list.add("is-open");
+            const head = foldHeadOf(node);
+            if (head) head.setAttribute("aria-expanded", "true");
+          }
+          node = node.parentElement;
+        }
+        return target;
+      };
+
+      const scrollToBeat = (key) => {
+        const target = revealBeat(key);
+        if (!target) return;
+        requestAnimationFrame(() => {
+          if (target.scrollIntoView) target.scrollIntoView({ block: "center", behavior: "smooth" });
+          target.classList.add("is-flash");
+          setTimeout(() => target.classList.remove("is-flash"), 900);
+        });
+      };
+
+      const renderOutlineNode = (item, depth) => {
+        const box = ui.el("div", `ol-node ol-${item.kind}`);
+        box.dataset.kind = item.kind;
+        box.dataset.depth = String(Math.min(depth, 4));
+        if (depth) box.classList.add("is-nested");
+
+        const row = ui.el("div", "outline-item ol-head row row-sm row-accent");
+        row.title = item.label;
+        if (item.kind === "option") row.appendChild(ui.el("span", "ol-idx", String(item.index || "")));
+        row.appendChild(ui.el("span", "ol-label", item.label));
+        if (item.lock) row.appendChild(ui.el("span", "ol-badge ol-lock badge", `🔒 ${item.lock}`));
+        else if (item.note) row.appendChild(ui.el("span", "ol-badge ol-note badge badge-neutral", item.note));
+
+        if (item.key) {
+          row.dataset.key = item.key;
+          row.setAttribute("role", "button");
+          row.tabIndex = 0;
+          const open = () => scrollToBeat(item.key);
+          row.addEventListener("click", open);
+          row.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              open();
+            }
+          });
+        }
+        box.appendChild(row);
+
+        if (item.children && item.children.length) {
+          const body = ui.el("div", "ol-body");
+          body.appendChild(renderOutlineNodes(item.children, depth + 1));
+          box.appendChild(body);
+        }
+        return box;
+      };
+
+      const renderOutlineNodes = (items, depth) => {
+        const frag = document.createDocumentFragment();
+        items.forEach((item) => frag.appendChild(renderOutlineNode(item, depth)));
+        return frag;
+      };
+
+      const renderOutlinePanel = (node) => {
+        const panel = $("outlinePanel");
+        const list = $("outlineList");
+        if (!panel || !list) return;
+        if (!node) {
+          panel.hidden = true;
+          return;
+        }
+        const rows = text.story(store.state.lang, node.id) || [];
+        const tree = beats.outlineModel(rows);
+        list.replaceChildren();
+        if (!tree.length) {
+          list.appendChild(ui.el("p", "rail-empty", i18n.t("outlineEmpty")));
+          return;
+        }
+        list.appendChild(renderOutlineNodes(tree, 0));
+      };
+
+      const hideOutline = () => {
+        const panel = $("outlinePanel");
+        const btn = $("outlineBtn");
+        if (panel) panel.hidden = true;
+        if (btn) {
+          btn.classList.remove("is-on");
+          btn.setAttribute("aria-pressed", "false");
+        }
+      };
+
+      const closeOutline = () => {
+        if (!overlay.close("outline")) hideOutline();
+      };
+
+      const openOutline = () => {
+        const panel = $("outlinePanel");
+        const btn = $("outlineBtn");
+        const node = store.selected();
+        if (!panel || !node) return;
+        renderOutlinePanel(node);
+        if (btn) {
+          btn.classList.add("is-on");
+          btn.setAttribute("aria-pressed", "true");
+        }
+        overlay.open("outline", { trigger: btn });
+      };
+
+      const toggleOutlinePanel = () => {
+        const panel = $("outlinePanel");
+        if (!panel) return;
+        if (panel.hidden) openOutline();
+        else closeOutline();
+      };
+
+      overlay.register("lookup", {
+        id: "lookupPanel",
+        group: "pop",
+        onHide: hideLookup,
+        placement: { align: "start", width: 330, fit: true },
+      });
+      overlay.register("outline", {
+        id: "outlinePanel",
+        triggerId: "outlineBtn",
+        group: "sheet",
+        onHide: hideOutline,
+        placement: { align: "end", width: 320, fit: true },
+      });
+
+      return {
+        attachLookupAnchor,
+        bindBranchPreview,
+        chooseLookup,
+        closeLookup,
+        closeOutline,
+        ensureFacetSets,
+        extractKey: beats.extractKey,
+        hideBranchPreview,
+        hideLookup,
+        hideOutline,
+        lookup,
+        lookupCount,
+        lookupTargetOf,
+        moveLookup,
+        openLookup,
+        openOutline,
+        paintLookupActive,
+        positionLookup,
+        renderCondBlock,
+        renderCondModel,
+        renderOutlinePanel,
+        repositionLookup: () => overlay.reposition("lookup"),
+        reset: () => {
+          resetNameIndex();
+          facetSets = null;
+        },
+        scrollToBeat,
+        showBranchPreview,
+        toggleOutlinePanel,
+      };
+    });
+})();
