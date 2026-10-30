@@ -217,7 +217,10 @@ class Renderer:
                     continue
                 label = self._meta(beat)
                 if label:
-                    out.append([BEAT_META, label])
+                    if beat.kind == "dice":
+                        out.append([BEAT_META, label, "dice", beat.key])
+                    else:
+                        out.append([BEAT_META, label])
             elif isinstance(beat, LoreBeat):
                 self._lore(beat.key, out)
         return out

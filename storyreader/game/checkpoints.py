@@ -43,7 +43,7 @@ DICE_PROPERTY = {0: "數值", 1: "好感度", 2: "技能", 3: "旗標"}
 DICE_FIELD = {0: "_stat", 1: "_relationship", 2: "_talent", 3: "_flag"}
 
 CHECKPOINT_CALL = re.compile(
-    r'checkpointmanager\.(Switch|Condition|Dice|Position)\(\s*"([^"]{2,60})"\s*\)')
+    r'checkpointmanager\.(Switch|Condition|Dice|Position)\(\s*"([^"]{2,60})"')
 
 
 def collect_keys(sources: Mapping[str, str]) -> set[str]:
@@ -68,6 +68,30 @@ def choose_model(models: list[dict[str, Any]], hinted: set[str] | None = None) -
             if model.get("kind") in hinted:
                 return model
     return models[0]
+
+
+def _distinct_models(models: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[str] = set()
+    out: list[dict[str, Any]] = []
+    for model in models:
+        kind = str(model.get("kind") or "")
+        if not kind or kind in seen:
+            continue
+        seen.add(kind)
+        out.append(model)
+    return out
+
+
+def _model_with_variants(models: list[dict[str, Any]],
+                         hinted: set[str] | None = None) -> dict[str, Any]:
+    distinct = _distinct_models(models)
+    primary = choose_model(distinct, hinted)
+    variants = [model for model in distinct if model is not primary]
+    if not variants:
+        return primary
+    merged = dict(primary)
+    merged["variants"] = variants
+    return merged
 
 
 def _norm(name: str) -> str:
@@ -448,7 +472,7 @@ def extract(assets_dir: Path, found: dict[str, Path], reporter: Reporter,
             if not parsed_models:
                 gaps.append({"key": key, "reason": reasons[0] if reasons else GAP_UNMATCHED})
                 continue
-            models[key] = choose_model(parsed_models, (hints or {}).get(key))
+            models[key] = _model_with_variants(parsed_models, (hints or {}).get(key))
     by_reason: dict[str, int] = {}
     for gap in gaps:
         by_reason[gap["reason"]] = by_reason.get(gap["reason"], 0) + 1
@@ -469,13 +493,16 @@ def extract(assets_dir: Path, found: dict[str, Path], reporter: Reporter,
 def summarize(models: dict[str, dict[str, Any]], wanted: int,
               gaps: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     by_kind: dict[str, int] = {}
+    variant_count = 0
     for model in models.values():
         by_kind[model["kind"]] = by_kind.get(model["kind"], 0) + 1
+        variant_count += len(model.get("variants") or [])
     out: dict[str, Any] = {
         "resolved": len(models),
         "wanted": wanted,
         "missing": max(wanted - len(models), 0),
         "by_kind": by_kind,
+        "variants": variant_count,
     }
     if gaps is not None:
         by_reason: dict[str, int] = {}

@@ -157,7 +157,7 @@
         overlay.place(panel, trigger, { align: "start", width: 330, fit: true });
       };
 
-      const openLookup = (kind, key, trigger) => {
+      const openLookup = (kind, key, trigger, method) => {
         if (!key) return;
         const panel = $("lookupPanel");
         if (!panel) return;
@@ -179,7 +179,7 @@
 
         const list = $("lookupList");
         list.replaceChildren();
-        if (kind === "check") renderCondBlock(list, key);
+        if (kind === "check") renderCondBlock(list, key, method);
 
         const rowOf = (node) => {
           const row = ui.el("div", "lookup-item row row-tall row-accent");
@@ -246,9 +246,9 @@
         condRow(parent, chip, result);
       };
 
-      const branchRow = (parent, branch, result) => {
+      const branchRow = (parent, branch, result, method) => {
         if (branch && branch.expr) {
-          const box = condexpr.render(branch.expr, { openLookup });
+          const box = condexpr.render(branch.expr, { openLookup, method });
           box.title = condexpr.label(branch.expr);
           condRow(parent, box, result);
           return;
@@ -263,7 +263,7 @@
           branches.forEach((branch) => {
             branchRow(body, branch, kind === "switch"
               ? i18n.t("lookupCondResult", { n: branch.result })
-              : i18n.t("lookupCondTrue"));
+              : i18n.t("lookupCondTrue"), kind);
           });
           if (kind === "switch" && model.fallback) {
             fallbackRow(body, model, i18n.t("lookupCondResult", { n: model.fallback }));
@@ -283,7 +283,7 @@
             });
           }
           branches.forEach((branch) => {
-            branchRow(body, branch, i18n.t("lookupCondResult", { n: branch.result }));
+            branchRow(body, branch, i18n.t("lookupCondResult", { n: branch.result }), kind);
           });
           if (model.fallback) {
             fallbackRow(body, model, i18n.t("lookupCondResult", { n: model.fallback }));
@@ -306,7 +306,7 @@
         }
       };
 
-      const renderCondBlock = (list, key) => {
+      const renderCondBlock = (list, key, method) => {
         const seq = ++lookup.seq;
         const box = ui.el("div", "lookup-cond");
         box.appendChild(ui.el("p", "lookup-cond-title", i18n.t("lookupCondTitle")));
@@ -317,7 +317,7 @@
 
         checkpoints.ensure(key).then(() => {
           if (seq !== lookup.seq) return;
-          const model = checkpoints.get(key);
+          const model = checkpoints.get(key, method);
           if (!model) {
             box.remove();
             if (lookup.open) overlay.reposition("lookup");

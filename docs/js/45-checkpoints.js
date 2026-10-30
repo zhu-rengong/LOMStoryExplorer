@@ -38,12 +38,24 @@
       return allPending;
     };
 
+    const get = (key, method) => {
+      const all = window.SR_CHECKPOINTS;
+      const model = all && key ? all[key] : null;
+      if (!model) return null;
+      if (!method || model.kind === method) return model;
+      const variants = Array.isArray(model.variants) ? model.variants : [];
+      for (const variant of variants) {
+        if (variant && variant.kind === method) return variant;
+      }
+      return null;
+    };
+
     return {
       count,
       ensure,
       ensureAll,
-      get: schema.checkpoint,
-      has: (key) => !!schema.checkpoint(key),
+      get,
+      has: (key, method) => !!get(key, method),
       shardOf: schema.checkpointShard,
     };
   });

@@ -76,7 +76,7 @@
         const open = (event) => {
           event.stopPropagation();
           event.preventDefault();
-          opts.openLookup(target.kind, target.key, chip);
+          opts.openLookup(target.kind, target.key, chip, opts.method);
         };
         chip.addEventListener("click", open);
         chip.addEventListener("keydown", (event) => {
@@ -218,7 +218,7 @@
       };
 
       const pick = (kind, key, result) => {
-        const model = checkpoints.get(key);
+        const model = checkpoints.get(key, kind);
         if (!model) return null;
         const branches = model.branches || [];
         if (!branches.length) return null;
@@ -233,7 +233,7 @@
       };
 
       const fallback = (kind, key, result) => {
-        const model = checkpoints.get(key);
+        const model = checkpoints.get(key, kind);
         if (!model) return null;
         const type = model.kind || kind;
         if (type !== "switch" && type !== "dice") return null;

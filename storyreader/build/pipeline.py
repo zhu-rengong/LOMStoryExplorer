@@ -316,23 +316,34 @@ def _count_checkpoint_kinds(items: dict[str, Any]) -> dict[str, int]:
     return kinds
 
 
+def _sanitize_model(model: dict[str, Any]) -> dict[str, Any]:
+    sanitized = dict(model)
+    branches = []
+    for branch in model.get("branches") or []:
+        if not isinstance(branch, dict):
+            continue
+        item = dict(branch)
+        expr = item.get("expr")
+        if expr is not None and not (isinstance(expr, dict) and "tag" in expr):
+            item.pop("expr", None)
+        branches.append(item)
+    sanitized["branches"] = branches
+    variants = model.get("variants")
+    if isinstance(variants, list):
+        cleaned = [_sanitize_model(variant) for variant in variants if isinstance(variant, dict)]
+        if cleaned:
+            sanitized["variants"] = cleaned
+        else:
+            sanitized.pop("variants", None)
+    return sanitized
+
+
 def _sanitize_checkpoints(items: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {}
     for key, model in items.items():
         if not isinstance(model, dict):
             continue
-        sanitized = dict(model)
-        branches = []
-        for branch in model.get("branches") or []:
-            if not isinstance(branch, dict):
-                continue
-            item = dict(branch)
-            expr = item.get("expr")
-            if expr is not None and not (isinstance(expr, dict) and "tag" in expr):
-                item.pop("expr", None)
-            branches.append(item)
-        sanitized["branches"] = branches
-        out[key] = sanitized
+        out[key] = _sanitize_model(model)
     return out
 
 
@@ -487,6 +498,8 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
         checkpoint_blob = {}
     raw_items = checkpoint_blob.get("items")
     checkpoint_items = _sanitize_checkpoints(raw_items if isinstance(raw_items, dict) else {})
+    checkpoint_variants = sum(
+        len(model.get("variants") or []) for model in checkpoint_items.values())
     checkpoint_parts: list[dict[str, Any]] = []
     checkpoint_mapping: dict[str, int] = {}
     if checkpoint_items:
@@ -495,6 +508,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
         parts.extend((item["name"], item["bytes"]) for item in checkpoint_parts)
         reporter.info(
             f"checkpoint conditions: {len(checkpoint_items)} in {len(checkpoint_parts)} shards,"
+            f" {checkpoint_variants} variants,"
             f" {fmt_bytes(sum(item['bytes'] for item in checkpoint_parts))} total"
         )
     else:
@@ -574,6 +588,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     }
     checkpoint_report = {
         "resolved": len(checkpoint_items),
+        "variants": checkpoint_variants,
         "bytes": sum(item["bytes"] for item in checkpoint_parts),
         "mode": "shards" if checkpoint_parts else "none",
         "shards": len(checkpoint_parts),

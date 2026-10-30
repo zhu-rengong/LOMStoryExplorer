@@ -112,6 +112,7 @@
             cond.classList.add("is-expr");
             cond.replaceChildren(condexpr.render(expr, {
               openLookup: ctx.lookup ? ctx.lookup.open : null,
+              method: kind,
             }));
             cond.title = condexpr.label(expr);
             return;
@@ -195,7 +196,9 @@
           lookupBtn.appendChild(ui.svg("i-search"));
           lookupBtn.addEventListener("click", (event) => {
             event.stopPropagation();
-            ctx.lookup.open(target.kind, target.key, lookupBtn);
+            const method = ["switch", "dice", "condition", "position"].indexOf(data.kind) >= 0
+              ? data.kind : "";
+            ctx.lookup.open(target.kind, target.key, lookupBtn, method);
           });
           head.appendChild(lookupBtn);
         }
@@ -254,27 +257,31 @@
           if (!metaBuffer.length) return;
           const group = ui.el("div", "meta-group");
           const chips = ui.el("div", "meta-chips");
-          metaBuffer.forEach((value) => {
+          metaBuffer.forEach((meta) => {
+            const value = meta.text;
             const chip = ui.el("span", "chip-stat chip chip-sm", value);
             if (value.length > 24) chip.title = value;
-            if (ctx.lookup && ctx.lookup.targetOf) {
-              const target = ctx.lookup.targetOf(extractKey(value) || value);
-              if (target) {
-                chip.classList.add("is-link");
-                chip.setAttribute("role", "button");
-                chip.tabIndex = 0;
-                const open = (event) => {
-                  event.stopPropagation();
-                  ctx.lookup.open(target.kind, target.key, chip);
-                };
-                chip.addEventListener("click", open);
-                chip.addEventListener("keydown", (event) => {
-                  if (event.key === "Enter" || event.key === " ") {
-                    event.preventDefault();
-                    open(event);
-                  }
-                });
-              }
+            let target = null;
+            if (meta.method === "dice" && meta.key) {
+              target = { kind: "check", key: meta.key };
+            } else if (ctx.lookup && ctx.lookup.targetOf) {
+              target = ctx.lookup.targetOf(extractKey(value) || value);
+            }
+            if (target) {
+              chip.classList.add("is-link");
+              chip.setAttribute("role", "button");
+              chip.tabIndex = 0;
+              const open = (event) => {
+                event.stopPropagation();
+                ctx.lookup.open(target.kind, target.key, chip, meta.method);
+              };
+              chip.addEventListener("click", open);
+              chip.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  open(event);
+                }
+              });
             }
             chips.appendChild(chip);
           });
@@ -308,7 +315,9 @@
           flushBranches();
 
           if (tag === "m") {
-            metaBuffer.push(stripRich(beat[1]));
+            const meta = schema.metaBeat(beat);
+            meta.text = stripRich(meta.text);
+            metaBuffer.push(meta);
             continue;
           }
           flushMeta();

@@ -117,6 +117,12 @@
     label: beat[2] || "",
   });
 
+  const metaBeat = (beat) => ({
+    text: beat[1] || "",
+    method: typeof beat[2] === "string" ? beat[2] : "",
+    key: typeof beat[3] === "string" ? beat[3] : "",
+  });
+
   const walk = (rows, visit) => {
     for (const beat of rows || []) {
       if (!Array.isArray(beat) || !beat.length) continue;
@@ -185,6 +191,7 @@
     firstLine,
     jump,
     kindOf,
+    metaBeat,
     nodeSource: (id) => meta.shardOf[id] || "",
     pack: packed,
     say,
