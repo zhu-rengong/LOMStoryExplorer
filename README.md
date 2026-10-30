@@ -61,7 +61,7 @@ docs/
   js/45-checkpoints.js       lazy checkpoint shard loading
   js/50-settings.js          font enumeration and preference facade
   js/55-query.js             filter language parser and evaluator
-  js/60-search.js            id and full text search index
+  js/60-search.js            full text search index for story text
   js/62-condexpr.js          checkpoint expression rendering
   js/65-beats.js             story beat rendering and preview models
   js/70-reader.js            reader surface, footer, loading and retry states

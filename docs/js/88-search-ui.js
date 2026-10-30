@@ -139,9 +139,8 @@
         const input = $("search");
         if (!input) return;
         const query = input.value.trim();
-        const found = run();
+        run();
         if (query.length < 2 || text.progress(store.state.lang).done) return;
-        if (search.ID_LIKE.test(query) && found > 0) return;
         ui.progress(i18n.t("searchLoadingText", { loaded: 0, total: 0 }));
         text.ensureAll(store.state.lang, (loaded, total) => {
           ui.progress(i18n.t("searchLoadingText", { loaded, total }));
