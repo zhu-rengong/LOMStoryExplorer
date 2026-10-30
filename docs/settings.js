@@ -206,22 +206,80 @@
     }
   };
 
-  const FALLBACK_FAMILIES = [
-    "Microsoft YaHei", "Microsoft YaHei UI", "SimSun", "SimHei", "KaiTi", "FangSong",
-    "DengXian", "YouYuan", "LiSu", "STKaiti", "STSong", "STXihei", "STZhongsong",
-    "Microsoft JhengHei", "MingLiU", "PMingLiU", "DFKai-SB", "BiauKai",
-    "Source Han Sans TC", "Source Han Serif TC", "Noto Sans TC", "Noto Serif TC",
-    "LXGW WenKai", "Sarasa Mono TC", "PingFang TC", "PingFang SC",
-    "Songti TC", "Kaiti TC", "Yuanti TC",
-    "Segoe UI", "Segoe UI Variable", "Arial", "Tahoma", "Verdana", "Georgia",
-    "Times New Roman", "Cambria", "Consolas", "Cascadia Mono", "Courier New", "Calibri",
-  ];
+  const FONT_CANDIDATES = [...new Set([
+    "Microsoft YaHei", "Microsoft YaHei UI", "Microsoft JhengHei", "Microsoft JhengHei UI",
+    "SimSun", "SimSun-ExtB", "NSimSun", "SimHei", "KaiTi", "FangSong", "DengXian",
+    "YouYuan", "LiSu", "MingLiU", "MingLiU_HKSCS", "PMingLiU", "DFKai-SB", "BiauKai",
+    "STKaiti", "STSong", "STXihei", "STZhongsong", "STFangsong", "STHupo", "STLiti",
+    "STXingkai", "STXinwei", "STCaiyun", "Source Han Sans TC", "Source Han Sans SC",
+    "Source Han Serif TC", "Source Han Serif SC", "Noto Sans TC", "Noto Sans SC",
+    "Noto Serif TC", "Noto Serif SC", "Noto Sans CJK TC", "Noto Serif CJK TC",
+    "LXGW WenKai", "LXGW WenKai TC", "Sarasa Mono TC", "Sarasa Gothic TC",
+    "PingFang TC", "PingFang SC", "Songti TC", "Songti SC", "Kaiti TC", "Kaiti SC",
+    "Yuanti TC", "Yuanti SC", "Heiti TC", "Heiti SC", "Hiragino Sans GB",
+    "Lantinghei TC", "Lantinghei SC", "HanHei TC", "HanHei SC",
+    "Yu Gothic", "Yu Mincho", "Meiryo", "MS Gothic", "MS Mincho",
+    "Hiragino Kaku Gothic ProN", "Hiragino Mincho ProN", "Malgun Gothic",
+    "Apple SD Gothic Neo", "NanumGothic",
+    "Segoe UI", "Segoe UI Variable", "Segoe UI Variable Display", "Segoe UI Variable Text",
+    "Arial", "Arial Black", "Tahoma", "Verdana", "Georgia", "Times New Roman",
+    "Cambria", "Calibri", "Trebuchet MS", "Palatino Linotype", "Book Antiqua",
+    "Franklin Gothic Medium", "Century Gothic", "Lucida Console", "Lucida Sans Unicode",
+    "Helvetica Neue", "Helvetica", "Optima", "Baskerville", "Futura", "Gill Sans",
+    "Rockwell", "Consolas", "Cascadia Mono", "Cascadia Code", "Courier New",
+    "SF Mono", "Menlo", "Monaco", "JetBrains Mono", "Fira Code", "Hack",
+    "IBM Plex Mono", "Roboto Mono", "Source Code Pro", "Ubuntu Mono",
+    "DejaVu Sans Mono", "Liberation Mono", "Noto Sans Mono", "Inconsolata",
+  ])];
 
-  const families = () => {
-    const list = window.__FONT_LIST__ && window.__FONT_LIST__.families;
-    if (Array.isArray(list) && list.length) return list;
-    return FALLBACK_FAMILIES;
+  const FONT_PROBE_TEXT = "mmmmmmmmmmlli WWW 中文測試";
+
+  const FONT_BASELINES = ["monospace", "serif", "sans-serif"];
+
+  let detectedFamilies = null;
+
+  const measureWidth = (ctx, font) => {
+    ctx.font = `72px ${font}`;
+    return ctx.measureText(FONT_PROBE_TEXT).width;
   };
+
+  const detectFamilies = () => {
+    try {
+      const ctx = document.createElement("canvas").getContext("2d");
+      if (!ctx) return null;
+      const baselines = FONT_BASELINES.map((base) => measureWidth(ctx, base));
+      const found = [];
+      for (const family of FONT_CANDIDATES) {
+        const quoted = `"${family.replace(/"/g, "")}"`;
+        let available = false;
+        for (let i = 0; i < FONT_BASELINES.length && !available; i++) {
+          if (measureWidth(ctx, `${quoted}, ${FONT_BASELINES[i]}`) !== baselines[i]) available = true;
+        }
+        if (available) found.push(family);
+      }
+      return found.length ? found : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const publishFamilies = () => {
+    const found = detectFamilies();
+    if (!found) return;
+    detectedFamilies = found;
+    window.dispatchEvent(new CustomEvent("sr:fonts", { detail: { families: found } }));
+  };
+
+  const scheduleFontDetection = () => {
+    const run = () => {
+      if (window.requestIdleCallback) window.requestIdleCallback(publishFamilies, { timeout: 1200 });
+      else setTimeout(publishFamilies, 120);
+    };
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run, { once: true });
+    else run();
+  };
+
+  const families = () => detectedFamilies || FONT_CANDIDATES;
 
   const labelOf = (kind, id, custom) => {
     if (kind === "type") {
@@ -301,4 +359,5 @@
 
   restore();
   apply();
+  scheduleFontDetection();
 })();

@@ -7,8 +7,7 @@ data/report.json
 data/checkpoints.json
 data/entries.json
 
-# 前端生成数据：build.py 输出的 graph.js / text-*.js / checkpoints-*.js / wordcount.js，
-# 以及 scan-fonts.ps1 按本机字体生成的 fonts.js，都可由脚本重建
+# 前端生成数据：build.py 输出的 graph.js / text-*.js / checkpoints-*.js / wordcount.js
 docs/data/
 
 # 开发期截图（旧的散落在 docs/，新的统一在 tools/shots/）

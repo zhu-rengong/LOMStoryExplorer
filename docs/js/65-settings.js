@@ -431,6 +431,14 @@
     if (btn) btn.addEventListener("click", openSettings);
   };
 
+  window.addEventListener("sr:fonts", () => {
+    if (!picker || picker.hidden || !pickerState.target) return;
+    pickerState.items = fontItems(pickerState.target);
+    pickerState.active = 0;
+    renderPickerList(pickerSearch ? pickerSearch.value : "");
+    paintPickerActive();
+  });
+
   overlay.register("settings", {
     id: "settingsDrawer",
     triggerId: "settingsBtn",

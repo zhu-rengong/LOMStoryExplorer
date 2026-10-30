@@ -3,8 +3,7 @@ param(
     [string]$GameDir = $env:MORTAL_GAME_DIR,
     [string]$Langs = "zh-tw,zh-cn",
     [switch]$Force,
-    [switch]$NoBrowser,
-    [switch]$NoFontScan
+    [switch]$NoBrowser
 )
 
 $ErrorActionPreference = "Stop"
@@ -39,15 +38,6 @@ try {
     Write-Host "`n== build reader data ==" -ForegroundColor Cyan
     python "build.py" "--langs" $Langs
     if ($LASTEXITCODE -ne 0) { throw "build.py failed (exit code $LASTEXITCODE)" }
-
-    if (-not $NoFontScan) {
-        Write-Host "`n== scan local fonts ==" -ForegroundColor Cyan
-        try {
-            & (Join-Path $root "tools" "scan-fonts.ps1")
-        } catch {
-            Write-Warning ("font scan failed, keeping the built-in list: {0}" -f $_.Exception.Message)
-        }
-    }
 
     $index = Join-Path $root "docs" "index.html"
     if (-not (Test-Path $index)) { throw "docs/index.html not found" }
