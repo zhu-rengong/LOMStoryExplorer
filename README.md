@@ -63,10 +63,10 @@ docs/
   js/55-query.js             filter language parser and evaluator
   js/60-search.js            id and full text search index
   js/62-condexpr.js          checkpoint expression rendering
-  js/65-beats.js             story beat rendering, outline and preview models
+  js/65-beats.js             story beat rendering and preview models
   js/70-reader.js            reader surface, footer, loading and retry states
-  js/75-rail.js              outline and bookmark rail
-  js/80-panels.js            lookup, condition and branch outline panels
+  js/75-rail.js              catalog and bookmark rail
+  js/80-panels.js            lookup and condition panels
   js/85-stats.js             word count panel
   js/88-search-ui.js         top bar search surface
   js/90-filter-ui.js         filter panel, suggestions and results

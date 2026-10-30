@@ -27,7 +27,6 @@
   <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.1"/><path d="M12 2.6a1.9 1.9 0 0 1 1.9 1.9v.5c0 .4.3.7.7.8.3.1.6 0 .8-.2l.4-.4a1.9 1.9 0 1 1 2.7 2.7l-.4.4c-.2.2-.3.5-.2.8.1.4.4.7.8.7h.5a1.9 1.9 0 0 1 0 3.8h-.5c-.4 0-.7.3-.8.7-.1.3 0 .6.2.8l.4.4a1.9 1.9 0 1 1-2.7 2.7l-.4-.4c-.2-.2-.5-.3-.8-.2-.4.1-.7.4-.7.8v.5a1.9 1.9 0 0 1-3.8 0v-.5c0-.4-.3-.7-.7-.8-.3-.1-.6 0-.8.2l-.4.4a1.9 1.9 0 1 1-2.7-2.7l.4-.4c.2-.2.3-.5.2-.8-.1-.4-.4-.7-.8-.7h-.5a1.9 1.9 0 0 1 0-3.8h.5c.4 0 .7-.3.8-.7.1-.3 0-.6-.2-.8l-.4-.4a1.9 1.9 0 1 1 2.7-2.7l.4.4c.2.2.5.3.8.2.4-.1.7-.4.7-.8v-.5A1.9 1.9 0 0 1 12 2.6z"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5 7.5 12l7 7"/></symbol>
   <symbol id="i-forward" viewBox="0 0 24 24"><path d="M9.5 5l7 7-7 7"/></symbol>
-  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M15 9V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h3"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-panel" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol>
   <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
@@ -36,7 +35,6 @@
   <symbol id="i-top" viewBox="0 0 24 24"><path d="M12 19V6M6 11l6-6 6 6"/></symbol>
   <symbol id="i-jump" viewBox="0 0 24 24"><path d="M5 19.5V9a3 3 0 0 1 3-3h8"/><path d="m13 3 3 3-3 3"/><circle cx="5" cy="19.5" r="1.3"/></symbol>
   <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 4 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.8-5.2 2.8 1-5.8L3.5 10.2l5.9-.9L12 4z"/></symbol>
-  <symbol id="i-tree" viewBox="0 0 24 24"><path d="M5 4v12a3 3 0 0 0 3 3h3M5 9h6a3 3 0 0 1 3 3v1M17 4v7M15.5 15h3M17 15v5"/><circle cx="17" cy="4" r="1.4"/><circle cx="17" cy="20" r="1.4"/></symbol>
   <symbol id="i-list" viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h9"/></symbol>
   <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.1"/><circle cx="12" cy="12" r="1.1"/><circle cx="18.5" cy="12" r="1.1"/></symbol>
   <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.4"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.7 1.1c0 1.7-2.3 1.9-2.3 3.4"/><circle cx="12" cy="17" r=".9" fill="currentColor" stroke="none"/></symbol>
@@ -166,7 +164,6 @@
   <div id="railScrim" class="scrim" hidden></div>
 
   <section id="reader" aria-live="polite">
-    <div id="readProgress" class="read-progress" aria-hidden="true" hidden></div>
     <header id="readerHead" class="reader-head">
       <div class="reader-title">
         <p id="nodeChapter" class="crumb" hidden></p>
@@ -177,10 +174,6 @@
           </button>
           <button class="icon-btn btn btn-icon" id="forwardBtn" data-i18n-title="forwardTitle" title="下一處（→）" disabled>
             <svg><use href="#i-forward"/></svg>
-          </button>
-          <button class="icon-btn btn btn-icon" id="outlineBtn" aria-pressed="false"
-                  data-i18n-title="outlineToggleTitle" title="分支大綱">
-            <svg><use href="#i-tree"/></svg>
           </button>
           <div class="menu-wrap reader-nav" id="navWrap">
             <button id="navBtn" class="icon-btn btn btn-icon" aria-haspopup="true" aria-expanded="false"
@@ -193,15 +186,6 @@
                   data-i18n-title="bookmarkAdd" title="加入書籤">
             <svg><use href="#i-star"/></svg>
           </button>
-          <div class="menu-wrap reader-more">
-            <button class="icon-btn btn btn-icon" id="readerMoreBtn" aria-haspopup="true" aria-expanded="false"
-                    data-i18n-title="moreTitle" title="更多">
-              <svg><use href="#i-more"/></svg>
-            </button>
-            <div id="readerMore" class="menu surface popover" role="menu" hidden>
-              <button class="menu-item row" id="copyBtn" data-i18n="copyTitle" data-i18n-title="copyTitle">複製劇本 id</button>
-            </div>
-          </div>
         </div>
       </div>
     </header>
@@ -218,16 +202,6 @@
          tabindex="0" data-i18n-title="gripTitle" title="拖動調整閱讀寬度"></div>
     <div class="reader-grip" data-edge="right" role="separator" aria-orientation="vertical"
          tabindex="0" data-i18n-title="gripTitle" title="拖動調整閱讀寬度"></div>
-    <div id="outlinePanel" class="outline-panel surface popover" role="dialog" aria-label="分支大綱" hidden>
-      <header class="outline-head panel-head popover-head">
-        <span class="outline-title popover-title" data-i18n="outlineTitle">大綱</span>
-        <button id="outlineClose" class="icon-btn btn btn-icon" data-i18n-title="closeTitle" title="關閉">
-          <svg><use href="#i-close"/></svg>
-        </button>
-      </header>
-      <div id="outlineList" class="outline-list popover-list"></div>
-    </div>
-
     <footer id="readerFoot" class="reader-foot" hidden>
       <button id="prevBtn" class="foot-btn btn" data-i18n-title="recentPrev" title="上一篇">
         <svg><use href="#i-back"/></svg><span data-i18n="recentPrev">上一篇</span>

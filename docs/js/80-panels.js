@@ -400,185 +400,36 @@
         head.addEventListener("blur", hideBranchPreview);
       };
 
-      const foldHeadOf = (box) => {
-        for (const child of box.children) {
-          if (!child.classList) continue;
-          if (child.classList.contains("option-head") || child.classList.contains("branch-head")) {
-            return child;
-          }
-        }
-        return null;
-      };
-
-      const revealBeat = (key) => {
-        const body = $("readerBody");
-        if (!key || !body) return null;
-        const selector = String(key).indexOf(":") >= 0
-          ? `[data-opt="${key}"]`
-          : `[data-beat="${key}"]`;
-        const target = body.querySelector(selector);
-        if (!target) return null;
-        let node = target.parentElement;
-        while (node && node !== body) {
-          const list = node.classList;
-          if (list && (list.contains("option") || list.contains("branch")) && !list.contains("is-open")) {
-            list.add("is-open");
-            const head = foldHeadOf(node);
-            if (head) head.setAttribute("aria-expanded", "true");
-          }
-          node = node.parentElement;
-        }
-        return target;
-      };
-
-      const scrollToBeat = (key) => {
-        const target = revealBeat(key);
-        if (!target) return;
-        requestAnimationFrame(() => {
-          if (target.scrollIntoView) target.scrollIntoView({ block: "center", behavior: "smooth" });
-          target.classList.add("is-flash");
-          setTimeout(() => target.classList.remove("is-flash"), 900);
-        });
-      };
-
-      const renderOutlineNode = (item, depth) => {
-        const box = ui.el("div", `ol-node ol-${item.kind}`);
-        box.dataset.kind = item.kind;
-        box.dataset.depth = String(Math.min(depth, 4));
-        if (depth) box.classList.add("is-nested");
-
-        const row = ui.el("div", "outline-item ol-head row row-sm row-accent");
-        row.title = item.label;
-        if (item.kind === "option") row.appendChild(ui.el("span", "ol-idx", String(item.index || "")));
-        row.appendChild(ui.el("span", "ol-label", item.label));
-        if (item.lock) row.appendChild(ui.el("span", "ol-badge ol-lock badge", `🔒 ${item.lock}`));
-        else if (item.note) row.appendChild(ui.el("span", "ol-badge ol-note badge badge-neutral", item.note));
-
-        if (item.key) {
-          row.dataset.key = item.key;
-          row.setAttribute("role", "button");
-          row.tabIndex = 0;
-          const open = () => scrollToBeat(item.key);
-          row.addEventListener("click", open);
-          row.addEventListener("keydown", (event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              event.preventDefault();
-              open();
-            }
-          });
-        }
-        box.appendChild(row);
-
-        if (item.children && item.children.length) {
-          const body = ui.el("div", "ol-body");
-          body.appendChild(renderOutlineNodes(item.children, depth + 1));
-          box.appendChild(body);
-        }
-        return box;
-      };
-
-      const renderOutlineNodes = (items, depth) => {
-        const frag = document.createDocumentFragment();
-        items.forEach((item) => frag.appendChild(renderOutlineNode(item, depth)));
-        return frag;
-      };
-
-      const renderOutlinePanel = (node) => {
-        const panel = $("outlinePanel");
-        const list = $("outlineList");
-        if (!panel || !list) return;
-        if (!node) {
-          panel.hidden = true;
-          return;
-        }
-        const rows = text.story(store.state.lang, node.id) || [];
-        const tree = beats.outlineModel(rows);
-        list.replaceChildren();
-        if (!tree.length) {
-          list.appendChild(ui.el("p", "rail-empty", i18n.t("outlineEmpty")));
-          return;
-        }
-        list.appendChild(renderOutlineNodes(tree, 0));
-      };
-
-      const hideOutline = () => {
-        const panel = $("outlinePanel");
-        const btn = $("outlineBtn");
-        if (panel) panel.hidden = true;
-        if (btn) {
-          btn.classList.remove("is-on");
-          btn.setAttribute("aria-pressed", "false");
-        }
-      };
-
-      const closeOutline = () => {
-        if (!overlay.close("outline")) hideOutline();
-      };
-
-      const openOutline = () => {
-        const panel = $("outlinePanel");
-        const btn = $("outlineBtn");
-        const node = store.selected();
-        if (!panel || !node) return;
-        renderOutlinePanel(node);
-        if (btn) {
-          btn.classList.add("is-on");
-          btn.setAttribute("aria-pressed", "true");
-        }
-        overlay.open("outline", { trigger: btn });
-      };
-
-      const toggleOutlinePanel = () => {
-        const panel = $("outlinePanel");
-        if (!panel) return;
-        if (panel.hidden) openOutline();
-        else closeOutline();
-      };
-
       overlay.register("lookup", {
         id: "lookupPanel",
         group: "pop",
         onHide: hideLookup,
         placement: { align: "start", width: 330, fit: true },
       });
-      overlay.register("outline", {
-        id: "outlinePanel",
-        triggerId: "outlineBtn",
-        group: "sheet",
-        onHide: hideOutline,
-        placement: { align: "end", width: 320, fit: true },
-      });
-
       return {
         attachLookupAnchor,
         bindBranchPreview,
         chooseLookup,
         closeLookup,
-        closeOutline,
         ensureFacetSets,
         extractKey: beats.extractKey,
         hideBranchPreview,
         hideLookup,
-        hideOutline,
         lookup,
         lookupCount,
         lookupTargetOf,
         moveLookup,
         openLookup,
-        openOutline,
         paintLookupActive,
         positionLookup,
         renderCondBlock,
         renderCondModel,
-        renderOutlinePanel,
         repositionLookup: () => overlay.reposition("lookup"),
         reset: () => {
           resetNameIndex();
           facetSets = null;
         },
-        scrollToBeat,
         showBranchPreview,
-        toggleOutlinePanel,
       };
     });
 })();

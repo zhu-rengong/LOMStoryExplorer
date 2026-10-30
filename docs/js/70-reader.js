@@ -13,26 +13,10 @@
 
       const isMobile = () => store.state.layout === "mobile";
 
-      const updateReadProgress = () => {
-        const bar = $("readProgress");
-        const body = $("readerBody");
-        if (!bar || !body) return;
-        const max = body.scrollHeight - body.clientHeight;
-        if (max <= 8) {
-          bar.hidden = true;
-          bar.style.width = "0%";
-          return;
-        }
-        bar.hidden = false;
-        const fraction = Math.min(1, Math.max(0, body.scrollTop / max));
-        bar.style.width = `${(fraction * 100).toFixed(2)}%`;
-      };
-
       const updateToTop = () => {
         const body = $("readerBody");
         const button = $("toTopBtn");
         if (button && body) button.hidden = body.scrollTop < 320;
-        updateReadProgress();
       };
 
       const scrollFraction = () => {
@@ -203,8 +187,6 @@
         title.textContent = node.id;
         renderFoot(node);
         syncBookmark();
-        const outline = $("outlinePanel");
-        if (outline && !outline.hidden) panels.renderOutlinePanel(node);
 
         const crumb = $("nodeChapter");
         if (crumb) {

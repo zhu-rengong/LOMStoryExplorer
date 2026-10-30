@@ -354,47 +354,6 @@
         return frag;
       };
 
-      const outlineModel = (rows) => {
-        let seq = 0;
-        const walk = (list) => {
-          const out = [];
-          for (const beat of list || []) {
-            if (!Array.isArray(beat) || !beat.length) continue;
-            if (beat[0] === "c") {
-              const key = `bt${seq++}`;
-              const choice = {
-                kind: "choice",
-                key,
-                label: i18n.t("choiceHead", { n: (beat[1] || []).length }),
-                children: [],
-              };
-              schema.choices(beat).forEach((option, index) => {
-                choice.children.push({
-                  kind: "option",
-                  key: `${key}:${index}`,
-                  index: index + 1,
-                  label: stripRich(option.text),
-                  lock: option.lock,
-                  note: option.note,
-                  children: walk(option.beats),
-                });
-              });
-              out.push(choice);
-            } else if (beat[0] === "br") {
-              const data = schema.branch(beat);
-              out.push({
-                kind: "branch",
-                key: `bt${seq++}`,
-                label: stripRich(data.label),
-                children: walk(data.beats),
-              });
-            }
-          }
-          return out;
-        };
-        return walk(rows);
-      };
-
       const beatsPreview = (rows, budget) => {
         const limits = budget || { lines: 6, chars: 220 };
         const out = { lines: [], more: 0 };
@@ -478,7 +437,6 @@
         extractKey,
         firstLineOf,
         loreBlock,
-        outlineModel,
         previewOfBranches,
         renderBeats,
         renderBranch,

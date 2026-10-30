@@ -59,13 +59,6 @@
         }
       };
 
-      const closeReaderMore = () => {
-        if (!overlay.close("readerMore")) {
-          const menu = $("readerMore");
-          if (menu) menu.hidden = true;
-        }
-      };
-
       const closeNav = () => {
         if (!overlay.close("navMenu")) {
           const menu = $("navMenu");
@@ -80,7 +73,6 @@
         document.body.dataset.layout = next;
         if (!isOverlayRail()) closeRail();
         closeMore();
-        closeReaderMore();
         closeNav();
       };
 
@@ -284,14 +276,6 @@
         overlay.open("moreMenu", { trigger: button });
       };
 
-      const copySelected = () => {
-        const node = store.selected();
-        if (!node) return;
-        ui.copyText(node.id).then((ok) => {
-          ui.toast(ok ? i18n.t("toastCopied", { id: node.id }) : node.id);
-        });
-      };
-
       const bindShell = () => {
         const railToggle = $("railToggle");
         if (railToggle) railToggle.addEventListener("click", toggleRail);
@@ -339,11 +323,6 @@
           });
         }
 
-        const outline = $("outlineBtn");
-        if (outline) outline.addEventListener("click", panels.toggleOutlinePanel);
-        const outlineClose = $("outlineClose");
-        if (outlineClose) outlineClose.addEventListener("click", panels.closeOutline);
-
         const lookupClose = $("lookupClose");
         if (lookupClose) lookupClose.addEventListener("click", panels.closeLookup);
 
@@ -364,21 +343,6 @@
             else openMore();
           });
         }
-        const readerMoreButton = $("readerMoreBtn");
-        if (readerMoreButton) {
-          readerMoreButton.addEventListener("click", (event) => {
-            event.stopPropagation();
-            const menu = $("readerMore");
-            if (menu && !menu.hidden) closeReaderMore();
-            else {
-              readerMoreButton.setAttribute("aria-expanded", "true");
-              overlay.open("readerMore", { trigger: readerMoreButton });
-            }
-          });
-        }
-        const copyButton = $("copyBtn");
-        if (copyButton) copyButton.addEventListener("click", copySelected);
-
         const back = $("backBtn");
         if (back) back.addEventListener("click", () => store.back());
         const forward = $("forwardBtn");
@@ -415,7 +379,6 @@
             applyLayout(false);
             panels.hideBranchPreview();
             closeNav();
-            closeReaderMore();
           }, 80);
         });
 
@@ -460,16 +423,6 @@
             if (menu) menu.hidden = true;
           },
           placement: { align: "end", width: 268, fit: true },
-        });
-        overlay.register("readerMore", {
-          id: "readerMore",
-          triggerId: "readerMoreBtn",
-          group: "menu",
-          onHide: () => {
-            const menu = $("readerMore");
-            if (menu) menu.hidden = true;
-          },
-          placement: { align: "end", width: 212, fit: true },
         });
       };
 
@@ -550,7 +503,6 @@
         bindShell,
         closeNav,
         closeRail,
-        copySelected,
         openRail,
         renderNavMenu,
         setLang,

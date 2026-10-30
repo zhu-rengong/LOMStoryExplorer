@@ -67,26 +67,6 @@
     if (!text) target.textContent = "";
   };
 
-  const copyText = (text) => {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(text).then(() => true, () => false);
-    }
-    try {
-      const area = document.createElement("textarea");
-      area.value = text;
-      area.setAttribute("readonly", "");
-      area.style.position = "fixed";
-      area.style.opacity = "0";
-      document.body.appendChild(area);
-      area.select();
-      document.execCommand("copy");
-      area.remove();
-      return Promise.resolve(true);
-    } catch {
-      return Promise.resolve(false);
-    }
-  };
-
   const focusables = (root) => {
     const selector = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
     return Array.prototype.filter.call(root.querySelectorAll(selector), (node) => node.offsetParent !== null);
@@ -96,7 +76,6 @@
     $,
     $$,
     clamp,
-    copyText,
     debounce,
     el,
     focusables,

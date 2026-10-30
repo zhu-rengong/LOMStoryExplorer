@@ -95,8 +95,6 @@ body[data-layout="mobile"] #helpBtn { display: none; }
   .stats-kind { min-height: 44px; }
 }
 
-body[data-layout="mobile"] .outline-panel { right: 8px; left: 8px; width: auto; top: 72px; }
-
 body[data-layout="mobile"] .lookup {
   left: 8px !important;
   right: 8px;

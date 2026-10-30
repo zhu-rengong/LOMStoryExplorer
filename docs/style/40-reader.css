@@ -28,20 +28,6 @@
 #reader::before { left: 20px; }
 #reader::after { right: 20px; }
 
-.read-progress {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 4;
-  height: 3px;
-  width: 0;
-  border-radius: var(--r-2);
-  background: var(--reader-accent);
-  opacity: .55;
-  pointer-events: none;
-  transition: width 120ms linear, opacity var(--t-base) var(--ease);
-}
-
 .reader-head {
   position: relative;
   z-index: 2;
@@ -96,8 +82,6 @@
 
 #bookmarkBtn[aria-pressed="true"] svg,
 #footBookmark[aria-pressed="true"] svg { fill: currentColor; }
-
-.reader-more { flex: none; }
 
 .muted { color: var(--reader-fg-3); font-size: var(--fs-xs); }
 
