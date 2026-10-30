@@ -119,33 +119,3 @@ body[data-layout="mobile"] .lookup {
 
   .help-list { grid-template-columns: 88px 1fr; }
 }
-
-body[data-layout="narrow"] .topbar,
-body[data-layout="compact"] .topbar,
-body[data-layout="mobile"] .topbar,
-body[data-layout="narrow"] #chapterRail,
-body[data-layout="compact"] #chapterRail,
-body[data-layout="mobile"] #chapterRail,
-body[data-layout="narrow"] #reader,
-body[data-layout="compact"] #reader,
-body[data-layout="mobile"] #reader { border-width: 1px; }
-
-body[data-layout="compact"] .reader-body,
-body[data-layout="mobile"] .reader-body { background-image: none; }
-
-body[data-layout="compact"] .reader-head::after,
-body[data-layout="mobile"] .reader-head::after,
-body[data-layout="compact"] .reader-foot::before,
-body[data-layout="mobile"] .reader-foot::before,
-body[data-layout="compact"] .rail-head::after,
-body[data-layout="mobile"] .rail-head::after,
-body[data-layout="compact"] .popover-head::after,
-body[data-layout="mobile"] .popover-head::after,
-body[data-layout="compact"] .picker-search::after,
-body[data-layout="mobile"] .picker-search::after { width: 18px; opacity: .45; }
-
-body[data-layout="mobile"] .drawer { border-left-width: 1px; }
-
-@media (max-width: 767px) {
-  body::before { inset: 3px; }
-}

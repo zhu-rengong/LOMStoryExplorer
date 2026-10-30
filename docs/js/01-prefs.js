@@ -37,7 +37,8 @@
     { id: "narration", label: { tw: "旁白", cn: "旁白" }, base: 14.5 },
     { id: "think", label: { tw: "心聲", cn: "心声" }, base: 16 },
     { id: "option", label: { tw: "選項", cn: "选项" }, base: 14.5 },
-    { id: "cond", label: { tw: "條件", cn: "条件" }, base: 12 },
+    { id: "branch-cond", label: { tw: "分支條件", cn: "分支条件" }, base: 12 },
+    { id: "option-cond", label: { tw: "選項條件", cn: "选项条件" }, base: 12 },
     { id: "label", label: { tw: "標籤", cn: "标签" }, base: 11.5 },
     { id: "lore", label: { tw: "劇情點", cn: "剧情点" }, base: 15 },
   ];
@@ -55,7 +56,8 @@
     speaker: { font: "kai", scale: 150 },
     narration: { scale: 150 },
     option: { font: "sans" },
-    cond: { font: "sans" },
+    "branch-cond": { font: "sans" },
+    "option-cond": { font: "sans" },
     label: { font: "sans" },
     lore: { font: "kai" },
   };
@@ -98,8 +100,10 @@
   const normalizeTypes = (raw) => {
     const types = defaultTypes();
     if (!raw || typeof raw !== "object") return types;
+    const legacyCond = raw.cond && typeof raw.cond === "object" ? raw.cond : null;
     for (const type of TYPES) {
-      const item = raw[type.id];
+      const fallback = type.id === "branch-cond" || type.id === "option-cond" ? legacyCond : null;
+      const item = raw[type.id] && typeof raw[type.id] === "object" ? raw[type.id] : fallback;
       if (!item || typeof item !== "object") continue;
       types[type.id].font = typeof item.font === "string" ? item.font : "";
       types[type.id].scale = Math.round(clampNumber(item.scale, 70, 150, 100) / 5) * 5;

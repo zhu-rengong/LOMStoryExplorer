@@ -56,7 +56,8 @@
       narration: "typeNarration",
       think: "typeThink",
       option: "typeOption",
-      cond: "typeCond",
+      "branch-cond": "typeBranchCond",
+      "option-cond": "typeOptionCond",
       label: "typeLabel",
       lore: "typeLore",
     }[typeId] || "typeDialog");
