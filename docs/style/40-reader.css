@@ -276,7 +276,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   margin: var(--rd-gap-3) 0 var(--rd-gap-4);
   padding: var(--rd-gap-2);
   border: 1px solid var(--reader-line-2);
-  background: var(--reader-bg-2);
 }
 
 .option {
@@ -369,8 +368,7 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 .badge-need { color: var(--reader-fg-2); }
 
 .option-body {
-  padding: var(--rd-pad-y) var(--rd-pad) var(--rd-gap-3)
-           calc(var(--rd-pad) + 24px + var(--rd-gap-2));
+  padding: var(--rd-pad-y) var(--rd-pad) var(--rd-gap-3);
   transition: background-color var(--t-fast);
 }
 .option:not(.is-open) .option-body { display: none; }
@@ -379,7 +377,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 .branch-group {
   margin: var(--rd-gap-3) 0 var(--rd-gap-4);
   border: 1px solid var(--reader-line-2);
-  background: var(--reader-bg-2);
 }
 .branch-group > .branch {
   margin: 0;
@@ -677,7 +674,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   isolation: isolate;
   margin: 12px 0 16px;
   padding: 8px var(--rd-pad) 12px;
-  border-left: 3px double var(--reader-line-2);
   border-radius: 0;
 }
 .lore::before {
