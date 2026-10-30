@@ -235,7 +235,7 @@
         if (!graph.nodeById.has(data.target)) {
           return ui.el("span", "jump dynamic", `▷ ${data.target}（${i18n.t("jumpMissing")}）`);
         }
-        const button = ui.el("button", "jump btn btn-sm btn-tint");
+        const button = ui.el("button", "jump btn btn-sm");
         button.type = "button";
         button.appendChild(ui.el("span", "arrow", "→"));
         button.appendChild(document.createTextNode(data.target));
@@ -267,10 +267,10 @@
                 target = ctx.lookup.targetOf(extractKey(value) || value);
               }
             }
-            const chip = ui.el(target ? "button" : "span", "chip-stat chip chip-sm", value);
+            const chip = ui.el(target ? "button" : "span",
+              target ? "btn btn-sm meta-action" : "chip-stat chip chip-sm", value);
             if (target) {
               chip.type = "button";
-              chip.classList.add("is-link");
               chip.setAttribute("aria-haspopup", "dialog");
             }
             if (value.length > 24) chip.title = value;

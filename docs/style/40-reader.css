@@ -427,6 +427,8 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   text-overflow: clip;
   color: var(--reader-fg-2);
 }
+.branch-head:active .cond,
+.branch-head:active .cond.is-expr { color: var(--reader-accent); }
 
 .cx-expr { display: inline-block; max-width: 100%; vertical-align: top; }
 
@@ -491,7 +493,12 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 
 .cx-neg { color: var(--danger); font-size: var(--fs-micro); }
 
-.cx-var.is-link { cursor: pointer; }
+.cx-var.is-link {
+  border-color: var(--control-border);
+  background: transparent;
+  color: var(--control-fg);
+  cursor: pointer;
+}
 .cx-var.is-link:hover,
 .cx-var.is-link:focus-visible {
   border-color: var(--reader-accent);
@@ -691,21 +698,17 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.reader-body .chip-stat.is-link {
-  cursor: pointer;
-  transition: color var(--t-fast), border-color var(--t-fast), background var(--t-fast);
+.reader-body .meta-action {
+  max-width: 24em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: var(--rd-font-label, var(--font-mono));
 }
-.reader-body .chip-stat.is-link:hover {
+.reader-body .meta-action:active {
   color: var(--reader-accent);
   border-color: var(--reader-accent);
-  background: var(--reader-accent-soft);
 }
-.reader-body .chip-stat.is-link:active {
-  color: var(--reader-accent);
-  border-color: var(--reader-accent);
-  background: var(--control-bg-active);
-}
-.reader-body .chip-stat.is-link[aria-expanded="true"] {
+.reader-body .meta-action[aria-expanded="true"] {
   color: var(--reader-accent);
   border-color: var(--reader-accent);
   background: var(--reader-accent-soft);

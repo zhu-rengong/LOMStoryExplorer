@@ -165,6 +165,11 @@
   font-size: var(--fs-micro);
   line-height: 1.6;
 }
+.lookup-cond .cx-var.is-link {
+  border-color: var(--control-border);
+  background: transparent;
+  color: var(--control-fg);
+}
 .lookup-cond .cx-type,
 .lookup-cond .cx-id { font-size: var(--fs-micro); color: var(--fg-3); }
 .lookup-cond .cx-var.is-link:hover,
@@ -172,6 +177,16 @@
   border-color: var(--accent-line);
   background: var(--accent-soft);
   color: var(--accent-strong);
+}
+.lookup-cond .cx-var.is-link:active {
+  border-color: var(--reader-accent);
+  background: var(--control-bg-active);
+  color: var(--reader-accent);
+}
+.lookup-cond .cx-var.is-link[aria-expanded="true"] {
+  border-color: var(--reader-accent);
+  background: var(--reader-accent-soft);
+  color: var(--reader-accent);
 }
 .lookup-cond .cx-op { margin: 0 4px; color: var(--accent-strong); }
 .lookup-cond .cx-const { color: var(--fg-2); }
