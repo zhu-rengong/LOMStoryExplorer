@@ -139,7 +139,6 @@
       head.tabIndex = 0;
       head.appendChild(el("span", "ri-id", chapterTitle(chapter)));
       head.appendChild(el("span", "ri-meta", String(members.length)));
-      head.appendChild(el("span", "rail-caret", "›"));
       head.addEventListener("click", () => {
         state.outlineChapter = state.outlineChapter === index ? -1 : index;
         renderOutlineRail();

@@ -196,7 +196,6 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
 
 .rail-item.rail-chap:hover { background-color: var(--bg-hover); }
 .rail-item.rail-chap:active { background-color: var(--bg-active); }
-.rail-item.rail-chap:hover .rail-caret { color: var(--accent-strong); }
 .rail-item.rail-chap .ri-id {
   flex: 1;
   min-width: 0;
@@ -204,13 +203,6 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
   font-size: var(--fs-md);
   letter-spacing: .02em;
 }
-.rail-chap .rail-caret {
-  flex: none;
-  color: var(--fg-3);
-  font-size: var(--fs-base);
-  transition: transform var(--t-fast) var(--ease);
-}
-.rail-item.rail-chap.is-open .rail-caret { transform: rotate(90deg); color: var(--accent-strong); }
 
 .rail-body {
   margin: 4px 0 4px 12px;

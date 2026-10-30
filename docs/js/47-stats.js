@@ -166,7 +166,6 @@
     const btn = el("button", "stats-expand");
     btn.type = "button";
     btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
-    btn.appendChild(el("span", "stats-caret", "›"));
     btn.appendChild(el("span", "stats-name", chapterTitle(chapter)));
     nameCell.appendChild(btn);
     row.appendChild(nameCell);

@@ -738,13 +738,6 @@
   cursor: pointer;
 }
 .stats-chapter:hover .stats-expand { color: var(--accent-strong); }
-.stats-caret {
-  display: inline-block;
-  width: 12px;
-  color: var(--fg-3);
-  transition: transform var(--t-fast) var(--ease), color var(--t-fast);
-}
-.stats-chapter.is-open .stats-caret { transform: rotate(90deg); color: var(--accent); }
 .stats-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .stats-chapter.is-open > th,
 .stats-chapter.is-open > td { background: var(--bg-hover); }

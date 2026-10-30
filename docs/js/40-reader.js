@@ -216,38 +216,6 @@
     const box = el("div", "choice");
     const beatKey = `bt${ctx.seq++}`;
     box.dataset.beat = beatKey;
-    const head = el("div", "choice-head");
-    const toggle = el("button", "choice-toggle");
-    toggle.type = "button";
-    toggle.setAttribute("aria-expanded", "false");
-    const toggleIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    const toggleUse = document.createElementNS("http://www.w3.org/2000/svg", "use");
-    toggleUse.setAttribute("href", "#i-chevron");
-    toggleIcon.appendChild(toggleUse);
-    toggle.appendChild(toggleIcon);
-
-    const syncToggle = () => {
-      const options = box.querySelectorAll(".option");
-      let open = options.length > 0;
-      options.forEach((option) => {
-        if (!option.classList.contains("is-open")) open = false;
-      });
-      const label = open ? t("collapseAll") : t("expandAll");
-      toggle.setAttribute("aria-expanded", open ? "true" : "false");
-      toggle.title = label;
-      toggle.setAttribute("aria-label", label);
-    };
-    box.syncToggle = syncToggle;
-
-    toggle.addEventListener("click", () => {
-      const open = toggle.getAttribute("aria-expanded") !== "true";
-      box.querySelectorAll(".option").forEach((option) => {
-        option.classList.toggle("is-open", open);
-      });
-      syncToggle();
-    });
-    head.appendChild(toggle);
-    box.appendChild(head);
 
     branches.forEach((branch, index) => {
       const text = branch[0] || "";
@@ -275,19 +243,14 @@
         main.appendChild(badges);
       }
       button.appendChild(main);
-      button.appendChild(el("span", "option-caret", "›"));
 
       const bodyEl = el("div", "option-body");
       bodyEl.appendChild(renderBeats(body, ctx));
-      button.addEventListener("click", () => {
-        option.classList.toggle("is-open");
-        syncToggle();
-      });
+      button.addEventListener("click", () => option.classList.toggle("is-open"));
       option.appendChild(button);
       option.appendChild(bodyEl);
       box.appendChild(option);
     });
-    syncToggle();
     return box;
   };
 
@@ -319,8 +282,6 @@
       }
       node = node.parentElement;
     }
-    const choice = target.closest(".choice");
-    if (choice && typeof choice.syncToggle === "function") choice.syncToggle();
     return target;
   };
 
@@ -384,7 +345,6 @@
       head.appendChild(lookupBtn);
     }
 
-    head.appendChild(el("span", "branch-caret", "›"));
     const body = el("div", "branch-body");
     body.appendChild(renderBeats(beats || [], ctx));
 
