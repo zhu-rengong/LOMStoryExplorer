@@ -56,6 +56,9 @@ body[data-layout="mobile"] .more-wrap { display: inline-flex; }
 body[data-layout="compact"] .reader-grip,
 body[data-layout="mobile"] .reader-grip { display: none; }
 
+body[data-layout="wide"] #reader,
+body[data-layout="narrow"] #reader { overflow: visible; }
+
 body[data-layout="compact"] #reader,
 body[data-layout="mobile"] #reader {
   width: auto;

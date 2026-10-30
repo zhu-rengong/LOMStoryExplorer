@@ -102,22 +102,19 @@
   display: grid;
   align-items: center;
   justify-items: center;
-  width: 16px;
+  width: 8px;
   cursor: col-resize;
   touch-action: none;
   background: none;
 }
-.reader-grip[data-edge="left"] { left: 6px; }
-.reader-grip[data-edge="right"] {
-  right: var(--scrollbar-w);
-  width: 12px;
-}
+.reader-grip[data-edge="left"] { left: -8px; }
+.reader-grip[data-edge="right"] { right: -8px; }
 
 .reader-grip::before {
   content: "";
   width: 1px;
   height: 100%;
-  background: var(--reader-line);
+  background: var(--line-2);
   pointer-events: none;
   transition: width var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
