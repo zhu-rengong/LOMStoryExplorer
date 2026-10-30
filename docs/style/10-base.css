@@ -42,7 +42,7 @@ svg {
 
 ::selection { background: var(--accent-soft); color: var(--fg-1); }
 
-*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar { width: var(--scrollbar-w); height: var(--scrollbar-w); }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
   background: var(--line-2);

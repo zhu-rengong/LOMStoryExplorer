@@ -141,13 +141,24 @@
   touch-action: none;
 }
 .reader-grip[data-edge="left"] { left: 0; justify-items: start; }
-.reader-grip[data-edge="right"] { right: 0; justify-items: end; }
+.reader-grip[data-edge="right"] {
+  right: var(--scrollbar-w);
+  width: 12px;
+  justify-items: end;
+}
+.reader-grip[data-edge="right"]::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: calc(var(--scrollbar-w) * -1);
+}
 
 .reader-grip::before {
   content: "";
   width: 1px;
   height: 100%;
   background: var(--reader-line);
+  pointer-events: none;
   transition: width var(--t-fast) var(--ease), background var(--t-fast) var(--ease);
 }
 
@@ -792,7 +803,7 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 
 .foot-btn.primary {
   border-color: var(--reader-accent);
-  background-color: var(--reader-accent-soft);
+  background-color: transparent;
   color: var(--reader-accent);
   letter-spacing: .06em;
 }
@@ -800,6 +811,10 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   color: var(--reader-accent);
   border-color: var(--reader-accent);
   background-color: var(--reader-accent-soft);
+}
+.foot-btn.primary:active:not(:disabled) {
+  border-color: var(--reader-accent);
+  background-color: var(--bg-active);
 }
 .foot-btn.is-end { opacity: .45; }
 
