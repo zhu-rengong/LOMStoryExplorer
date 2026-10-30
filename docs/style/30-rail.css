@@ -74,10 +74,6 @@
   align-items: center;
   gap: 4px var(--sp-3);
 }
-.rail-item.is-on {
-  background-color: var(--control-on-bg);
-  color: var(--control-fg);
-}
 .rail-item.is-on .ri-id { color: var(--control-on-fg); }
 
 .rail-item .ri-id {
@@ -108,34 +104,34 @@
 .rail-item .ri-entry.is-combat { background: var(--danger); }
 
 .rail-item .ri-del {
+  --control-border: var(--line-1);
+  --control-border-hover: var(--line-1);
+  --control-fg: var(--fg-3);
+  --control-fg-hover: var(--danger);
   position: absolute;
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
-  border-color: var(--line-1);
+  border-color: var(--control-border);
   background: var(--bg-elev);
-  color: var(--fg-3);
+  color: var(--control-fg);
   opacity: 0;
-  transition: opacity var(--t-fast), color var(--t-fast);
+  transition: opacity var(--t-fast), color var(--t-fast), background-color var(--t-fast);
 }
 .rail-item .ri-del svg { width: 14px; height: 14px; }
 .rail-item:hover .ri-del,
 .rail-item:focus-within .ri-del { opacity: 1; }
-.rail-item .ri-del:hover { color: var(--danger); background: var(--bg-hover); }
-.rail-item .ri-del:active { color: var(--danger); background: var(--bg-active); }
 .rail-item:has(.ri-del) .ri-meta { padding-right: 32px; }
 
 .rail-item.rail-chap {
+  --row-bg: var(--accent-wash);
   display: flex;
   align-items: center;
   gap: var(--sp-2);
   margin-top: var(--sp-2);
-  background: var(--accent-wash);
   border: 1px solid var(--line-1);
 }
-.rail-item.rail-chap.is-open { background: var(--accent-soft); border-color: var(--accent); }
-.rail-item.rail-chap:hover { background-color: var(--bg-hover); }
-.rail-item.rail-chap:active { background-color: var(--bg-active); }
+.rail-item.rail-chap.is-open { --row-bg: var(--accent-soft); border-color: var(--accent); }
 .rail-item.rail-chap .ri-id {
   flex: 1;
   min-width: 0;
@@ -150,17 +146,9 @@
   border-left: 1px solid var(--line-1);
 }
 .rail-body .rail-item.is-card {
+  --row-bg: var(--bg-field);
   margin-top: var(--sp-2);
   border: 1px solid var(--line-1);
-  background: var(--bg-field);
-}
-.rail-body .rail-item.is-card:hover {
-  background-color: var(--bg-hover);
-  border-color: var(--line-2);
-}
-.rail-body .rail-item.is-card:active {
-  background-color: var(--bg-active);
-  border-color: var(--line-2);
 }
 .rail-body .rail-item.is-card.is-on { border-color: var(--accent); }
 

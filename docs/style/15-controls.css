@@ -58,9 +58,6 @@
 .btn-icon.btn-sm { width: var(--ctl-sm); }
 .btn-icon.btn-lg { width: var(--ctl-lg); }
 
-.btn-icon:enabled:hover { border-color: var(--control-border); }
-.btn-icon.is-on { border-color: transparent; }
-
 .btn-primary {
   border-color: var(--control-on-border);
   background-color: var(--control-on-bg);
@@ -112,7 +109,8 @@
   color: var(--control-on-fg);
 }
 
-.btn.is-on:hover {
+.btn.is-on:hover,
+.btn.is-on:active {
   border-color: var(--control-on-border);
   background-color: var(--control-on-bg);
   color: var(--control-on-fg);
@@ -160,7 +158,8 @@
   color: var(--control-on-fg);
 }
 
-.chip.is-on:hover {
+.chip.is-on:hover,
+.chip.is-on:active {
   border-color: var(--control-on-border);
   background-color: var(--control-on-bg);
   color: var(--control-on-fg);
@@ -331,7 +330,7 @@
   padding: 4px var(--row-pad);
   border: 0;
   border-radius: var(--r-2);
-  background: none;
+  background-color: var(--row-bg, transparent);
   color: var(--control-fg);
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
@@ -346,6 +345,16 @@
 }
 
 .row:active { background-color: var(--row-active-bg); }
+
+.row.is-active {
+  background-color: var(--control-on-bg);
+  color: var(--control-fg-hover);
+}
+.row.is-active:hover,
+.row.is-active:active {
+  background-color: var(--control-on-bg);
+  color: var(--control-fg-hover);
+}
 
 .row-sm {
   min-height: var(--ctl-sm);

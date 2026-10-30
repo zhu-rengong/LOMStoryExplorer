@@ -201,7 +201,6 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 4px var(--sp-2);
 }
-.lookup-item.is-active { background-color: var(--row-hover-bg); }
 .lookup-item .li-top { grid-column: 1 / -1; display: flex; align-items: baseline; gap: 7px; }
 .lookup-item .li-id { font-family: var(--font-mono); font-size: var(--fs-sm); color: var(--accent-strong); }
 .lookup-item .li-ch { font-size: var(--fs-micro); color: var(--fg-3); }
@@ -405,10 +404,6 @@
   align-items: center;
   gap: var(--sp-2);
   padding: 0 var(--row-pad);
-}
-.picker-item.is-active {
-  background-color: var(--row-hover-bg);
-  color: var(--control-fg-hover);
 }
 .picker-item .pi-name {
   flex: 1;

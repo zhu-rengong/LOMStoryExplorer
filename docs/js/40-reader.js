@@ -329,7 +329,7 @@
 
     const target = lookupTargetOf(extractKey(label) || label);
     if (target) {
-      const lookupBtn = el("button", "cond-lookup btn-icon");
+      const lookupBtn = el("button", "cond-lookup btn btn-icon");
       lookupBtn.type = "button";
       lookupBtn.title = t("condLookup");
       lookupBtn.setAttribute("aria-label", t("condLookup"));
@@ -374,7 +374,7 @@
     if (!nodeById.has(target)) {
       return el("span", "jump dynamic", `▷ ${target}（${t("jumpMissing")}）`);
     }
-    const button = el("button", "jump btn btn-sm");
+    const button = el("button", "jump btn btn-sm btn-primary");
     button.appendChild(el("span", "arrow", "→"));
     button.appendChild(document.createTextNode(target));
     if (label) button.appendChild(el("span", "option-cond", `  ${label}`));
@@ -545,7 +545,6 @@
     const label = $("nextLabel");
     if (!btn || !label) return;
     btn.disabled = targets.length === 0;
-    btn.classList.toggle("is-end", targets.length === 0);
     if (targets.length === 0) {
       label.textContent = t("recentEnd");
     } else if (targets.length === 1) {

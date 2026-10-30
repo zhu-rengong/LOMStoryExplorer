@@ -193,7 +193,7 @@
     const list = el("div", "filter-results-list");
     ids.slice(0, FILTER_RESULT_LIMIT).forEach((index) => {
       const node = nodes[index];
-      const item = el("button", `result-item row row-sm${state.selected && state.selected.i === index ? " is-current" : ""}`);
+      const item = el("button", `result-item row row-sm${state.selected && state.selected.i === index ? " is-active" : ""}`);
       item.type = "button";
       item.dataset.id = node.id;
       item.appendChild(el("span", "ri-id", node.id));

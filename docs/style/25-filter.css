@@ -30,10 +30,6 @@
   gap: var(--sp-2);
   color: var(--fg-1);
 }
-.suggest-item.is-active {
-  border-left-color: var(--control-on-border);
-  background: var(--control-on-bg);
-}
 .suggest-item .sg-value {
   flex: 0 1 auto;
   max-width: 55%;
@@ -74,10 +70,6 @@
   align-items: center;
   gap: var(--sp-2);
   color: var(--fg-1);
-}
-.result-item.is-current {
-  background-color: var(--row-hover-bg);
-  color: var(--control-fg-hover);
 }
 .result-item .ri-id,
 .result-item .tid {
