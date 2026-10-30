@@ -520,8 +520,7 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 .branch-head .cond.is-fallback { cursor: pointer; }
 
 .branch-body {
-  padding: 4px 0 8px calc(var(--rd-pad) - 4px);
-  margin-left: 4px;
+  padding: 4px 0 8px var(--rd-pad);
   transition: background-color var(--t-fast);
 }
 .branch:not(.is-open) .branch-body { display: none; }
