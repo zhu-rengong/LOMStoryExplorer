@@ -155,8 +155,10 @@
   border-top: 2px solid var(--line-2);
   border-left: 2px solid var(--line-2);
   border-bottom: 2px solid var(--line-2);
-  border-top-left-radius: 8px;
-  border-bottom-left-radius: 8px;
+  border-top-left-radius: 4px;
+  border-bottom-left-radius: 4px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 15%, rgba(0, 0, 0, .28) 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 15%, rgba(0, 0, 0, .28) 100%);
   transition: border-color var(--t-fast) var(--ease);
 }
 
@@ -167,7 +169,7 @@
 .branch-group::after {
   content: "";
   position: absolute;
-  inset: 0 0 0 12px;
+  inset: 0;
   z-index: -1;
   background-image: linear-gradient(90deg, var(--accent-mist) 0%, transparent 100%);
   -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
