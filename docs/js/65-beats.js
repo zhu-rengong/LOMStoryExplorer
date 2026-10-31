@@ -56,7 +56,7 @@
 
       const speakerName = (id) => {
         if (!id) return "";
-        return text.characters(store.state.lang)[id] || id;
+        return text.characters(store.textLang())[id] || id;
       };
 
       const speakerTone = (id) => {
@@ -480,7 +480,7 @@
 
       const firstLineOf = (node) => {
         if (!node) return "";
-        const rows = text.story(store.state.lang, node.id);
+        const rows = text.story(store.textLang(), node.id);
         if (!rows) return "";
         return schema.firstLine(rows, speakerName);
       };

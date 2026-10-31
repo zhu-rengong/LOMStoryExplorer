@@ -6,8 +6,33 @@
   SR.define("store", ["schema", "graph", "storage"], ({ schema, graph, storage }) => {
     const meta = schema.meta;
 
+    const uiLangs = () => Object.keys(window.SR_I18N || {});
+
+    const initialLang = () => {
+      const available = uiLangs();
+      if (available.indexOf(meta.defaultLang) >= 0) return meta.defaultLang;
+      return available[0] || meta.defaultLang;
+    };
+
+    const detectLang = () => {
+      const available = uiLangs();
+      const tags = navigator.languages && navigator.languages.length
+        ? navigator.languages
+        : [navigator.language || ""];
+      for (const raw of tags) {
+        const tag = String(raw || "").toLowerCase();
+        if (!tag) continue;
+        let id = "";
+        if (tag.indexOf("en") === 0) id = "en";
+        else if (tag.indexOf("zh") === 0) id = /hans|-cn|-sg|-my/.test(tag) ? "zh-cn" : "zh-tw";
+        if (id && available.indexOf(id) >= 0) return id;
+      }
+      if (available.indexOf(meta.defaultLang) >= 0) return meta.defaultLang;
+      return available[0] || meta.defaultLang;
+    };
+
     const state = {
-      lang: meta.defaultLang,
+      lang: initialLang(),
       selectedId: "",
       history: [],
       hIndex: -1,
@@ -117,8 +142,9 @@
       if (restored) return;
       restored = true;
       const session = storage.readSession();
+      const available = uiLangs();
+      state.lang = session && available.indexOf(session.lang) >= 0 ? session.lang : detectLang();
       if (session) {
-        if (meta.langs.indexOf(session.lang) >= 0) state.lang = session.lang;
         if (typeof session.filter === "string") state.filterSource = session.filter;
         if (session.selected && graph.nodeById.has(session.selected)) {
           state.selectedId = session.selected;
@@ -150,7 +176,7 @@
       selected,
       select,
       setLang: (lang) => {
-        if (!lang || lang === state.lang || meta.langs.indexOf(lang) < 0) return false;
+        if (!lang || lang === state.lang || uiLangs().indexOf(lang) < 0) return false;
         state.lang = lang;
         commit("lang");
         return true;
@@ -177,6 +203,11 @@
         commit("settingsType");
       },
       state,
+      textLang: () => {
+        if (meta.langs.indexOf(state.lang) >= 0) return state.lang;
+        if (meta.langs.indexOf(meta.defaultLang) >= 0) return meta.defaultLang;
+        return meta.langs[0] || meta.defaultLang || "";
+      },
       subscribe: (keys, fn) => {
         const listener = { keys: new Set(keys), fn };
         listeners.push(listener);

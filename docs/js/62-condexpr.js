@@ -42,7 +42,7 @@
 
       const displayName = (kind, key, fallbackText) => {
         if (kind) {
-          const table = (text.names(store.state.lang) || {})[NAME_GROUP[kind]] || {};
+          const table = (text.names(store.textLang()) || {})[NAME_GROUP[kind]] || {};
           if (table[key]) return table[key];
         }
         return fallbackText || key;
@@ -51,7 +51,7 @@
       const localizedName = (node) => {
         const labels = node && node.label;
         if (!labels) return "";
-        return labels[store.state.lang] || labels["zh-tw"] || "";
+        return labels[store.textLang()] || labels["zh-tw"] || "";
       };
 
       const countOf = (kind, key) => {

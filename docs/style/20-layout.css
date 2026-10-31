@@ -231,6 +231,18 @@ body[data-layout="mobile"] #main { grid-template-columns: minmax(0, 1fr); }
 .menu-item.is-on::after { content: "✓"; font-size: var(--fs-sm); color: var(--accent); }
 .menu-sep { height: 1px; margin: 4px 8px; background: var(--line-1); }
 
+.menu-lang { width: 240px; }
+.menu-lang .menu-item { min-height: var(--row-h); }
+.menu-lang .menu-item.is-on { color: var(--accent-strong); }
+.menu-note {
+  margin: 0;
+  padding: 6px 12px 2px;
+  font-family: var(--font-display);
+  font-size: var(--fs-micro);
+  line-height: 1.6;
+  color: var(--fg-3);
+}
+
 .menu-wide {
   width: 350px;
   max-width: calc(100vw - 24px);

@@ -11,7 +11,7 @@
 
       const presetLabel = (preset) => {
         if (!preset || !preset.label) return "";
-        return preset.label[store.state.lang === "zh-cn" ? "cn" : "tw"] || preset.label.tw || "";
+        return settings.pickLabel(preset.label, store.state.lang);
       };
 
       const setTrigger = (id, text) => {

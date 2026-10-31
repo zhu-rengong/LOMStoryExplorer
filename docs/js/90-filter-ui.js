@@ -38,7 +38,7 @@
       let contextCache = null;
 
       const nodeText = (index) => {
-        const lang = store.state.lang;
+        const lang = store.textLang();
         const pack = text.pack(lang);
         const count = pack && pack.stories ? Object.keys(pack.stories).length : 0;
         if (textCache.lang !== lang || textCache.count !== count) {
@@ -55,7 +55,7 @@
 
       const buildContext = () => {
         if (contextCache) return contextCache;
-        const names = text.names(store.state.lang);
+        const names = text.names(store.textLang());
         contextCache = {
           count: graph.nodes.length,
           nodes: graph.nodes.map((node) => ({
@@ -71,7 +71,7 @@
           facets: graph.nodes.map((node) => node.facets),
           edgeKinds: graph.edgeKinds,
           names: {
-            speakers: text.characters(store.state.lang),
+            speakers: text.characters(store.textLang()),
             flags: names.flags || {},
             checks: names.checks || {},
             stats: names.stats || {},
@@ -209,10 +209,10 @@
           store.applyFilter({ source: "", set: null, error: "", loading: false });
           return { ok: true, count: null };
         }
-        const loading = TEXT_RE.test(value) && !text.progress(store.state.lang).done;
+        const loading = TEXT_RE.test(value) && !text.progress(store.textLang()).done;
         store.applyFilter({ loading });
         if (loading) {
-          text.ensureAll(store.state.lang).then(() => {
+          text.ensureAll(store.textLang()).then(() => {
             resetContext();
             if (store.state.filterSource === value) {
               const result = query.compile(value, buildContext());

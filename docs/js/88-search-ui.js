@@ -93,7 +93,7 @@
         renderScope(frag);
 
         if (!hits.length) {
-          const progress = text.progress(store.state.lang);
+          const progress = text.progress(store.textLang());
           const loading = query.length >= 2 && !progress.done;
           frag.appendChild(ui.el("div", "drop-empty popover-empty",
             loading
@@ -172,9 +172,9 @@
         if (!input) return;
         const query = input.value.trim();
         run();
-        if (query.length < 2 || text.progress(store.state.lang).done) return;
+        if (query.length < 2 || text.progress(store.textLang()).done) return;
         ui.progress(i18n.t("searchLoadingText", { loaded: 0, total: 0 }));
-        warmFullText(store.state.lang);
+        warmFullText(store.textLang());
       };
 
       const onInput = () => {

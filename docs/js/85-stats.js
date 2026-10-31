@@ -41,7 +41,7 @@
       const pack = () => {
         const all = window.SR_WORDCOUNT;
         if (!all || !all.langs) return null;
-        return all.langs[store.state.lang] || all.langs[Object.keys(all.langs)[0]] || null;
+        return all.langs[store.textLang()] || all.langs[Object.keys(all.langs)[0]] || null;
       };
 
       const counts = (row, kind) => {

@@ -1,8 +1,21 @@
 (() => {
   "use strict";
 
-  const dict = (window.SR_I18N && (window.SR_I18N[document.documentElement.lang.indexOf("Hans") >= 0 ? "zh-cn" : "zh-tw"]))
-    || {};
+  const META = window.SR_I18N_META || {};
+
+  const DICT = window.SR_I18N || {};
+
+  const langOf = () => {
+    const html = String(document.documentElement.lang || "").toLowerCase();
+    for (const id of Object.keys(META)) {
+      if (String(META[id].html || "").toLowerCase() === html) return id;
+    }
+    if (html.indexOf("hans") >= 0) return "zh-cn";
+    if (html.indexOf("en") === 0) return "en";
+    return "zh-tw";
+  };
+
+  const dict = DICT[langOf()] || DICT["zh-tw"] || {};
 
   const showFatal = (error) => {
     const body = document.body;

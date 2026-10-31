@@ -46,7 +46,6 @@ body[data-layout="mobile"] .brand { min-width: 0; }
 body[data-layout="mobile"] .topbar { gap: var(--sp-2); padding: 0 10px; }
 body[data-layout="mobile"] .searchwrap { max-width: none; }
 body[data-layout="mobile"] .tools { gap: var(--sp-1); }
-body[data-layout="mobile"] .tools > #langSeg { display: none; }
 body[data-layout="mobile"] .more-wrap { display: inline-flex; }
 
 .more-wrap { display: none; }

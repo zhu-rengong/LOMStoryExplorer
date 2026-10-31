@@ -73,6 +73,7 @@
         document.body.dataset.layout = next;
         if (!isOverlayRail()) closeRail();
         closeMore();
+        closeLang();
         closeNav();
       };
 
@@ -99,12 +100,46 @@
         }
       };
 
-      const updateLangButtons = () => {
-        ui.$$("#langSeg .seg-btn").forEach((button) => {
-          const on = button.dataset.lang === store.state.lang;
-          button.classList.toggle("is-on", on);
-          button.setAttribute("aria-pressed", on ? "true" : "false");
+      const closeLang = () => {
+        if (!overlay.close("langMenu")) {
+          const menu = $("langMenu");
+          if (menu) menu.hidden = true;
+          const button = $("langBtn");
+          if (button) button.classList.remove("is-on");
+        }
+      };
+
+      const renderLangMenu = () => {
+        const menu = $("langMenu");
+        if (!menu) return;
+        menu.replaceChildren();
+        menu.appendChild(ui.el("div", "menu-head", i18n.t("moreLang")));
+        i18n.languages().forEach((item) => {
+          const on = item.id === store.state.lang;
+          const row = ui.el("button", `menu-item row${on ? " is-on" : ""}`, item.native);
+          row.type = "button";
+          row.setAttribute("role", "menuitemradio");
+          row.setAttribute("aria-checked", on ? "true" : "false");
+          row.setAttribute("lang", item.html);
+          row.dataset.lang = item.id;
+          row.title = item.label;
+          row.addEventListener("click", () => {
+            closeLang();
+            setLang(item.id);
+          });
+          menu.appendChild(row);
         });
+        menu.appendChild(ui.el("div", "menu-sep"));
+        menu.appendChild(ui.el("p", "menu-note", i18n.t("langPickerNote")));
+      };
+
+      const openLang = () => {
+        const button = $("langBtn");
+        if (!button) return;
+        renderLangMenu();
+        button.setAttribute("aria-expanded", "true");
+        button.classList.add("is-on");
+        overlay.open("langMenu", { trigger: button });
       };
 
       const applyLanguage = () => {
@@ -113,7 +148,7 @@
         searchUi.reset();
         filterUi.reset();
         i18n.apply();
-        updateLangButtons();
+        renderLangMenu();
         rail.render();
         settingsUi.sync();
         reader.syncBookmark();
@@ -127,11 +162,13 @@
       let langToken = 0;
 
       const setLang = (lang) => {
-        if (!lang || lang === store.state.lang || schema.meta.langs.indexOf(lang) < 0) return;
+        if (!lang || lang === store.state.lang) return;
         const token = ++langToken;
-        text.ensureHead(lang).then(() => {
+        const content = schema.meta.langs.indexOf(lang) >= 0 ? lang : store.textLang();
+        text.ensureHead(content).then(() => {
           if (token !== langToken) return;
-          store.setLang(lang);
+          if (!store.setLang(lang)) return;
+          i18n.syncLanguage();
           applyLanguage();
         });
       };
@@ -206,17 +243,6 @@
         const menu = $("moreMenu");
         if (!menu) return;
         menu.replaceChildren();
-        menu.appendChild(ui.el("div", "menu-head", i18n.t("moreLang")));
-        const language = ui.el("button", "menu-item row",
-          store.state.lang === "zh-tw" ? i18n.t("langZhCn") : i18n.t("langZhTw"));
-        language.type = "button";
-        language.addEventListener("click", () => {
-          closeMore();
-          setLang(store.state.lang === "zh-tw" ? "zh-cn" : "zh-tw");
-        });
-        menu.appendChild(language);
-
-        menu.appendChild(ui.el("div", "menu-sep"));
         const statsRow = ui.el("button", "menu-item row", i18n.t("statsBtn"));
         statsRow.type = "button";
         statsRow.addEventListener("click", () => {
@@ -320,9 +346,15 @@
         document.addEventListener("click", () => panels.hideBranchPreview(), true);
         if (body) body.addEventListener("scroll", panels.hideBranchPreview, { passive: true });
 
-        ui.$$("#langSeg .seg-btn").forEach((button) => {
-          button.addEventListener("click", () => setLang(button.dataset.lang));
-        });
+        const langButton = $("langBtn");
+        if (langButton) {
+          langButton.addEventListener("click", (event) => {
+            event.stopPropagation();
+            const menu = $("langMenu");
+            if (menu && !menu.hidden) closeLang();
+            else openLang();
+          });
+        }
 
         let resizeTimer = null;
         window.addEventListener("resize", () => {
@@ -365,6 +397,18 @@
             if (menu) menu.hidden = true;
           },
           placement: { align: "end", width: 340, fit: true },
+        });
+        overlay.register("langMenu", {
+          id: "langMenu",
+          triggerId: "langBtn",
+          group: "menu",
+          onHide: () => {
+            const menu = $("langMenu");
+            if (menu) menu.hidden = true;
+            const button = $("langBtn");
+            if (button) button.classList.remove("is-on");
+          },
+          placement: { align: "end", width: 240, fit: true },
         });
         overlay.register("moreMenu", {
           id: "moreMenu",
@@ -412,7 +456,7 @@
         stats.init();
         shortcuts.init();
         grip.init();
-        updateLangButtons();
+        renderLangMenu();
         updateHistoryButtons();
         i18n.apply();
         rail.render();
@@ -434,7 +478,7 @@
           }
         }
 
-        text.ensureHead(store.state.lang).then(() => {
+        text.ensureHead(store.textLang()).then(() => {
           search.invalidate();
           filterUi.reset();
           const node = store.selected();

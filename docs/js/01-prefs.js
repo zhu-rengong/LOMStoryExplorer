@@ -15,32 +15,32 @@
   const SYSTEM = '-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans TC",system-ui,sans-serif';
 
   const READING = [
-    { id: "serif", label: { tw: "宋體（預設）", cn: "宋体（默认）" }, stack: SERIF },
-    { id: "sans", label: { tw: "黑體", cn: "黑体" }, stack: SANS },
-    { id: "kai", label: { tw: "楷體", cn: "楷体" }, stack: KAI },
-    { id: "round", label: { tw: "圓體", cn: "圆体" }, stack: ROUND },
-    { id: "mono", label: { tw: "等寬", cn: "等宽" }, stack: MONO },
-    { id: "custom", label: { tw: "自訂字體…", cn: "自定义字体…" }, stack: SERIF },
+    { id: "serif", label: { tw: "宋體（預設）", cn: "宋体（默认）", en: "Serif (default)" }, stack: SERIF },
+    { id: "sans", label: { tw: "黑體", cn: "黑体", en: "Sans" }, stack: SANS },
+    { id: "kai", label: { tw: "楷體", cn: "楷体", en: "Kai" }, stack: KAI },
+    { id: "round", label: { tw: "圓體", cn: "圆体", en: "Rounded" }, stack: ROUND },
+    { id: "mono", label: { tw: "等寬", cn: "等宽", en: "Monospace" }, stack: MONO },
+    { id: "custom", label: { tw: "自訂字體…", cn: "自定义字体…", en: "Custom font…" }, stack: SERIF },
   ];
 
   const UI = [
-    { id: "system", label: { tw: "系統預設", cn: "系统默认" }, stack: SYSTEM },
-    { id: "sans", label: { tw: "黑體", cn: "黑体" }, stack: SANS },
-    { id: "round", label: { tw: "圓體", cn: "圆体" }, stack: ROUND },
-    { id: "serif", label: { tw: "宋體", cn: "宋体" }, stack: SERIF },
-    { id: "custom", label: { tw: "自訂字體…", cn: "自定义字体…" }, stack: SYSTEM },
+    { id: "system", label: { tw: "系統預設", cn: "系统默认", en: "System default" }, stack: SYSTEM },
+    { id: "sans", label: { tw: "黑體", cn: "黑体", en: "Sans" }, stack: SANS },
+    { id: "round", label: { tw: "圓體", cn: "圆体", en: "Rounded" }, stack: ROUND },
+    { id: "serif", label: { tw: "宋體", cn: "宋体", en: "Serif" }, stack: SERIF },
+    { id: "custom", label: { tw: "自訂字體…", cn: "自定义字体…", en: "Custom font…" }, stack: SYSTEM },
   ];
 
   const TYPES = [
-    { id: "dialog", label: { tw: "對白", cn: "对白" }, base: 16 },
-    { id: "speaker", label: { tw: "說話人", cn: "说话人" }, base: 14 },
-    { id: "narration", label: { tw: "旁白", cn: "旁白" }, base: 14.5 },
-    { id: "think", label: { tw: "心聲", cn: "心声" }, base: 16 },
-    { id: "option", label: { tw: "選項", cn: "选项" }, base: 14.5 },
-    { id: "branch-cond", label: { tw: "分支條件", cn: "分支条件" }, base: 12 },
-    { id: "option-cond", label: { tw: "選項條件", cn: "选项条件" }, base: 12 },
-    { id: "label", label: { tw: "標籤", cn: "标签" }, base: 11.5 },
-    { id: "lore", label: { tw: "劇情點", cn: "剧情点" }, base: 15 },
+    { id: "dialog", label: { tw: "對白", cn: "对白", en: "Dialogue" }, base: 16 },
+    { id: "speaker", label: { tw: "說話人", cn: "说话人", en: "Speaker" }, base: 14 },
+    { id: "narration", label: { tw: "旁白", cn: "旁白", en: "Narration" }, base: 14.5 },
+    { id: "think", label: { tw: "心聲", cn: "心声", en: "Inner voice" }, base: 16 },
+    { id: "option", label: { tw: "選項", cn: "选项", en: "Option" }, base: 14.5 },
+    { id: "branch-cond", label: { tw: "分支條件", cn: "分支条件", en: "Branch condition" }, base: 12 },
+    { id: "option-cond", label: { tw: "選項條件", cn: "选项条件", en: "Option condition" }, base: 12 },
+    { id: "label", label: { tw: "標籤", cn: "标签", en: "Label" }, base: 11.5 },
+    { id: "lore", label: { tw: "劇情點", cn: "剧情点", en: "Lore" }, base: 15 },
   ];
 
   const WEIGHTS = [400, 500, 600];
@@ -304,7 +304,7 @@
 
   const labelOf = (kind, id, custom) => {
     if (kind === "type") {
-      if (!id) return { tw: "跟隨正文", cn: "跟随正文" };
+      if (!id) return { tw: "跟隨正文", cn: "跟随正文", en: "Follow body font" };
       const preset = presetById("reading", id);
       if (preset) return preset.label;
       return { tw: id, cn: id };
@@ -318,6 +318,10 @@
     return kind === "reading" ? READING[0].label : UI[0].label;
   };
 
+  const LABEL_KEYS = { "zh-cn": "cn", en: "en" };
+
+  const pickLabel = (label, lang) => label[LABEL_KEYS[lang] || "tw"] || label.tw || "";
+
   const describe = (target, lang) => {
     let label;
     if (target.indexOf("type:") === 0) {
@@ -329,7 +333,7 @@
     } else {
       label = labelOf("ui", state.ui, state.uiCustom);
     }
-    return label[lang === "zh-cn" ? "cn" : "tw"] || label.tw;
+    return pickLabel(label, lang);
   };
 
   const api = {
@@ -350,6 +354,7 @@
     apply: apply,
     describe: describe,
     labelOf: labelOf,
+    pickLabel: pickLabel,
     theme: () => resolveTheme(state.theme),
     subscribe: (fn) => {
       const handler = (event) => fn(event.detail);

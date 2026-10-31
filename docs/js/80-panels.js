@@ -35,14 +35,14 @@
       };
 
       const ensureNameIndex = () => {
-        if (nameCache.lang === store.state.lang && nameCache.index) return nameCache.index;
-        const names = text.names(store.state.lang);
+        if (nameCache.lang === store.textLang() && nameCache.index) return nameCache.index;
+        const names = text.names(store.textLang());
         const index = { flags: {}, checks: {}, stats: {}, rels: {} };
         for (const group of ["flags", "checks", "stats", "rels"]) {
           const table = names[group] || {};
           for (const key of Object.keys(table)) index[group][table[key]] = key;
         }
-        nameCache = { lang: store.state.lang, index };
+        nameCache = { lang: store.textLang(), index };
         return index;
       };
 
@@ -168,7 +168,7 @@
               : kind === "rel" ? "lookupRel" : "lookupStat";
         let name = kind === "speaker" ? beats.speakerName(key) : key;
         if (kind !== "speaker") {
-          const table = (text.names(store.state.lang) || {})[NAME_GROUP[kind] || "stats"];
+          const table = (text.names(store.textLang()) || {})[NAME_GROUP[kind] || "stats"];
           if (table && table[key]) name = table[key];
         }
 
@@ -261,7 +261,7 @@
       const additionLabel = (item) => {
         const labels = item.label;
         if (!labels) return "";
-        return labels[store.state.lang] || labels["zh-tw"] || "";
+        return labels[store.textLang()] || labels["zh-tw"] || "";
       };
 
       const additionRow = (item) => {

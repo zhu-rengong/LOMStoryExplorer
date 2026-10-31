@@ -3,7 +3,11 @@
 
   const SR = window.SR;
 
+  const LIB = window.i18next || null;
+
   const DICT = window.SR_I18N || { "zh-tw": {} };
+
+  const META = window.SR_I18N_META || {};
 
   const EXTRA = {
     "zh-tw": {
@@ -13,8 +17,6 @@
       errorReload: "重新載入",
       errorScript: "頁面腳本載入失敗：{name}",
       filterSyntax: "第 {column} 欄：{message}",
-      langZhTw: "繁體中文",
-      langZhCn: "简体中文",
     },
     "zh-cn": {
       errorTitle: "数据加载失败",
@@ -23,31 +25,112 @@
       errorReload: "重新加载",
       errorScript: "页面脚本加载失败：{name}",
       filterSyntax: "第 {column} 栏：{message}",
-      langZhTw: "繁體中文",
-      langZhCn: "简体中文",
+    },
+    "en": {
+      errorTitle: "Failed to load data",
+      errorMissing: "data/graph.js is missing. Run build.py to generate the data first.",
+      errorSchema: "The data version does not match. Run build.py again.",
+      errorReload: "Reload",
+      errorScript: "Failed to load a page script: {name}",
+      filterSyntax: "Column {column}: {message}",
     },
   };
+
+  const FALLBACK = "zh-tw";
+
+  const PLACEHOLDER = /\{(\w+)\}/g;
 
   for (const lang of Object.keys(EXTRA)) {
     if (!DICT[lang]) DICT[lang] = {};
     Object.assign(DICT[lang], EXTRA[lang]);
   }
 
+  const LANGS = Object.keys(DICT);
+
+  const ORDER = (() => {
+    const out = [];
+    for (const id of Object.keys(META)) if (LANGS.indexOf(id) >= 0) out.push(id);
+    for (const id of LANGS) if (out.indexOf(id) < 0) out.push(id);
+    return out;
+  })();
+
+  const htmlOf = (lang) => (META[lang] && META[lang].html) || lang;
+
+  const format = (text, vars) => text.replace(PLACEHOLDER, (whole, name) => (
+    vars[name] === undefined ? whole : String(vars[name])
+  ));
+
+  const ENGINE = (() => {
+    if (!LIB || typeof LIB.init !== "function") return null;
+    const resources = {};
+    for (const lang of LANGS) resources[lang] = { translation: DICT[lang] };
+    try {
+      LIB.init({
+        resources,
+        lng: FALLBACK,
+        fallbackLng: FALLBACK,
+        supportedLngs: LANGS,
+        lowerCaseLng: true,
+        initAsync: false,
+        keySeparator: false,
+        nsSeparator: false,
+        returnNull: false,
+        returnEmptyString: false,
+        interpolation: { prefix: "{", suffix: "}", escapeValue: false },
+      });
+    } catch {
+      return null;
+    }
+    return LIB.isInitialized ? LIB : null;
+  })();
+
+  const fixed = new Map();
+
+  const translateOf = (lang) => {
+    if (!ENGINE) return null;
+    let fn = fixed.get(lang);
+    if (!fn) {
+      fn = ENGINE.getFixedT(lang, "translation");
+      fixed.set(lang, fn);
+    }
+    return fn;
+  };
+
+  const rawOf = (lang, key) => {
+    const table = DICT[lang] || {};
+    if (table[key] !== undefined) return table[key];
+    const base = DICT[FALLBACK] || {};
+    return base[key];
+  };
+
   SR.define("i18n", ["store", "graph"], ({ store, graph }) => {
     const state = store.state;
 
-    const dict = () => DICT[state.lang] || DICT["zh-tw"];
-
-    const has = (key) => dict()[key] !== undefined || DICT["zh-tw"][key] !== undefined;
-
     const t = (key, vars) => {
-      let text = dict()[key];
-      if (text === undefined) text = DICT["zh-tw"][key];
+      const translate = translateOf(state.lang);
+      if (translate) return translate(key, vars);
+      const text = rawOf(state.lang, key);
       if (text === undefined) return key;
-      if (!vars) return text;
-      return text.replace(/\{(\w+)\}/g, (whole, name) => (
-        vars[name] === undefined ? whole : String(vars[name])
-      ));
+      return vars ? format(text, vars) : text;
+    };
+
+    const has = (key) => {
+      if (ENGINE) return ENGINE.exists(key, { lng: state.lang });
+      return rawOf(state.lang, key) !== undefined;
+    };
+
+    const languages = () => ORDER
+      .filter((id) => DICT[id] && Object.keys(DICT[id]).length)
+      .map((id) => ({
+        id,
+        native: (META[id] && META[id].native) || id,
+        label: (META[id] && META[id].label) || id,
+        html: htmlOf(id),
+      }));
+
+    const syncLanguage = () => {
+      if (!ENGINE || ENGINE.language === state.lang) return;
+      ENGINE.changeLanguage(state.lang);
     };
 
     const typeLabel = (typeId) => t({
@@ -72,11 +155,11 @@
       if (match) return t("actN", { n: match[1] });
       match = /^s(\d+)$/.exec(id);
       if (match) return t("eventN", { n: match[1] });
-      const fixed = {
+      const fixedIds = {
         scene: "chScene", work: "chWork", travel: "chTravel",
         free: "chFree", section: "chSection", misc: "chMisc", other: "chOther",
       };
-      if (fixed[id]) return t(fixed[id]);
+      if (fixedIds[id]) return t(fixedIds[id]);
       return chapter.title || t("chOther");
     };
 
@@ -96,7 +179,8 @@
 
     const apply = (root) => {
       const scope = root || document;
-      document.documentElement.lang = state.lang === "zh-cn" ? "zh-Hans" : "zh-Hant";
+      syncLanguage();
+      document.documentElement.lang = htmlOf(state.lang);
       document.title = t("appTitle");
       for (const node of scope.querySelectorAll("[data-i18n]")) {
         const key = node.getAttribute("data-i18n");
@@ -110,8 +194,14 @@
         const key = node.getAttribute("data-i18n-placeholder");
         if (has(key)) node.placeholder = t(key);
       }
-      const seg = document.getElementById("langSeg");
-      if (seg) seg.setAttribute("aria-label", state.lang === "zh-cn" ? "语言" : "語言");
+      for (const node of scope.querySelectorAll("[data-i18n-label]")) {
+        const key = node.getAttribute("data-i18n-label");
+        if (has(key)) node.setAttribute("aria-label", t(key));
+      }
+      const button = document.getElementById("langBtn");
+      if (button) button.setAttribute("aria-label", t("langBtnTitle"));
+      const menu = document.getElementById("langMenu");
+      if (menu) menu.setAttribute("aria-label", t("moreLang"));
 
       const meta = graph.chapters.length;
       const counts = graph.nodes.length;
@@ -135,13 +225,13 @@
     };
 
     return {
-      DICT,
       apply,
       chapterTitle,
       dateOf,
-      dict,
       has,
+      languages,
       stageNames,
+      syncLanguage,
       t,
       timeText,
       typeLabel,

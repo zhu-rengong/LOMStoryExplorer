@@ -97,7 +97,7 @@
         for (let index = 0; index < targets.length && ids.length < 2; index++) {
           ids.push(targets[index].node.id);
         }
-        if (ids.length) text.prefetch(store.state.lang, ids, 2);
+        if (ids.length) text.prefetch(store.textLang(), ids, 2);
       };
 
       const skeletonBlock = () => {
@@ -119,14 +119,14 @@
         const button = ui.el("button", "tool-btn btn", i18n.t("loadTextRetry"));
         button.type = "button";
         button.addEventListener("click", () => {
-          text.retry(store.state.lang, node.id);
+          text.retry(store.textLang(), node.id);
           render(node, { keepScroll: true });
         });
         card.appendChild(button);
         return card;
       };
 
-      const edgeLabelOf = (edge) => text.edgeLabel(store.state.lang, String(edge.id), edge.label);
+      const edgeLabelOf = (edge) => text.edgeLabel(store.textLang(), String(edge.id), edge.label);
 
       const syncBookmark = () => {
         const node = store.selected();
@@ -151,7 +151,7 @@
         const readerPanel = $("reader");
         if (!body || !title || !readerPanel) return;
         panels.hideBranchPreview();
-        const lang = store.state.lang;
+        const lang = store.textLang();
         const rows = text.story(lang, node.id);
 
         if (readingId && readingId !== node.id) {

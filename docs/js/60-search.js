@@ -11,7 +11,7 @@
     const passes = (nodeIndex) => graph.passes(nodeIndex, store.state.filterSet);
 
     const buildIndex = () => {
-      const lang = store.state.lang;
+      const lang = store.textLang();
       const pack = text.pack(lang);
       const stories = (pack && pack.stories) || {};
       const ids = Object.keys(stories);
