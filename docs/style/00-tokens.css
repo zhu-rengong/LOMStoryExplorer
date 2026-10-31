@@ -54,7 +54,18 @@
   --scrim: rgba(27, 26, 21, .38);
   --scrim-soft: rgba(27, 26, 21, .18);
 
-  --paper-tex: repeating-linear-gradient(90deg, rgba(120, 104, 76, .04) 0 1px, transparent 1px 5px);
+  --paper-grain: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='180'%20height='180'%3E%3Cfilter%20id='g'%20x='0'%20y='0'%20width='100%25'%20height='100%25'%20color-interpolation-filters='sRGB'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='.85'%20numOctaves='4'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%20.44%200%200%200%200%20.37%200%200%200%200%20.27%200%200%200%20.06%200'/%3E%3C/filter%3E%3Crect%20width='180'%20height='180'%20filter='url(%23g)'/%3E%3C/svg%3E");
+  --paper-grain-soft: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='180'%20height='180'%3E%3Cfilter%20id='g'%20x='0'%20y='0'%20width='100%25'%20height='100%25'%20color-interpolation-filters='sRGB'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='.85'%20numOctaves='4'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%20.44%200%200%200%200%20.37%200%200%200%200%20.27%200%200%200%20.028%200'/%3E%3C/filter%3E%3Crect%20width='180'%20height='180'%20filter='url(%23g)'/%3E%3C/svg%3E");
+  --paper-cloud:
+    radial-gradient(120% 90% at 12% -8%, rgba(146, 128, 92, .05), transparent 58%),
+    radial-gradient(90% 80% at 88% 104%, rgba(120, 104, 76, .045), transparent 60%),
+    radial-gradient(70% 55% at 46% 42%, rgba(255, 253, 244, .16), transparent 72%);
+  --paper-cloud-soft:
+    radial-gradient(120% 90% at 12% -8%, rgba(146, 128, 92, .022), transparent 58%),
+    radial-gradient(90% 80% at 88% 104%, rgba(120, 104, 76, .02), transparent 60%),
+    radial-gradient(70% 55% at 46% 42%, rgba(255, 253, 244, .07), transparent 72%);
+  --paper-tex: var(--paper-grain), var(--paper-cloud);
+  --paper-tex-soft: var(--paper-grain-soft), var(--paper-cloud-soft);
 
   --sp-1: 4px;
   --sp-2: 8px;

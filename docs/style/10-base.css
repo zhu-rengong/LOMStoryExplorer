@@ -9,7 +9,8 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: var(--canvas);
+  background-color: var(--canvas);
+  background-image: var(--paper-tex);
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: var(--fs-base);
