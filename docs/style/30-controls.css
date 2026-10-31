@@ -31,11 +31,8 @@
 }
 
 .btn:enabled:active:not(:hover) {
-  background: var(--surface-hold);
-}
-
-.btn:enabled:active:not(:hover):where(:not([aria-selected="true"]):not([aria-pressed="true"])) {
   border-color: var(--line-hold);
+  background: var(--surface-hold);
 }
 
 .btn:enabled:active:not(:hover):not(.is-on):not(.btn-primary):not([aria-expanded="true"]):not([aria-pressed="true"]) {
@@ -224,7 +221,7 @@
 
 .tab:active { border-color: var(--line-3); background: var(--surface-active); color: var(--ink); }
 
-.tab:active:not(:hover) {
+.tab:enabled:active:not(:hover) {
   border-color: var(--line-hold);
   background: var(--surface-hold);
 }
