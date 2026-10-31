@@ -356,20 +356,18 @@
   background: var(--accent);
 }
 
-.chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: var(--sp-3);
-}
-
-.chip-row .btn { flex: 1; }
-
 .type-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
   margin-bottom: var(--sp-3);
+}
+
+.type-tab:enabled.is-on,
+.type-tab:enabled[aria-selected="true"] {
+  border-color: var(--ink-2);
+  color: var(--accent-strong);
+  box-shadow: 0 1px 3px rgba(69, 64, 55, .20);
 }
 
 .type-panel { padding-top: 2px; }

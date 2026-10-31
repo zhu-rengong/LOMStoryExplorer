@@ -253,21 +253,15 @@
       </div>
       <input id="fontScale" class="range" type="range" min="90" max="140" step="5" value="100"
              data-i18n-label="fontSize" aria-label="正文字號">
-      <div class="chip-row" id="scalePresets">
-        <button class="chip-btn btn btn-sm btn-mono" type="button" data-scale="90">90%</button>
-        <button class="chip-btn btn btn-sm btn-mono" type="button" data-scale="100">100%</button>
-        <button class="chip-btn btn btn-sm btn-mono" type="button" data-scale="115">115%</button>
-        <button class="chip-btn btn btn-sm btn-mono" type="button" data-scale="130">130%</button>
-      </div>
     </section>
 
     <section class="field">
-      <h3 class="field-title" data-i18n="lineHeight">行距</h3>
-      <div class="seg seg-wide tabs" id="leadingSeg" role="group">
-        <button class="seg-btn tab" type="button" data-leading="1.7" data-i18n="leadingTight">緊湊</button>
-        <button class="seg-btn tab" type="button" data-leading="1.85" data-i18n="leadingNormal">標準</button>
-        <button class="seg-btn tab" type="button" data-leading="2.05" data-i18n="leadingLoose">寬鬆</button>
+      <div class="field-row">
+        <h3 class="field-title" data-i18n="lineHeight">行距</h3>
+        <output id="leadingOut" class="field-value">1.85</output>
       </div>
+      <input id="leading" class="range" type="range" min="1.2" max="2.6" step="0.05" value="1.85"
+             data-i18n-label="lineHeight" aria-label="行距">
     </section>
 
     <section class="field">

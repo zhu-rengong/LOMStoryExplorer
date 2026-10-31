@@ -164,16 +164,10 @@
         if (scale) scale.value = String(current.scale);
         const scaleOut = $("fontScaleOut");
         if (scaleOut) scaleOut.textContent = `${current.scale}%`;
-        ui.$$("#scalePresets .chip-btn").forEach((button) => {
-          const on = Number(button.dataset.scale) === current.scale;
-          button.classList.toggle("is-on", on);
-          ui.setPressed(button, on);
-        });
-        ui.$$("#leadingSeg .seg-btn").forEach((button) => {
-          const on = Math.abs(Number(button.dataset.leading) - current.leading) < 0.01;
-          button.classList.toggle("is-on", on);
-          ui.setPressed(button, on);
-        });
+        const leading = $("leading");
+        if (leading) leading.value = String(current.leading);
+        const leadingOut = $("leadingOut");
+        if (leadingOut) leadingOut.textContent = Number(current.leading).toFixed(2);
 
         const typeId = store.state.settingsType;
         ui.$$("#typeTabs .type-tab").forEach((button) => {
@@ -288,18 +282,13 @@
             sync();
           });
         }
-        ui.$$("#scalePresets .chip-btn").forEach((button) => {
-          button.addEventListener("click", () => {
-            settings.set({ scale: Number(button.dataset.scale) });
+        const leading = $("leading");
+        if (leading) {
+          leading.addEventListener("input", () => {
+            settings.set({ leading: Number(leading.value) });
             sync();
           });
-        });
-        ui.$$("#leadingSeg .seg-btn").forEach((button) => {
-          button.addEventListener("click", () => {
-            settings.set({ leading: Number(button.dataset.leading) });
-            sync();
-          });
-        });
+        }
 
         const typeScale = $("typeScale");
         if (typeScale) {
