@@ -37,7 +37,6 @@
       return {
         lang: typeof saved.lang === "string" ? saved.lang : "",
         selected: typeof saved.selected === "string" ? saved.selected : "",
-        chapters: Array.isArray(saved.chapters) ? saved.chapters : [],
         filter: typeof saved.filter === "string" ? saved.filter : "",
       };
     };

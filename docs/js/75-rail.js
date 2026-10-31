@@ -12,13 +12,6 @@
 
       let nodesByChapter = null;
 
-      const updateCount = () => {
-        const node = $("railCount");
-        if (!node) return;
-        const count = store.state.chapterFilter.size;
-        node.textContent = count ? i18n.t("railSelected", { n: count }) : "";
-      };
-
       const chapterNodes = (index) => {
         if (!nodesByChapter) {
           nodesByChapter = graph.nodesByChapter();
@@ -102,7 +95,6 @@
           frag.appendChild(clear);
         }
         list.replaceChildren(frag);
-        updateCount();
       };
 
       const renderOutline = () => {
@@ -157,7 +149,6 @@
 
         if (!frag.childNodes.length) frag.appendChild(ui.el("p", "rail-empty", i18n.t("searchEmpty")));
         list.replaceChildren(frag);
-        updateCount();
       };
 
       const syncTabs = () => {
@@ -184,35 +175,20 @@
         render();
       };
 
-      const setOnlyChapter = (index) => {
-        store.toggleOnlyChapter(index);
-        const active = store.state.chapterFilter.size === 1 && store.state.chapterFilter.has(index);
-        ui.toast(active
-          ? i18n.t("chapterOnly", { name: i18n.chapterTitle(graph.chapters[index]) })
-          : "");
-      };
-
-      const clearChapterFilter = () => {
-        store.clearChapters();
-      };
-
       const reset = () => {
         nodesByChapter = null;
       };
 
       return {
         chapterNodes,
-        clearChapterFilter,
         railRow,
         render,
         renderBookmarks,
         renderOutline,
         reset,
-        setOnlyChapter,
         setTab,
         syncSelection,
         syncTabs,
-        updateCount,
       };
     });
 })();

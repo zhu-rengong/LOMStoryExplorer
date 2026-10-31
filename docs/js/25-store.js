@@ -11,7 +11,6 @@
       selectedId: "",
       history: [],
       hIndex: -1,
-      chapterFilter: new Set(),
       filterSource: "",
       filterSet: null,
       filterError: "",
@@ -24,19 +23,8 @@
     };
 
     const listeners = [];
-    const eventListeners = [];
     const pending = new Set();
     let restored = false;
-
-    const emit = (type, payload) => {
-      for (const listener of eventListeners.slice()) {
-        try {
-          listener({ type, payload });
-        } catch {
-          continue;
-        }
-      }
-    };
 
     const notify = () => {
       if (!pending.size) return;
@@ -58,7 +46,6 @@
       storage.saveSession({
         lang: state.lang,
         selected: state.selectedId,
-        chapters: Array.from(state.chapterFilter),
         filter: state.filterSource,
       });
     };
@@ -70,19 +57,9 @@
     };
 
     const computeVisible = () => graph.computeVisibility(
-      state.chapterFilter, state.filterSet, state.selectedId);
+      state.filterSet, state.selectedId);
 
     const selected = () => (state.selectedId ? graph.nodeById.get(state.selectedId) || null : null);
-
-    const ensureVisible = (node) => {
-      if (!node) return;
-      const index = graph.indexById.get(node.id);
-      if (graph.visible[index]) return;
-      if (!state.chapterFilter.size) return;
-      state.chapterFilter.add(node.chapter);
-      pending.add("filter");
-      emit("chapterAutoAdded", graph.chapterOf(node));
-    };
 
     const select = (id, options) => {
       const node = graph.nodeById.get(id);
@@ -94,7 +71,6 @@
         if (state.history[state.history.length - 1] !== id) state.history.push(id);
         state.hIndex = state.history.length - 1;
       }
-      ensureVisible(node);
       computeVisible();
       commit("selected", "history", "visible");
       return true;
@@ -122,33 +98,6 @@
       return graph.nodeById.get(id);
     };
 
-    const stepPrev = () => {
-      if (state.hIndex > 0) return back();
-      const node = selected();
-      if (!node) return null;
-      const previous = graph.prevInChapter(node);
-      if (!previous) return null;
-      select(previous.id, { history: true });
-      return previous;
-    };
-
-    const toggleOnlyChapter = (index) => {
-      if (state.chapterFilter.size === 1 && state.chapterFilter.has(index)) {
-        state.chapterFilter.clear();
-      } else {
-        state.chapterFilter = new Set([index]);
-      }
-      computeVisible();
-      commit("filter", "visible");
-    };
-
-    const clearChapters = () => {
-      if (!state.chapterFilter.size) return;
-      state.chapterFilter.clear();
-      computeVisible();
-      commit("filter", "visible");
-    };
-
     const setFilter = (patch) => {
       if (!patch || typeof patch !== "object") return;
       if (patch.source !== undefined) state.filterSource = String(patch.source);
@@ -171,13 +120,6 @@
       if (session) {
         if (meta.langs.indexOf(session.lang) >= 0) state.lang = session.lang;
         if (typeof session.filter === "string") state.filterSource = session.filter;
-        const chapters = new Set();
-        for (const value of session.chapters) {
-          if (Number.isInteger(value) && value >= 0 && value < schema.chapters.length) {
-            chapters.add(value);
-          }
-        }
-        state.chapterFilter = chapters;
         if (session.selected && graph.nodeById.has(session.selected)) {
           state.selectedId = session.selected;
         }
@@ -193,22 +135,13 @@
         storage.clearBookmarks();
         commit("bookmarks");
       },
-      clearChapters,
       commit,
       count: () => graph.count(),
-      emit,
       forward,
       get: (key) => state[key],
       history: () => ({ index: state.hIndex, items: state.history.slice() }),
       isBookmarked: (id) => storage.bookmarks.has(id),
       nextTargets: (node) => graph.nextTargets(node),
-      on: (fn) => {
-        eventListeners.push(fn);
-        return () => {
-          const index = eventListeners.indexOf(fn);
-          if (index >= 0) eventListeners.splice(index, 1);
-        };
-      },
       persist,
       positionOf: (id) => storage.positionOf(id),
       refresh,
@@ -244,7 +177,6 @@
         commit("settingsType");
       },
       state,
-      stepPrev,
       subscribe: (keys, fn) => {
         const listener = { keys: new Set(keys), fn };
         listeners.push(listener);
@@ -259,8 +191,6 @@
         commit("bookmarks");
         return on;
       },
-      toggleOnlyChapter,
-      visible: graph.visible,
     };
   });
 })();

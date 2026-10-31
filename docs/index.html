@@ -143,7 +143,6 @@
   <aside id="chapterRail" aria-label="目錄與書籤">
     <div class="rail-head panel-head">
       <span class="rail-title" data-i18n="railTitle">書目</span>
-      <span id="railCount" class="rail-count"></span>
       <button id="railClose" class="icon-btn btn btn-icon rail-close" data-i18n-title="closeTitle" title="收起">
         <svg><use href="#i-close"/></svg>
       </button>
@@ -195,29 +194,13 @@
         <h3 data-i18n="emptyH3">一卷手抄，任君翻閱</h3>
         <p data-i18n="emptyP">左側目錄按章節收錄 2200 餘個劇本，書籤可收藏常讀篇章；也可以在頂欄搜尋 id 或正文。
 點一篇即可在此閱讀全文。</p>
-        <p class="hint-line" data-i18n="emptyHint">快捷鍵：/ 搜尋 · ← → 歷史 · [ ] 上下篇</p>
+        <p class="hint-line" data-i18n="emptyHint">快捷鍵：/ 搜尋 · ← → 歷史</p>
       </div>
     </div>
     <div class="reader-grip" data-edge="left" role="separator" aria-orientation="vertical"
          tabindex="0" data-i18n-title="gripTitle" title="拖動調整閱讀寬度"></div>
     <div class="reader-grip" data-edge="right" role="separator" aria-orientation="vertical"
          tabindex="0" data-i18n-title="gripTitle" title="拖動調整閱讀寬度"></div>
-    <footer id="readerFoot" class="reader-foot" hidden>
-      <button id="prevBtn" class="foot-btn btn" data-i18n-title="recentPrev" title="上一篇">
-        <svg><use href="#i-back"/></svg><span data-i18n="recentPrev">上一篇</span>
-      </button>
-      <span id="footPos" class="foot-pos"></span>
-      <button id="footBookmark" class="foot-btn btn btn-icon foot-bookmark" aria-pressed="false"
-              data-i18n-title="bookmarkAdd" title="加入書籤">
-        <svg><use href="#i-star"/></svg>
-      </button>
-      <div class="foot-next-wrap">
-        <button id="nextBtn" class="foot-btn btn" data-i18n-title="recentContinueTitle" title="沿劇情續接下一篇">
-          <span id="nextLabel" data-i18n="recentContinue">續讀</span>
-        </button>
-        <div id="nextMenu" class="menu menu-wide foot-menu surface popover" role="menu" hidden></div>
-      </div>
-    </footer>
   </section>
 </main>
 

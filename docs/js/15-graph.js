@@ -44,18 +44,16 @@
 
     const chapterOf = (node) => chapters[node.chapter] || { id: "", title: "", color: "#8A8578", count: 0 };
 
-    const passes = (index, chapterFilter, filterSet) => {
-      const node = nodes[index];
-      if (chapterFilter && chapterFilter.size && !chapterFilter.has(node.chapter)) return false;
+    const passes = (index, filterSet) => {
       if (filterSet && !filterSet.has(index)) return false;
       return true;
     };
 
-    const computeVisibility = (chapterFilter, filterSet, selectedId) => {
+    const computeVisibility = (filterSet, selectedId) => {
       const selectedIndex = selectedId ? indexById.get(selectedId) : undefined;
       let count = 0;
       for (let index = 0; index < nodes.length; index++) {
-        let show = passes(index, chapterFilter, filterSet);
+        let show = passes(index, filterSet);
         if (!show && index === selectedIndex) show = true;
         visible[index] = show ? 1 : 0;
         if (show) count++;
@@ -88,16 +86,6 @@
         targets.push({ node: target, edge });
       }
       return targets;
-    };
-
-    const prevInChapter = (node) => {
-      if (!node) return null;
-      let previous = null;
-      for (const candidate of nodesByChapter()[node.chapter] || []) {
-        if (candidate.id >= node.id) continue;
-        if (!previous || candidate.id > previous.id) previous = candidate;
-      }
-      return previous;
     };
 
     const idOrder = nodes.map((node) => node.id).sort();
@@ -166,7 +154,6 @@
       nodesByChapter,
       outAdj,
       passes,
-      prevInChapter,
       visible,
       edgeLabel,
     };

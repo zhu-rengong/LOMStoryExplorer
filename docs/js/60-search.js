@@ -8,8 +8,7 @@
 
     let index = { lang: "", count: 0, entries: [] };
 
-    const passes = (nodeIndex) => graph.passes(
-      nodeIndex, store.state.chapterFilter, store.state.filterSet);
+    const passes = (nodeIndex) => graph.passes(nodeIndex, store.state.filterSet);
 
     const buildIndex = () => {
       const lang = store.state.lang;

@@ -150,15 +150,29 @@
       });
     };
 
+    const silenceFocusRing = (node) => {
+      node.classList.add("is-focus-silent");
+      const clear = () => {
+        node.classList.remove("is-focus-silent");
+        document.removeEventListener("keydown", clear, true);
+        document.removeEventListener("pointerdown", clear, true);
+      };
+      document.addEventListener("keydown", clear, true);
+      document.addEventListener("pointerdown", clear, true);
+      node.addEventListener("blur", clear, { once: true });
+    };
+
     const restoreFocus = (layer) => {
       const trigger = layer && layer.trigger;
       if (!trigger || !trigger.isConnected || trigger.disabled) return;
+      silenceFocusRing(trigger);
       try {
         trigger.focus({ preventScroll: true });
       } catch {
         try {
           trigger.focus();
         } catch {
+          trigger.classList.remove("is-focus-silent");
           return;
         }
       }

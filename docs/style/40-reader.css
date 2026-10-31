@@ -63,8 +63,7 @@
 
 .reader-actions { display: flex; align-items: center; gap: var(--sp-1); flex: none; }
 
-#bookmarkBtn[aria-pressed="true"] svg,
-#footBookmark[aria-pressed="true"] svg { fill: currentColor; }
+#bookmarkBtn[aria-pressed="true"] svg { fill: currentColor; }
 
 .muted { color: var(--reader-fg-3); font-size: var(--fs-xs); }
 
@@ -661,10 +660,12 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 .jump .option-cond { color: var(--reader-fg-3); font-size: var(--fs-micro); }
 
 .scene-switch {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: var(--sp-2);
+  max-width: 100%;
+  vertical-align: top;
   margin: 4px 0 12px;
   padding: 6px 12px;
   border: 3px double var(--reader-line-2);
@@ -770,46 +771,7 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 .reader-skeleton.is-failed .sk-caption { color: var(--reader-accent); }
 .reader-skeleton.is-failed .btn { align-self: flex-start; }
 
-.reader-foot {
-  position: relative;
-  z-index: 2;
-  flex: none;
-  display: flex;
-  align-items: center;
-  gap: var(--sp-2);
-  margin: 0;
-  padding: 10px 16px;
-  border-top: 3px double var(--reader-line);
-  background: var(--reader-bg-2);
-}
-
-.foot-bookmark {
-  display: none;
-  width: var(--control-h);
-  padding: 0;
-  justify-content: center;
-  flex: none;
-}
-
-.foot-pos {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  color: var(--fg-3);
-  font-variant-numeric: tabular-nums;
-  letter-spacing: .06em;
-}
-
-.foot-next-wrap { position: relative; margin-left: 4px; }
-
-.foot-menu {
-  top: auto;
-  bottom: calc(100% + 4px);
-  width: 300px;
-}
-
 .reader-actions .btn,
-.reader-foot .btn,
 .reader-body .jump:not(.dynamic),
 .reader-body .meta-action,
 .reader-body .chip-stat,
@@ -827,7 +789,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 }
 
 .reader-actions .btn-icon,
-.reader-foot .btn-icon,
 .reader-body .cond-lookup {
   width: var(--control-h);
   height: var(--control-h);
@@ -851,7 +812,6 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 }
 
 .reader-actions .btn-icon,
-.reader-foot .btn-icon,
 .reader-body .cond-lookup {
   border-width: 1px;
   border-style: solid;

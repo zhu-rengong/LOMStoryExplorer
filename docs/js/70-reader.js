@@ -4,12 +4,11 @@
   const SR = window.SR;
 
   SR.define("reader",
-    ["store", "graph", "i18n", "text", "beats", "panels", "overlay", "ui"],
-    ({ store, graph, i18n, text, beats, panels, overlay, ui }) => {
+    ["store", "graph", "i18n", "text", "beats", "panels", "ui"],
+    ({ store, graph, i18n, text, beats, panels, ui }) => {
       const $ = ui.$;
       const HIT_SELECTOR = ".say .what, .option-text, .lore-p";
       const scrollMemory = new Map();
-      let nextTargetsCache = [];
       let readingId = "";
       let pendingHit = null;
       let flashTimer = 0;
@@ -129,96 +128,13 @@
 
       const edgeLabelOf = (edge) => text.edgeLabel(store.state.lang, String(edge.id), edge.label);
 
-      const hideNextMenu = () => {
-        const menu = $("nextMenu");
-        if (menu) menu.hidden = true;
-      };
-
-      const closeNextMenu = () => {
-        if (!overlay.close("nextMenu")) hideNextMenu();
-      };
-
-      const renderNextMenu = (node) => {
-        const menu = $("nextMenu");
-        if (!menu) return;
-        const targets = nextTargetsCache.length ? nextTargetsCache : nextTargets(node);
-        menu.replaceChildren();
-        menu.appendChild(ui.el("div", "menu-head", i18n.t("recentChoices")));
-        const list = ui.el("div", "menu-list popover-list");
-        targets.forEach((item) => {
-          const row = ui.el("button", "nav-item row");
-          row.type = "button";
-          row.appendChild(ui.el("span", "nav-id", item.node.id));
-          const label = beats.stripRich(edgeLabelOf(item.edge)) || i18n.chapterTitle(graph.chapterOf(item.node));
-          row.appendChild(ui.el("span", "nav-label", label));
-          if (item.edge.kind === "inferred") {
-            row.appendChild(ui.el("span", "nav-badge badge badge-cool", i18n.t("navInferred")));
-          } else if (item.edge.kind === "temp" || item.edge.kind === "travel") {
-            row.appendChild(ui.el("span", "nav-badge badge badge-accent", i18n.t("navTemp")));
-          }
-          row.addEventListener("click", () => {
-            closeNextMenu();
-            store.select(item.node.id, { history: true });
-          });
-          list.appendChild(row);
-        });
-        menu.appendChild(list);
-        overlay.open("nextMenu", {
-          trigger: $("nextBtn"),
-          placement: { align: "end", side: "top", gap: 8, width: 300, fit: true },
-        });
-      };
-
-      const stepNext = () => {
-        const node = store.selected();
-        if (!node) return;
-        const targets = nextTargetsCache.length ? nextTargetsCache : nextTargets(node);
-        if (!targets.length) return;
-        if (targets.length === 1) {
-          store.select(targets[0].node.id, { history: true });
-          return;
-        }
-        const menu = $("nextMenu");
-        if (!menu) return;
-        if (menu.hidden) renderNextMenu(node);
-        else closeNextMenu();
-      };
-
-      const renderFoot = (node) => {
-        const foot = $("readerFoot");
-        if (!foot) return;
-        if (!node) {
-          foot.hidden = true;
-          return;
-        }
-        foot.hidden = false;
-        const prev = $("prevBtn");
-        if (prev) prev.disabled = store.state.hIndex <= 0;
-        const pos = $("footPos");
-        if (pos) {
-          pos.textContent = store.state.history.length
-            ? `${store.state.hIndex + 1} / ${store.state.history.length}` : "";
-        }
-        nextTargetsCache = nextTargets(node);
-        const button = $("nextBtn");
-        const label = $("nextLabel");
-        if (!button || !label) return;
-        button.disabled = nextTargetsCache.length === 0;
-        if (!nextTargetsCache.length) label.textContent = i18n.t("recentEnd");
-        else if (nextTargetsCache.length === 1) label.textContent = i18n.t("recentNext");
-        else label.textContent = i18n.t("recentContinue");
-        closeNextMenu();
-      };
-
       const syncBookmark = () => {
         const node = store.selected();
         const on = !!(node && store.isBookmarked(node.id));
-        for (const id of ["bookmarkBtn", "footBookmark"]) {
-          const button = $(id);
-          if (!button) continue;
-          button.setAttribute("aria-pressed", on ? "true" : "false");
-          button.title = i18n.t(on ? "bookmarkRemove" : "bookmarkAdd");
-        }
+        const button = $("bookmarkBtn");
+        if (!button) return;
+        button.setAttribute("aria-pressed", on ? "true" : "false");
+        button.title = i18n.t(on ? "bookmarkRemove" : "bookmarkAdd");
       };
 
       const buildContext = () => ({
@@ -245,7 +161,6 @@
         readingId = node.id;
 
         title.textContent = node.id;
-        renderFoot(node);
         syncBookmark();
 
         const crumb = $("nodeChapter");
@@ -317,25 +232,13 @@
         readingId = "";
       };
 
-      overlay.register("nextMenu", {
-        id: "nextMenu",
-        triggerId: "nextBtn",
-        group: "menu",
-        onHide: hideNextMenu,
-        placement: { align: "end", side: "top", gap: 8, width: 300, fit: true },
-      });
-
       return {
         clearScrollMemory,
-        closeNextMenu,
         edgeLabelOf,
         focusText,
         nextTargets,
         render,
-        renderFoot,
-        renderNextMenu,
         scrollFraction,
-        stepNext,
         syncBookmark,
       };
     });

@@ -14,8 +14,6 @@
     {
       title: "helpGroupRead",
       rows: [
-        ["[", "hkPrev"],
-        ["]", "hkNext"],
         ["B", "hkBookmark"],
         ["?", "hkHelp"],
         ["Esc", "hkEsc"],
@@ -32,8 +30,8 @@
   ];
 
   SR.define("shortcuts",
-    ["store", "i18n", "overlay", "ui", "reader", "panels"],
-    ({ store, i18n, overlay, ui, reader, panels }) => {
+    ["store", "i18n", "overlay", "ui", "panels"],
+    ({ store, i18n, overlay, ui, panels }) => {
       const $ = ui.$;
       let openFlag = false;
 
@@ -136,16 +134,6 @@
         if (event.key === "ArrowRight") {
           event.preventDefault();
           store.forward();
-          return;
-        }
-        if (event.key === "[") {
-          event.preventDefault();
-          store.stepPrev();
-          return;
-        }
-        if (event.key === "]") {
-          event.preventDefault();
-          reader.stepNext();
           return;
         }
         if (String(event.key || "").toLowerCase() === "b") {

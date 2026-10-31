@@ -14,7 +14,7 @@
       let warming = null;
       let warmingLang = "";
 
-      const scoped = () => store.state.chapterFilter.size > 0 || !!store.state.filterSet;
+      const scoped = () => !!store.state.filterSet;
 
       const markSnippet = (snippet, query) => {
         const node = ui.el("span", "dtext");
@@ -70,7 +70,6 @@
         clear.type = "button";
         clear.addEventListener("click", (event) => {
           event.stopPropagation();
-          store.clearChapters();
           store.applyFilter({ source: "", set: null, error: "", loading: false });
           run();
         });
@@ -109,7 +108,6 @@
               button.type = "button";
               button.addEventListener("click", (event) => {
                 event.stopPropagation();
-                store.clearChapters();
                 store.applyFilter({ source: "", set: null, error: "", loading: false });
                 run();
               });

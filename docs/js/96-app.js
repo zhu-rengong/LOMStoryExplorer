@@ -182,22 +182,6 @@
         addGroup("navIn", graph.inAdj[nodeIndex] || [], (edge) => graph.nodeById.get(edge.from));
 
         menu.appendChild(list);
-        menu.appendChild(ui.el("div", "menu-sep"));
-
-        const only = ui.el("button", "menu-item row", i18n.t("navOnlyChapter"));
-        only.type = "button";
-        only.addEventListener("click", () => {
-          closeNav();
-          rail.setOnlyChapter(node.chapter);
-        });
-        const clear = ui.el("button", "menu-item row", i18n.t("navClearFilter"));
-        clear.type = "button";
-        clear.addEventListener("click", () => {
-          closeNav();
-          store.clearChapters();
-        });
-        menu.appendChild(only);
-        menu.appendChild(clear);
       };
 
       const beatsLabel = (edge) => {
@@ -290,32 +274,9 @@
           tab.addEventListener("click", () => rail.setTab(tab.dataset.rail));
         });
 
-        const prev = $("prevBtn");
-        if (prev) {
-          prev.addEventListener("click", () => {
-            store.back();
-          });
-        }
-        const next = $("nextBtn");
-        if (next) {
-          next.addEventListener("click", (event) => {
-            event.stopPropagation();
-            reader.stepNext();
-          });
-        }
-
         const bookmark = $("bookmarkBtn");
         if (bookmark) {
           bookmark.addEventListener("click", () => {
-            const node = store.selected();
-            if (!node) return;
-            const on = store.toggleBookmark(node.id);
-            ui.toast(i18n.t(on ? "bookmarkAdded" : "bookmarkRemoved"));
-          });
-        }
-        const footBookmark = $("footBookmark");
-        if (footBookmark) {
-          footBookmark.addEventListener("click", () => {
             const node = store.selected();
             if (!node) return;
             const on = store.toggleBookmark(node.id);
@@ -432,17 +393,10 @@
           rail.render();
         });
         store.subscribe(["filter"], () => filterUi.sync());
-        store.subscribe(["filter", "visible"], () => rail.updateCount());
         store.subscribe(["railTab", "outline"], () => rail.render());
         store.subscribe(["settingsType"], () => settingsUi.sync());
         store.subscribe(["layout"], () => {
           document.body.dataset.layout = store.state.layout;
-          rail.updateCount();
-        });
-        store.on((event) => {
-          if (event.type === "chapterAutoAdded") {
-            ui.toast(i18n.t("chapterAutoAdded", { name: i18n.chapterTitle(event.payload) }));
-          }
         });
       };
 

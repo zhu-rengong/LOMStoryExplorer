@@ -22,13 +22,6 @@
   color: var(--fg-2);
 }
 
-.rail-count {
-  font-family: var(--font-mono);
-  font-size: var(--fs-xs);
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-
 .rail-close {
   display: none;
   width: var(--ctl-sm);
