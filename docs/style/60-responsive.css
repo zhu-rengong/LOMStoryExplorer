@@ -98,6 +98,9 @@ body[data-layout="compact"] .reader-head { padding: var(--sp-5) 40px var(--sp-4)
 
 body[data-layout="compact"] #nodeTitle { font-size: 23px; }
 
+body[data-layout="compact"] .crumb-time,
+body[data-layout="mobile"] .crumb-time { display: none; }
+
 body[data-layout="compact"] .reader-body { padding: var(--sp-6) 40px 72px; }
 
 body[data-layout="mobile"] .masthead {

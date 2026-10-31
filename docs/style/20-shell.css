@@ -531,15 +531,20 @@
 
 .crumb {
   display: flex;
-  flex-wrap: wrap;
+  flex: 0 1 auto;
+  flex-wrap: nowrap;
   align-items: center;
   gap: var(--sp-2);
-  margin-bottom: var(--sp-2);
+  max-width: 46%;
+  min-width: 0;
+  margin-bottom: 0;
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   letter-spacing: .14em;
   text-transform: uppercase;
   color: var(--ink-3);
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .crumb::before {
@@ -560,8 +565,16 @@
 
 .reader-title-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: var(--sp-4);
+}
+
+.reader-headline {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: 1;
+  min-width: 0;
 }
 
 #nodeTitle {
@@ -573,7 +586,10 @@
   letter-spacing: .01em;
   line-height: 1.25;
   color: var(--ink);
-  overflow-wrap: anywhere;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
 }
 
 .reader-actions {
@@ -581,7 +597,7 @@
   display: flex;
   align-items: center;
   gap: 2px;
-  margin-top: -4px;
+  margin-top: 0;
 }
 
 .reader-actions [aria-pressed="true"] svg {

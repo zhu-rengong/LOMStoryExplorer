@@ -161,6 +161,7 @@
         readingId = node.id;
 
         title.textContent = node.id;
+        title.title = node.id;
         syncBookmark();
 
         const crumb = $("nodeChapter");
