@@ -117,14 +117,14 @@
 }
 
 .say.think .who {
-  color: var(--ink-2);
+  color: var(--ink-think);
   font-weight: var(--rd-w-speaker, 400);
   letter-spacing: .1em;
   opacity: .9;
 }
 
 .say.think .what {
-  color: var(--ink-2);
+  color: var(--ink-think);
   font-family: var(--rd-font-think, var(--font-reading));
   font-size: var(--rd-fs-think, var(--rd-fs));
   font-weight: var(--rd-w-think, 400);
