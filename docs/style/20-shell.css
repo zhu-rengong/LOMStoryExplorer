@@ -134,6 +134,10 @@
 
 .search-input:hover { border-color: var(--line-2); }
 
+.search-input:focus-visible { outline: none; }
+
+.search-input:focus { border-color: var(--accent); }
+
 .search-input::-webkit-search-cancel-button { appearance: none; }
 
 .search-key {

@@ -178,9 +178,13 @@
 
 .input:hover { border-color: var(--line-2); }
 
+.input:focus-visible { outline: none; }
+
+.input:focus { border-color: var(--accent); }
+
 .input.is-error { border-color: var(--danger); }
 
-.input.is-error:focus-visible { outline-color: var(--danger); }
+.input.is-error:focus-visible { border-color: var(--danger); }
 
 .input-mono {
   font-family: var(--font-mono);
