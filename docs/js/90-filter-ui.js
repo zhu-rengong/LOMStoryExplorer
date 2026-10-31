@@ -447,6 +447,7 @@
             if (["ArrowLeft", "ArrowRight", "Home", "End"].indexOf(event.key) >= 0) updateSuggest();
           });
           expr.addEventListener("keydown", (event) => {
+            if (event.ctrlKey || event.metaKey || event.altKey) return;
             if (event.key === "Escape") {
               if (suggest.open) {
                 event.preventDefault();
@@ -468,7 +469,7 @@
               return;
             }
             if (suggest.open && suggest.items.length
-              && (event.key === "Tab" || (event.key === "Enter" && !event.ctrlKey))) {
+              && (event.key === "Tab" || event.key === "Enter")) {
               event.preventDefault();
               accept(suggest.active);
               return;

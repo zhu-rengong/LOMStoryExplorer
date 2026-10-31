@@ -7,7 +7,6 @@
     {
       title: "helpGroupNav",
       rows: [
-        ["/", "hkSearch"],
         ["← / →", "hkHistory"],
       ],
     },
@@ -16,15 +15,7 @@
       rows: [
         ["B", "hkBookmark"],
         ["?", "hkHelp"],
-        ["Esc", "hkEsc"],
-        ["Tab", "hkTab"],
-      ],
-    },
-    {
-      title: "helpGroupFilter",
-      rows: [
-        ["speaker:…", "hkFilterExpr"],
-        ["Ctrl+Enter", "hkFilterApply"],
+        ["J", "navBtnTitle"],
       ],
     },
   ];
@@ -121,6 +112,14 @@
         if (String(event.key || "").toLowerCase() === "b") {
           event.preventDefault();
           toggleBookmark();
+          return;
+        }
+        if (String(event.key || "").toLowerCase() === "j") {
+          const nav = $("navBtn");
+          if (nav && !nav.disabled) {
+            event.preventDefault();
+            nav.click();
+          }
         }
       };
 
