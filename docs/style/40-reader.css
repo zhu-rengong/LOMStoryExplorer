@@ -642,7 +642,8 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 }
 
 .jump {
-  display: inline-flex;
+  display: flex;
+  width: fit-content;
   align-items: center;
   gap: var(--sp-2);
   margin: 4px 0 12px;
