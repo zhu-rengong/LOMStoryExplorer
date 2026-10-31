@@ -42,7 +42,6 @@
   ];
 
   const WEIGHTS = [400, 500, 600];
-  const THEMES = ["paper", "night", "auto"];
 
   const DEFAULT_TYPE = { font: "", scale: 100, weight: 400 };
 
@@ -61,7 +60,6 @@
   };
 
   const DEFAULTS = {
-    theme: "auto",
     reading: "serif",
     readingCustom: "",
     ui: "system",
@@ -71,8 +69,6 @@
     measure: MEASURE_DEFAULT,
     types: null,
   };
-
-  const media = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
 
   let state = null;
 
@@ -153,16 +149,8 @@
     return direct ? `${direct},var(--font-reading)` : "var(--font-reading)";
   };
 
-  const resolveTheme = (mode) => {
-    if (mode === "auto") return media && media.matches ? "night" : "paper";
-    return mode === "night" ? "night" : "paper";
-  };
-
   const apply = () => {
     const root = document.documentElement;
-    const theme = resolveTheme(state.theme);
-    root.dataset.theme = theme;
-    root.style.colorScheme = theme === "night" ? "dark" : "light";
     root.style.setProperty("--font-reading", stackFor("reading"));
     root.style.setProperty("--font-ui", stackFor("ui"));
     root.style.setProperty("--rd-scale", String(state.scale / 100));
@@ -175,7 +163,6 @@
       root.style.setProperty(`--rd-fs-${type.id}`, `${px.toFixed(2)}px`);
       root.style.setProperty(`--rd-w-${type.id}`, String(item.weight || 400));
     }
-    return theme;
   };
 
   const persist = () => {
@@ -187,7 +174,6 @@
   };
 
   const snapshot = () => ({
-    theme: state.theme,
     reading: state.reading,
     readingCustom: state.readingCustom,
     ui: state.ui,
@@ -204,7 +190,6 @@
 
   const restoreDefaults = () => {
     state = {
-      theme: DEFAULTS.theme,
       reading: DEFAULTS.reading,
       readingCustom: DEFAULTS.readingCustom,
       ui: DEFAULTS.ui,
@@ -225,7 +210,6 @@
       saved = null;
     }
     const source = saved && typeof saved === "object" ? saved : {};
-    if (typeof source.theme === "string" && THEMES.indexOf(source.theme) >= 0) state.theme = source.theme;
     if (typeof source.reading === "string") state.reading = source.reading;
     if (typeof source.readingCustom === "string") state.readingCustom = source.readingCustom;
     if (typeof source.ui === "string") state.ui = source.ui;
@@ -238,7 +222,6 @@
 
   const set = (patch) => {
     if (patch && typeof patch === "object") {
-      if (typeof patch.theme === "string" && THEMES.indexOf(patch.theme) >= 0) state.theme = patch.theme;
       if (typeof patch.reading === "string") state.reading = patch.reading;
       if (typeof patch.readingCustom === "string") state.readingCustom = patch.readingCustom;
       if (typeof patch.ui === "string") state.ui = patch.ui;
@@ -309,7 +292,6 @@
 
   const api = {
     KEY: KEY,
-    THEMES: THEMES.slice(),
     presets: { reading: READING, ui: UI, types: TYPES, weights: WEIGHTS.slice() },
     defaults: clone(DEFAULTS),
     measureRange: { min: MEASURE_MIN, max: MEASURE_MAX, fallback: MEASURE_DEFAULT },
@@ -326,23 +308,12 @@
     describe: describe,
     labelOf: labelOf,
     pickLabel: pickLabel,
-    theme: () => resolveTheme(state.theme),
     subscribe: (fn) => {
       const handler = (event) => fn(event.detail);
       document.addEventListener("sr:prefs", handler);
       return () => document.removeEventListener("sr:prefs", handler);
     },
   };
-
-  if (media) {
-    const onSystemChange = () => {
-      if (state.theme !== "auto") return;
-      apply();
-      notify();
-    };
-    if (media.addEventListener) media.addEventListener("change", onSystemChange);
-    else if (media.addListener) media.addListener(onSystemChange);
-  }
 
   restore();
   apply();

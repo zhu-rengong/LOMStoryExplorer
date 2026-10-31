@@ -1,75 +1,48 @@
 :root {
-  --gold: #9A7B4F;
-  --crimson: #9C3A28;
-  --teal: #47665F;
-  --moss: #6F8A5E;
-  --gold-1: rgba(154, 123, 79, .14);
-  --gold-2: rgba(154, 123, 79, .30);
-  --gold-3: rgba(154, 123, 79, .58);
-  --crimson-1: rgba(156, 58, 40, .12);
-  --crimson-2: rgba(156, 58, 40, .32);
-  --teal-1: rgba(71, 102, 95, .12);
-  --teal-2: rgba(71, 102, 95, .34);
-}
+  color-scheme: light;
 
-:root {
-  --bg-page: #E3D4B2;
-  --bg-panel: #EDE1C3;
-  --bg-elev: #F6ECD4;
-  --bg-hover: rgba(45, 35, 20, .055);
-  --bg-active: rgba(45, 35, 20, .105);
-  --bg-field: #FAF1DB;
-  --bg-scrim: rgba(27, 21, 12, .52);
+  --canvas: #FAF9F6;
+  --surface: #FFFFFF;
+  --surface-2: #F7F4EE;
+  --surface-sunken: #F2EEE6;
+  --surface-hover: #F6F2EB;
+  --surface-active: #EFE9DE;
 
-  --fg-1: #211C14;
-  --fg-2: #4D4535;
-  --fg-3: #746A55;
-  --fg-invert: #F8F0DC;
+  --ink: #16130E;
+  --ink-2: #4B463D;
+  --ink-3: #7C7566;
+  --ink-4: #A49C8C;
 
-  --line-1: rgba(45, 35, 20, .15);
-  --line-2: rgba(45, 35, 20, .28);
-  --line-3: rgba(45, 35, 20, .44);
+  --line-1: #E8E3D9;
+  --line-2: #D8D0C1;
+  --line-3: #BCB2A0;
 
-  --accent: #A5382A;
-  --accent-strong: #7C2418;
-  --accent-soft: #F0DCD1;
-  --accent-line: #BE8474;
-  --danger: #8E2F22;
-  --danger-soft: #EBD3CB;
+  --accent: #A63B2A;
+  --accent-strong: #7E2A1D;
+  --accent-soft: #F7E8E3;
+  --accent-line: #D9B5A9;
+  --on-accent: #FFFFFF;
+
+  --danger: #9B2C1F;
+  --danger-soft: #F8E7E2;
+  --danger-line: #E2B6AB;
+
+  --ok: #3E6B4F;
+  --ok-soft: #E9F0EA;
+  --ok-line: #B7CCBD;
+
+  --warn: #8A6A22;
+  --warn-soft: #F6EFDC;
+
   --cool: #3C5560;
-  --cool-soft: #DCE5E2;
-
-  --reader-bg: #F7EDD6;
-  --reader-bg-2: #F0E3C7;
-  --reader-card: #F4E8CE;
-  --reader-card-hover: #FBF2DD;
-  --reader-fg: #211C14;
-  --reader-fg-2: #4D4535;
-  --reader-fg-3: #746A55;
-  --reader-line: rgba(45, 35, 20, .16);
-  --reader-line-2: rgba(45, 35, 20, .30);
-  --reader-accent: #A5382A;
-  --reader-accent-soft: #F1DDD1;
-  --think-ghost: rgba(33, 28, 20, .16);
-
-  --seal-bg: #A5382A;
-  --seal-fg: #F9F0DA;
-  --seal-ring: rgba(249, 240, 218, .26);
-
-  --reader-bg-veil: #F3E7CB;
-  --accent-wash: #F2E5C9;
-  --crimson-line: #C08A7B;
-  --crimson-wash: #F2DED4;
-  --teal-line: #9CB2AE;
-  --teal-wash: #E0E8E4;
+  --cool-soft: #E7EDEE;
 
   --spk-0: #8A5A2B;
-  --spk-1: #A5382A;
+  --spk-1: #A63B2A;
   --spk-2: #3C5560;
 
-  --on-accent: #FBF3DF;
-  --texture-line: rgba(90, 68, 40, .04);
-  --vignette: rgba(48, 34, 16, .07);
+  --scrim: rgba(22, 19, 14, .36);
+  --scrim-soft: rgba(22, 19, 14, .18);
 
   --sp-1: 4px;
   --sp-2: 8px;
@@ -77,53 +50,51 @@
   --sp-4: 16px;
   --sp-5: 24px;
   --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
 
-  --r-1: 0;
-  --r-2: 0;
-  --r-3: 0;
-  --r-pill: 0;
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --r-xl: 16px;
+  --r-pill: 999px;
 
-  --tile-gap: 10px;
-  --tile-line: var(--line-1);
-  --frame-inset: 3px;
+  --ctl-sm: 30px;
+  --ctl-md: 36px;
+  --ctl-lg: 42px;
+  --row-h: 34px;
+  --row-pad: 10px;
 
-  --ctl-sm: 28px;
-  --ctl-md: 32px;
-  --ctl-lg: 36px;
+  --fs-micro: 10.5px;
+  --fs-xs: 11.5px;
+  --fs-sm: 12.5px;
+  --fs-base: 13.5px;
+  --fs-md: 15px;
+  --fs-h: 18px;
+  --fs-title: 22px;
+  --fs-display: 30px;
 
-  --fs-micro: 10px;
-  --fs-xs: 11px;
-  --fs-sm: 12px;
-  --fs-base: 13px;
-  --fs-md: 14px;
-  --fs-h: 17px;
-  --fs-title: 20px;
+  --font-ui: "Inter", "PingFang TC", "PingFang SC", "Source Han Sans TC", "Noto Sans TC", "Microsoft JhengHei", "Microsoft YaHei", system-ui, sans-serif;
+  --font-display: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", "STSong", Georgia, "SimSun", serif;
+  --font-mono: "Cascadia Mono", "Sarasa Mono TC", ui-monospace, Consolas, "Courier New", monospace;
+  --font-reading: var(--font-display);
 
-  --font-ui: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Noto Sans TC", system-ui, sans-serif;
-  --font-display: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", "SimSun", Georgia, serif;
-  --font-mono: ui-monospace, "Cascadia Mono", "Sarasa Mono TC", Consolas, "Courier New", monospace;
-  --font-reading: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", Georgia, "SimSun", serif;
   --rd-scale: 1;
   --rd-leading: 1.85;
   --rd-fs: calc(16px * var(--rd-scale));
   --rd-fs-sm: calc(14.5px * var(--rd-scale));
-  --rd-fs-xs: calc(11.5px * var(--rd-scale));
-
   --rd-gap-1: 4px;
   --rd-gap-2: 8px;
-  --rd-gap-3: 16px;
-  --rd-gap-4: 24px;
+  --rd-gap-3: 18px;
+  --rd-gap-4: 28px;
+  --rd-pad: 14px;
+  --rd-pad-y: 9px;
+  --rd-indent: 14px;
 
-  --rd-pad: 12px;
-  --rd-pad-y: 8px;
-  --rd-indent: var(--rd-pad);
-
-  --row-h: 34px;
-  --panel-head-h: 44px;
-  --topbar-h: 60px;
-  --rail-w: 300px;
-  --reader-measure: 840px;
-  --scrollbar-w: 8px;
+  --masthead-h: 76px;
+  --rail-w: 292px;
+  --reader-measure: 860px;
+  --scrollbar-w: 10px;
 
   --z-float: 10;
   --z-scrim: 30;
@@ -131,40 +102,15 @@
   --z-pop: 45;
   --z-toast: 50;
 
-  --shadow-1: none;
-  --shadow-2: none;
-  --reader-shadow: none;
+  --shadow-1: 0 1px 2px rgba(22, 19, 14, .05);
+  --shadow-pop: 0 2px 6px rgba(22, 19, 14, .06), 0 24px 48px -24px rgba(22, 19, 14, .26);
+  --shadow-sheet: -24px 0 64px -32px rgba(22, 19, 14, .3);
+  --shadow-lift: 0 1px 2px rgba(22, 19, 14, .04);
+
   --ease: cubic-bezier(.22, .61, .36, 1);
   --t-fast: 120ms;
-  --t-base: 180ms;
+  --t-base: 160ms;
   --t-slow: 240ms;
-}
-
-:root {
-  --control-h: var(--ctl-md);
-  --control-border: var(--line-2);
-  --control-border-hover: var(--line-3);
-  --control-bg-solid: var(--bg-field);
-  --control-fg: var(--fg-2);
-  --control-fg-hover: var(--fg-1);
-  --control-bg-hover: var(--bg-hover);
-  --control-bg-active: var(--bg-active);
-  --control-on-bg: rgba(45, 35, 20, .08);
-  --control-on-fg: var(--accent-strong);
-  --control-on-border: var(--accent-line);
-  --control-disabled: .4;
-
-  --row-hover-bg: var(--bg-hover);
-  --row-active-bg: var(--bg-active);
-  --row-pad: 12px;
-
-  --chip-fs: var(--fs-xs);
-
-  --pop-bg: var(--bg-elev);
-  --pop-border: var(--line-2);
-  --pop-pad: 6px;
-  --pop-head-h: var(--panel-head-h);
-  --frame-bg: var(--bg-elev);
 
   --focus-ring: 2px solid var(--accent);
   --focus-offset: 2px;

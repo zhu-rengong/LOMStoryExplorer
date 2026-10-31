@@ -51,7 +51,7 @@ docs/
   index.html                 single page shell
   vendor/i18next.min.js      vendored i18next runtime, no CDN required
   js/00-runtime.js           SR.define / SR.require / SR.start module runtime
-  js/01-prefs.js             first paint preferences (theme, fonts, measure)
+  js/01-prefs.js             first paint preferences (fonts, size, leading, measure)
   js/10-schema.js            data validation and beat codec
   js/15-graph.js             indexes, adjacency, chapters, visibility
   js/20-storage.js           versioned local storage repositories
@@ -77,7 +77,14 @@ docs/
   js/94-shortcuts.js         keyboard shortcuts and help panel
   js/96-app.js               shell bindings, routing, language and layout
   js/99-boot.js              fatal error surface and runtime start
-  style/                     token, theme, base, component, layout and feature layers
+  style/00-tokens.css        single light palette, type scale, spacing and motion tokens
+  style/10-base.css          reset, document typography, scrollbars and focus rings
+  style/20-shell.css         masthead, search field, catalog rail and reader page frame
+  style/30-controls.css      buttons, inputs, segmented controls, rows, menus and popovers
+  style/40-reader.css        reading column, beats, options, branches and conditions
+  style/50-panels.css        filter, settings drawer, stats, shortcuts, lookup and toasts
+  style/60-responsive.css    layout tiers driven by body[data-layout]
+  style/90-motion.css        keyframes and reduced-motion fallbacks
 ```
 
 ## Frontend module contract
@@ -94,7 +101,7 @@ const app = SR.start("app");
 
 Each module declares its dependencies and receives them as an object. `SR.require` resolves modules lazily, reports the exact dependency chain when a module is missing, and rejects cycles at startup. Modules never read each other through implicit globals.
 
-`01-prefs.js` and `31-lang.js` run before the body exists. The first applies the stored theme, font stacks, size, leading and reading measure to `documentElement`; the second resolves the interface language and writes `documentElement.lang` and `document.title`, so the first paint matches both the saved preferences and the browser language.
+`01-prefs.js` and `31-lang.js` run before the body exists. The first applies the stored font stacks, size, leading and reading measure to `documentElement`; the second resolves the interface language and writes `documentElement.lang` and `document.title`, so the first paint matches both the saved preferences and the browser language. The interface ships a single light theme declared by `color-scheme: light` and the tokens in `style/00-tokens.css`, so there is no theme switch and no stored theme state.
 
 Interface strings live in `30-i18n-data.js` as plain globals so they load with a classic script tag in the head, which keeps the site working from `file://` without a fetch backend. `32-i18n.js` feeds those bundles to the vendored i18next runtime and exposes `t`, so call sites never touch the library directly. `31-lang.js` owns the interface language: it takes the first supported entry of `navigator.languages`, keeps English as English, maps Chinese tags to the nearest variant and falls back to the data default for everything else. A language picked in the menu is stored in `legend-of-mortal.explorer.lang.v1` and wins on later visits, while an untouched reader re-detects on every load, so a changed browser language takes effect the next time the page opens. The interface language and the content language are separate: `store.state.lang` selects the UI bundle, while `store.textLang()` picks the closest available pack from `SR_DATA.meta.langs`. An interface language without a matching text pack (English) therefore keeps rendering the default story data instead of requesting missing shards.
 

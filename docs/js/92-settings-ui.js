@@ -143,15 +143,6 @@
         ui.toast(i18n.t("fontPicked", { name: item.name }));
       };
 
-      const syncTheme = () => {
-        const mode = settings.get().theme;
-        ui.$$("#themeSeg .seg-btn").forEach((button) => {
-          const on = button.dataset.theme === mode;
-          button.classList.toggle("is-on", on);
-          ui.setPressed(button, on);
-        });
-      };
-
       const sync = () => {
         const current = settings.get();
         const lang = store.state.lang;
@@ -211,7 +202,6 @@
           typeCustom.hidden = !isCustom;
           if (isCustom) typeCustom.value = item.font;
         }
-        syncTheme();
       };
 
       const initTypeTabs = () => {
@@ -264,13 +254,6 @@
 
       const bind = () => {
         initTypeTabs();
-
-        ui.$$("#themeSeg .seg-btn").forEach((button) => {
-          button.addEventListener("click", () => {
-            settings.set({ theme: button.dataset.theme });
-            syncTheme();
-          });
-        });
 
         const readingTrigger = $("fontReadingTrigger");
         if (readingTrigger) readingTrigger.addEventListener("click", () => openPicker(readingTrigger, "reading"));
@@ -423,7 +406,6 @@
         open,
         openPicker,
         sync,
-        syncTheme,
       };
     });
 })();
