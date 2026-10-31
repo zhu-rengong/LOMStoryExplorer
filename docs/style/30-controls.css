@@ -113,7 +113,7 @@
   height: 18px;
   padding: 0 5px;
   border: 1px solid var(--line-1);
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--ink-3);
   font-family: var(--font-ui);
@@ -123,28 +123,10 @@
   white-space: nowrap;
 }
 
-.badge-accent {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-}
-
-.badge-cool {
-  border-color: var(--ok-line);
-  background: var(--ok-soft);
-  color: var(--cool);
-}
-
 .badge-danger {
   border-color: var(--danger-line);
   background: var(--danger-soft);
   color: var(--danger);
-}
-
-.badge-neutral {
-  border-color: var(--line-1);
-  background: transparent;
-  color: var(--ink-3);
 }
 
 .badge-num {
@@ -260,8 +242,7 @@
   color: var(--ink-3);
   font-family: var(--font-ui);
   font-size: var(--fs-sm);
-  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
-              box-shadow var(--t-fast) var(--ease);
+  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
 }
 
 .seg-wide .tab,
@@ -272,9 +253,8 @@
 
 .seg .tab.is-on,
 .seg .seg-btn.is-on {
-  background: var(--surface);
-  color: var(--ink);
-  box-shadow: var(--shadow-1);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .chip-btn.is-on {

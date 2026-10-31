@@ -74,7 +74,7 @@
 .say .who {
   display: block;
   margin-bottom: 5px;
-  color: var(--spk, var(--accent-strong));
+  color: var(--accent-strong);
   font-family: var(--rd-font-speaker, var(--font-ui));
   font-size: var(--rd-fs-speaker, calc(14px * var(--rd-scale)));
   font-weight: var(--rd-w-speaker, 500);
@@ -100,12 +100,6 @@
   letter-spacing: .015em;
   overflow-wrap: break-word;
 }
-
-.say.spk-0 .who { --spk: var(--spk-0); }
-
-.say.spk-1 .who { --spk: var(--spk-1); }
-
-.say.spk-2 .who { --spk: var(--spk-2); }
 
 .say.narration {
   width: 85%;
@@ -465,13 +459,12 @@
   font-variant-numeric: tabular-nums;
 }
 
-.cx-rand { color: var(--cool); }
-
-.cx-dice {
-  padding: 0 5px;
-  border: 1px solid var(--line-1);
-  border-radius: 3px;
-  color: var(--cool);
+.cx-var,
+.cx-dice,
+.cx-gtag {
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
 }
 
 .cx-var {
@@ -480,13 +473,16 @@
   gap: 4px;
   margin: 0 4px;
   padding: 0 6px;
-  border: 1px solid var(--line-1);
-  border-radius: 3px;
-  background: var(--surface-2);
   color: var(--ink);
   line-height: 1.6;
   transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
               color var(--t-fast) var(--ease);
+}
+
+.cx-dice {
+  padding: 0 5px;
+  color: var(--ink-3);
+  font-size: var(--fs-micro);
 }
 
 .cx-type {
@@ -499,11 +495,7 @@
 
 .cx-neg { color: var(--danger); font-size: var(--fs-micro); }
 
-.cx-var.is-link {
-  background: transparent;
-  color: var(--ink-2);
-  cursor: pointer;
-}
+.cx-var.is-link { cursor: pointer; }
 
 .cx-var.is-link:hover {
   border-color: var(--accent-line);
@@ -527,8 +519,6 @@
 
 .cx-gtag {
   padding: 0 5px;
-  border: 1px solid var(--line-1);
-  border-radius: 3px;
   color: var(--ink-4);
   font-size: var(--fs-micro);
   letter-spacing: .04em;
@@ -545,7 +535,7 @@
   display: inline-block;
   padding: 0 6px;
   border: 1px dashed var(--line-2);
-  border-radius: 3px;
+  border-radius: var(--r-sm);
   color: var(--ink-2);
   font-family: var(--font-mono);
   letter-spacing: .04em;
@@ -577,6 +567,16 @@
 
 .lore-text .lore-p + .lore-p { margin-top: .45em; }
 
+.scene-switch,
+.jump,
+.chip-stat,
+.meta-action {
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  color: var(--ink-3);
+}
+
 .scene-switch {
   display: flex;
   flex-wrap: wrap;
@@ -586,10 +586,6 @@
   max-width: 100%;
   margin: 0 0 var(--rd-gap-3);
   padding: 3px 8px;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  background: var(--surface-2);
-  color: var(--ink-3);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   line-height: 1.7;
@@ -618,9 +614,6 @@
   height: auto;
   margin: 0 0 var(--rd-gap-3);
   padding: 3px 8px;
-  border: 1px solid transparent;
-  border-radius: 3px;
-  background: var(--surface-2);
   color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
@@ -673,9 +666,6 @@
   height: auto;
   min-height: 22px;
   padding: 2px 7px;
-  border-color: transparent;
-  background: var(--surface-2);
-  color: var(--ink-3);
   font-family: var(--rd-font-label, var(--font-mono));
   font-size: var(--rd-fs-label, var(--fs-xs));
   font-weight: var(--rd-w-label, 400);
@@ -691,10 +681,6 @@
   height: auto;
   min-height: 22px;
   padding: 2px 7px;
-  border: 1px solid var(--accent-line);
-  border-radius: 3px;
-  background: var(--accent-soft);
-  color: var(--accent-strong);
   font-family: var(--rd-font-label, var(--font-mono));
   font-size: var(--rd-fs-label, var(--fs-xs));
   font-weight: var(--rd-w-label, 400);
@@ -702,36 +688,10 @@
   letter-spacing: 0;
 }
 
-.meta-action:hover {
-  border-color: var(--accent);
+.btn.meta-action:hover {
+  border-color: var(--accent-line);
   background: var(--accent-soft);
   color: var(--accent-strong);
-}
-
-.reader-body .badge { color: var(--ink-3); }
-
-.reader-body .badge-lock {
-  border-color: var(--danger-line);
-  background: var(--danger-soft);
-  color: var(--danger);
-}
-
-.reader-body .badge-dice {
-  border-color: var(--ok-line);
-  background: var(--ok-soft);
-  color: var(--cool);
-}
-
-.reader-body .badge-need {
-  border-color: var(--line-1);
-  background: transparent;
-  color: var(--ink-3);
-}
-
-.reader-body .entry-badge {
-  border-color: var(--line-1);
-  background: transparent;
-  color: var(--ink-3);
 }
 
 .is-flash {

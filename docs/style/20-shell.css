@@ -390,7 +390,7 @@
   flex: none;
   margin-right: 2px;
   border-radius: var(--r-pill);
-  background: var(--cool);
+  background: var(--ink-4);
 }
 
 .rail-item .ri-entry.is-combat { background: var(--danger); }

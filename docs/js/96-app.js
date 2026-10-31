@@ -198,13 +198,11 @@
             item.appendChild(ui.el("span", "nav-id", target.id));
             const label = beatsLabel(edge);
             if (label) item.appendChild(ui.el("span", "nav-label", label));
-            if (edge.kind === "inferred") {
-              item.appendChild(ui.el("span", "nav-badge badge badge-cool", i18n.t("navInferred")));
-            } else if (edge.kind === "temp" || edge.kind === "travel") {
-              item.appendChild(ui.el("span", "nav-badge badge badge-accent", i18n.t("navTemp")));
-            } else if (edge.kind === "position") {
-              item.appendChild(ui.el("span", "nav-badge badge badge-cool", i18n.t("navPosition")));
-            }
+            let tag = "";
+            if (edge.kind === "inferred") tag = i18n.t("navInferred");
+            else if (edge.kind === "temp" || edge.kind === "travel") tag = i18n.t("navTemp");
+            else if (edge.kind === "position") tag = i18n.t("navPosition");
+            if (tag) item.appendChild(ui.el("span", "nav-badge badge", tag));
             item.addEventListener("click", () => {
               closeNav();
               store.select(target.id, { history: true });

@@ -59,14 +59,6 @@
         return text.characters(store.textLang())[id] || id;
       };
 
-      const speakerTone = (id) => {
-        let sum = 0;
-        for (let index = 0; index < id.length; index++) {
-          sum = (sum * 31 + id.charCodeAt(index)) % 997;
-        }
-        return sum % 3;
-      };
-
       const entryLabel = (node) => {
         if (!node || !node.entry) return "";
         const key = ENTRY_KEYS[node.entry];
@@ -77,7 +69,7 @@
         const label = entryLabel(node);
         if (!label) return null;
         const badge = ui.el("span",
-          `entry-badge badge ${node.entry === "combat" ? "badge-danger" : "badge-cool"} is-${node.entry}`,
+          `entry-badge badge${node.entry === "combat" ? " badge-danger" : ""} is-${node.entry}`,
           label);
         badge.title = i18n.t("entrySourceTitle", { name: label });
         return badge;
@@ -147,11 +139,8 @@
 
           if (option.lock || option.note) {
             const badges = ui.el("span", "option-badges");
-            if (option.lock) badges.appendChild(ui.el("span", "badge badge-lock", `🔒 ${option.lock}`));
-            if (option.note) {
-              const isDice = option.note.indexOf(i18n.t("diceLabel")) === 0;
-              badges.appendChild(ui.el("span", `badge ${isDice ? "badge-dice" : "badge-need"}`, option.note));
-            }
+            if (option.lock) badges.appendChild(ui.el("span", "badge badge-danger", `🔒 ${option.lock}`));
+            if (option.note) badges.appendChild(ui.el("span", "badge", option.note));
             main.appendChild(badges);
           }
           button.appendChild(main);
@@ -389,7 +378,6 @@
           if (tag === "s") {
             const data = schema.say(beat);
             const wrap = ui.el("div", `say${data.mode !== "dialog" ? ` ${SAY_CLASS[data.mode === "think" ? 2 : 1]}` : ""}`);
-            if (data.speaker && data.mode === "dialog") wrap.classList.add(`spk-${speakerTone(data.speaker)}`);
             if (data.speaker) {
               const who = ui.el("span", "who", speakerName(data.speaker));
               who.classList.add("is-link");
@@ -507,7 +495,6 @@
         renderJump,
         renderScene,
         speakerName,
-        speakerTone,
         stripRich,
       };
     });

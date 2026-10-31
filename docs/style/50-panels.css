@@ -109,21 +109,6 @@
   gap: 5px;
 }
 
-.filter-chip {
-  height: 26px;
-  padding: 0 8px;
-  border-color: transparent;
-  background: var(--surface-2);
-  color: var(--ink-2);
-  font-size: var(--fs-micro);
-}
-
-.filter-chip:hover {
-  border-color: var(--line-2);
-  background: var(--surface);
-  color: var(--ink);
-}
-
 .filter-results {
   margin-top: var(--sp-4);
   padding-top: var(--sp-3);
@@ -733,40 +718,19 @@
 .lookup-cond .cx-var {
   margin: 0 3px;
   padding: 0 5px;
-  border-color: var(--line-1);
-  background: var(--surface);
-  color: var(--ink);
   font-size: var(--fs-xs);
   line-height: 1.7;
 }
 
-.lookup-cond .cx-var.is-link {
-  border-color: var(--line-2);
-  background: transparent;
-  font-family: var(--font-mono);
-}
-
-.lookup-cond .cx-var.is-link:hover {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-}
+.lookup-cond .cx-var.is-link { font-family: var(--font-mono); }
 
 .lookup-cond .cx-type,
-.lookup-cond .cx-id { font-size: var(--fs-micro); color: var(--ink-4); }
+.lookup-cond .cx-id { font-size: var(--fs-micro); }
 
-.lookup-cond .cx-op { color: var(--accent); }
-
-.lookup-cond .cx-const { color: var(--ink-2); }
-
-.lookup-cond .cx-gtag { border-color: var(--line-1); color: var(--ink-4); font-size: var(--fs-micro); }
-
-.lookup-cond .cx-dice { border-color: var(--line-2); color: var(--cool); }
+.lookup-cond .cx-gtag { font-size: var(--fs-micro); }
 
 .lookup-cond .cx-fallback {
   padding: 0 4px;
-  border-color: var(--line-2);
-  color: var(--ink-2);
   font-size: var(--fs-micro);
 }
 
@@ -787,9 +751,9 @@
 .lc-add .lc-add-type {
   flex: none;
   padding: 0 5px;
-  border: 1px solid var(--line-1);
-  border-radius: 3px;
-  background: var(--surface);
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
   color: var(--ink-4);
   font-size: var(--fs-micro);
   line-height: 1.7;
@@ -1054,18 +1018,7 @@
   padding: var(--sp-4) var(--sp-5) 0;
 }
 
-.stats-kinds .btn {
-  flex: none;
-  border-color: transparent;
-  background: var(--surface-2);
-  color: var(--ink-3);
-}
-
-.stats-kinds .btn.is-on {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-}
+.stats-kinds .btn { flex: none; }
 
 .stats-body {
   flex: 1;
