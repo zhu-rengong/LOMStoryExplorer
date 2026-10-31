@@ -20,12 +20,23 @@
 
 .btn:enabled:hover {
   border-color: var(--line-2);
-  color: var(--ink);
+  background: var(--surface-hover);
+  color: var(--ink-hover);
 }
 
 .btn:enabled:active {
   border-color: var(--line-3);
+  background: var(--surface-active);
   color: var(--ink);
+}
+
+.btn:enabled:active:not(:hover) {
+  border-color: var(--line-hold);
+  background: var(--surface-hold);
+}
+
+.btn:enabled:active:not(:hover):not(.is-on):not(.btn-primary):not([aria-expanded="true"]):not([aria-pressed="true"]) {
+  color: var(--ink-hold);
 }
 
 .btn-primary:enabled {
@@ -35,12 +46,19 @@
 
 .btn-primary:enabled:hover {
   border-color: var(--accent-strong);
+  background: var(--surface-hover);
   color: var(--accent-strong);
 }
 
 .btn-primary:enabled:active {
   border-color: var(--accent-strong);
+  background: var(--surface-active);
   color: var(--accent-strong);
+}
+
+.btn-primary:enabled:active:not(:hover) {
+  border-color: var(--accent-strong);
+  background: var(--surface-hold);
 }
 
 .btn:disabled { opacity: .38; }
@@ -191,12 +209,20 @@
   font-family: var(--font-ui);
   font-size: var(--fs-xs);
   letter-spacing: .02em;
-  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease);
 }
 
-.tab:hover { border-color: var(--line-2); color: var(--ink); }
+.tab:hover { border-color: var(--line-2); background: var(--surface-hover); color: var(--ink-hover); }
 
-.tab:active { border-color: var(--line-3); color: var(--ink); }
+.tab:active { border-color: var(--line-3); background: var(--surface-active); color: var(--ink); }
+
+.tab:active:not(:hover) {
+  border-color: var(--line-hold);
+  background: var(--surface-hold);
+}
+
+.tab:active:not(:hover):not(.is-on):not([aria-selected="true"]) { color: var(--ink-hold); }
 
 .tab.is-on,
 .tab[aria-selected="true"] { color: var(--accent-strong); }
@@ -227,12 +253,20 @@
   font-size: var(--fs-xs);
   text-align: left;
   cursor: pointer;
-  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease);
 }
 
-.row:hover { border-color: var(--line-2); color: var(--ink); }
+.row:hover { border-color: var(--line-2); background: var(--surface-hover); color: var(--ink-hover); }
 
-.row:active { border-color: var(--line-3); color: var(--ink); }
+.row:active { border-color: var(--line-3); background: var(--surface-active); color: var(--ink); }
+
+.row:active:not(:hover) {
+  border-color: var(--line-hold);
+  background: var(--surface-hold);
+}
+
+.row:active:not(:hover):not(.is-on):not(.is-active) { color: var(--ink-hold); }
 
 .row.is-active { color: var(--accent-strong); }
 

@@ -364,14 +364,12 @@
 }
 
 .rail-item.rail-chap:hover {
-  border-left-color: var(--line-3);
-  background: var(--surface);
-  color: var(--ink);
+  border-left-color: var(--line-2);
+  color: var(--ink-hover);
 }
 
 .rail-item.rail-chap.is-open {
   border-left-color: var(--accent);
-  background: transparent;
   color: var(--ink);
 }
 
@@ -399,10 +397,7 @@
 
 .rail-body .rail-item.is-card {
   padding: 6px 8px;
-  background: transparent;
 }
-
-.rail-body .rail-item:hover { background: var(--surface); }
 
 .rail-body .rail-item.is-on {
   color: var(--accent-strong);

@@ -209,14 +209,13 @@
   color: var(--ink-2);
   font-size: var(--rd-fs-option, var(--rd-fs-sm));
   text-align: left;
-  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease);
 }
 
-.option-head:hover { background: transparent; color: var(--ink); }
+.option-head:hover { color: var(--ink-hover); }
 
 .option-head:hover .option-idx { color: var(--accent); }
-
-.option-head:active { background: transparent; }
 
 .option-idx {
   flex: none;
@@ -302,12 +301,11 @@
   line-height: 1.6;
   user-select: none;
   cursor: pointer;
-  transition: color var(--t-fast) var(--ease);
+  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
+              border-color var(--t-fast) var(--ease);
 }
 
-.branch-head:hover { background: transparent; color: var(--ink-2); }
-
-.branch-head:active { background: transparent; }
+.branch-head:hover { color: var(--ink-hover); }
 
 .branch-head .cond {
   flex: 1;

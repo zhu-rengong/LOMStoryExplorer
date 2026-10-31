@@ -3,14 +3,20 @@
 
   --surface: #FBF7EB;
   --surface-inset: #F6F0E0;
+  --surface-hover: #F7F1E1;
+  --surface-active: #EDE6D3;
+  --surface-hold: #F2ECDA;
 
   --ink: #1B1A15;
   --ink-2: #454037;
+  --ink-hover: #2F2B23;
+  --ink-hold: #25241C;
   --ink-think: #746D5D;
 
   --line-1: #DFD8C3;
   --line-2: #C8BFA6;
   --line-3: #ABA188;
+  --line-hold: #B9B097;
 
   --accent: #4C7268;
   --accent-strong: #33544B;
