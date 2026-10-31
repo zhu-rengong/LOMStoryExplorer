@@ -316,10 +316,13 @@
 
         const flushBranches = () => {
           if (!branchBuffer.length) return;
-          const group = ui.el("div", "branch-group");
-          branchBuffer.forEach((box) => group.appendChild(box));
+          const boxes = branchBuffer;
           branchBuffer = [];
           branchGroup = null;
+          const filled = boxes.filter((box) => !box.classList.contains("is-empty"));
+          if (!filled.length) return;
+          const group = ui.el("div", "branch-group");
+          filled.forEach((box) => group.appendChild(box));
           frag.appendChild(group);
         };
 
