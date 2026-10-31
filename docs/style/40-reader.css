@@ -1,3 +1,7 @@
+:root {
+  --frame-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2010%2010'%3E%3Crect%20x='1'%20y='1'%20width='8'%20height='8'%20fill='none'%20stroke='%23000'%20stroke-width='2'/%3E%3C/svg%3E");
+}
+
 #reader:not(.is-open) .reader-head,
 #reader:not(.is-open) .reader-grip { display: none; }
 
@@ -148,27 +152,50 @@
 .branch-group::before {
   content: "";
   position: absolute;
+  left: 4px;
+  top: 10px;
+  bottom: 10px;
+  z-index: 2;
+  width: 2px;
+  background-color: currentColor;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 15%, rgba(0, 0, 0, .28) 100%);
+  mask-image: linear-gradient(180deg, #000 0%, #000 15%, rgba(0, 0, 0, .28) 100%);
+  pointer-events: none;
+}
+
+.choice::after,
+.branch-group::after {
+  content: "";
+  position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
   z-index: 2;
   width: 10px;
-  color: var(--line-2);
-  background-image:
-    linear-gradient(currentColor, currentColor),
-    linear-gradient(currentColor, currentColor),
-    linear-gradient(currentColor, currentColor);
-  background-size: 10px 8px, 10px 8px, 2px 100%;
-  background-position: 0 0, 0 100%, 4px 0;
-  background-repeat: no-repeat;
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 15%, rgba(0, 0, 0, .28) 100%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 15%, rgba(0, 0, 0, .28) 100%);
+  background-color: currentColor;
+  -webkit-mask-image: var(--frame-mask), var(--frame-mask);
+  -webkit-mask-size: 10px 10px, 10px 10px;
+  -webkit-mask-position: 0 0, 0 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-image: var(--frame-mask), var(--frame-mask);
+  mask-size: 10px 10px, 10px 10px;
+  mask-position: 0 0, 0 100%;
+  mask-repeat: no-repeat;
   pointer-events: none;
+}
+
+.choice::before,
+.branch-group::before,
+.choice::after,
+.branch-group::after {
+  color: var(--line-2);
   transition: color var(--t-fast) var(--ease);
 }
 
 .choice:hover::before,
-.branch-group:hover::before { color: var(--accent); }
+.branch-group:hover::before,
+.choice:hover::after,
+.branch-group:hover::after { color: var(--accent); }
 
 .choice > .meta-action { margin: var(--rd-gap-3) 0 var(--rd-gap-2); }
 
