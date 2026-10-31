@@ -55,8 +55,9 @@ docs/
   js/10-schema.js            data validation and beat codec
   js/15-graph.js             indexes, adjacency, chapters, visibility
   js/20-storage.js           versioned local storage repositories
-  js/25-store.js             application state, actions, UI and content language
+  js/25-store.js             application state, actions and content language
   js/30-i18n-data.js         interface dictionaries for every UI language
+  js/31-lang.js              interface language resolution, first paint lang and title
   js/32-i18n.js              i18next wrapper, lookups and language metadata
   js/35-overlay.js           popover, menu, sheet and modal lifecycle
   js/40-text.js              lazy story shard loading and prefetch
@@ -93,9 +94,9 @@ const app = SR.start("app");
 
 Each module declares its dependencies and receives them as an object. `SR.require` resolves modules lazily, reports the exact dependency chain when a module is missing, and rejects cycles at startup. Modules never read each other through implicit globals.
 
-`01-prefs.js` is the only script that runs before the body exists. It applies the stored theme, font stacks, size, leading and reading measure to `documentElement` so the first paint matches the saved preferences.
+`01-prefs.js` and `31-lang.js` run before the body exists. The first applies the stored theme, font stacks, size, leading and reading measure to `documentElement`; the second resolves the interface language and writes `documentElement.lang` and `document.title`, so the first paint matches both the saved preferences and the browser language.
 
-Interface strings live in `30-i18n-data.js` as plain globals so they load with a classic script tag, which keeps the site working from `file://` without a fetch backend. `32-i18n.js` feeds those bundles to the vendored i18next runtime and exposes `t`, so call sites never touch the library directly. The interface language and the content language are separate: `store.state.lang` selects the UI bundle, while `store.textLang()` picks the closest available pack from `SR_DATA.meta.langs`. An interface language without a matching text pack (English) therefore keeps rendering the default story data instead of requesting missing shards.
+Interface strings live in `30-i18n-data.js` as plain globals so they load with a classic script tag in the head, which keeps the site working from `file://` without a fetch backend. `32-i18n.js` feeds those bundles to the vendored i18next runtime and exposes `t`, so call sites never touch the library directly. `31-lang.js` owns the interface language: it takes the first supported entry of `navigator.languages`, keeps English as English, maps Chinese tags to the nearest variant and falls back to the data default for everything else. A language picked in the menu is stored in `legend-of-mortal.explorer.lang.v1` and wins on later visits, while an untouched reader re-detects on every load, so a changed browser language takes effect the next time the page opens. The interface language and the content language are separate: `store.state.lang` selects the UI bundle, while `store.textLang()` picks the closest available pack from `SR_DATA.meta.langs`. An interface language without a matching text pack (English) therefore keeps rendering the default story data instead of requesting missing shards.
 
 ## Data contract
 

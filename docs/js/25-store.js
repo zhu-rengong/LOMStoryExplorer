@@ -3,36 +3,11 @@
 
   const SR = window.SR;
 
-  SR.define("store", ["schema", "graph", "storage"], ({ schema, graph, storage }) => {
+  SR.define("store", ["schema", "graph", "storage", "lang"], ({ schema, graph, storage, lang }) => {
     const meta = schema.meta;
 
-    const uiLangs = () => Object.keys(window.SR_I18N || {});
-
-    const initialLang = () => {
-      const available = uiLangs();
-      if (available.indexOf(meta.defaultLang) >= 0) return meta.defaultLang;
-      return available[0] || meta.defaultLang;
-    };
-
-    const detectLang = () => {
-      const available = uiLangs();
-      const tags = navigator.languages && navigator.languages.length
-        ? navigator.languages
-        : [navigator.language || ""];
-      for (const raw of tags) {
-        const tag = String(raw || "").toLowerCase();
-        if (!tag) continue;
-        let id = "";
-        if (tag.indexOf("en") === 0) id = "en";
-        else if (tag.indexOf("zh") === 0) id = /hans|-cn|-sg|-my/.test(tag) ? "zh-cn" : "zh-tw";
-        if (id && available.indexOf(id) >= 0) return id;
-      }
-      if (available.indexOf(meta.defaultLang) >= 0) return meta.defaultLang;
-      return available[0] || meta.defaultLang;
-    };
-
     const state = {
-      lang: initialLang(),
+      lang: lang.initial(),
       selectedId: "",
       history: [],
       hIndex: -1,
@@ -69,7 +44,6 @@
 
     const persist = () => {
       storage.saveSession({
-        lang: state.lang,
         selected: state.selectedId,
         filter: state.filterSource,
       });
@@ -141,9 +115,8 @@
     const restore = () => {
       if (restored) return;
       restored = true;
+      state.lang = lang.initial();
       const session = storage.readSession();
-      const available = uiLangs();
-      state.lang = session && available.indexOf(session.lang) >= 0 ? session.lang : detectLang();
       if (session) {
         if (typeof session.filter === "string") state.filterSource = session.filter;
         if (session.selected && graph.nodeById.has(session.selected)) {
@@ -175,11 +148,13 @@
       restore,
       selected,
       select,
-      setLang: (lang) => {
-        if (!lang || lang === state.lang || uiLangs().indexOf(lang) < 0) return false;
-        state.lang = lang;
-        commit("lang");
-        return true;
+      setLang: (id) => {
+        if (!lang.has(id)) return false;
+        const changed = id !== state.lang;
+        lang.pin(id);
+        state.lang = id;
+        if (changed) commit("lang");
+        return changed;
       },
       setLayout: (layout) => {
         if (!layout || layout === state.layout) return;

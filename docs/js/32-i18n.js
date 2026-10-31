@@ -54,8 +54,6 @@
     return out;
   })();
 
-  const htmlOf = (lang) => (META[lang] && META[lang].html) || lang;
-
   const format = (text, vars) => text.replace(PLACEHOLDER, (whole, name) => (
     vars[name] === undefined ? whole : String(vars[name])
   ));
@@ -103,7 +101,7 @@
     return base[key];
   };
 
-  SR.define("i18n", ["store", "graph"], ({ store, graph }) => {
+  SR.define("i18n", ["store", "graph", "lang"], ({ store, graph, lang }) => {
     const state = store.state;
 
     const t = (key, vars) => {
@@ -125,7 +123,7 @@
         id,
         native: (META[id] && META[id].native) || id,
         label: (META[id] && META[id].label) || id,
-        html: htmlOf(id),
+        html: lang.htmlOf(id),
       }));
 
     const syncLanguage = () => {
@@ -180,7 +178,7 @@
     const apply = (root) => {
       const scope = root || document;
       syncLanguage();
-      document.documentElement.lang = htmlOf(state.lang);
+      document.documentElement.lang = lang.htmlOf(state.lang);
       document.title = t("appTitle");
       for (const node of scope.querySelectorAll("[data-i18n]")) {
         const key = node.getAttribute("data-i18n");

@@ -31,7 +31,6 @@
       const saved = read(SESSION_KEY);
       if (!saved || typeof saved !== "object") return null;
       return {
-        lang: typeof saved.lang === "string" ? saved.lang : "",
         selected: typeof saved.selected === "string" ? saved.selected : "",
         filter: typeof saved.filter === "string" ? saved.filter : "",
       };

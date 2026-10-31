@@ -161,13 +161,13 @@
 
       let langToken = 0;
 
-      const setLang = (lang) => {
-        if (!lang || lang === store.state.lang) return;
+      const setLang = (id) => {
+        if (!id) return;
         const token = ++langToken;
-        const content = schema.meta.langs.indexOf(lang) >= 0 ? lang : store.textLang();
+        const content = schema.meta.langs.indexOf(id) >= 0 ? id : store.textLang();
         text.ensureHead(content).then(() => {
           if (token !== langToken) return;
-          if (!store.setLang(lang)) return;
+          if (!store.setLang(id)) return;
           i18n.syncLanguage();
           applyLanguage();
         });
