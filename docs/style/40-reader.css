@@ -253,6 +253,8 @@ body.is-gripping { cursor: col-resize; user-select: none; }
   background: var(--reader-bg-2);
 }
 
+.choice > .meta-action { margin: 0 0 var(--rd-gap-2); }
+
 .option {
   position: relative;
   margin-bottom: var(--rd-gap-1);

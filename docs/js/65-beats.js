@@ -278,6 +278,7 @@
         let metaBuffer = [];
         let branchBuffer = [];
         let branchGroup = null;
+        let diceButtons = [];
 
         const flushMeta = () => {
           if (!metaBuffer.length) return;
@@ -307,11 +308,23 @@
               };
               chip.addEventListener("click", open);
             }
-            chips.appendChild(chip);
+            if (target && meta.method === "dice") diceButtons.push(chip);
+            else chips.appendChild(chip);
           });
+          metaBuffer = [];
+          if (!chips.childNodes.length) return;
           group.appendChild(chips);
           frag.appendChild(group);
-          metaBuffer = [];
+        };
+
+        const flushDice = () => {
+          if (!diceButtons.length) return;
+          const group = ui.el("div", "meta-group");
+          const chips = ui.el("div", "meta-chips");
+          diceButtons.forEach((chip) => chips.appendChild(chip));
+          diceButtons = [];
+          group.appendChild(chips);
+          frag.appendChild(group);
         };
 
         const flushBranches = () => {
@@ -319,6 +332,7 @@
           const boxes = branchBuffer;
           branchBuffer = [];
           branchGroup = null;
+          flushDice();
           const filled = boxes.filter((box) => !box.classList.contains("is-empty"));
           if (!filled.length) return;
           const group = ui.el("div", "branch-group");
@@ -349,6 +363,19 @@
           }
           flushMeta();
 
+          if (tag === "c") {
+            const choice = renderChoice(beat, ctx);
+            if (diceButtons.length) {
+              const dice = document.createDocumentFragment();
+              diceButtons.forEach((chip) => dice.appendChild(chip));
+              diceButtons = [];
+              choice.insertBefore(dice, choice.firstChild);
+            }
+            frag.appendChild(choice);
+            continue;
+          }
+          flushDice();
+
           if (tag === "lore") {
             frag.appendChild(loreBlock(stripRich(beat[1])));
             continue;
@@ -377,14 +404,13 @@
             appendRich(what, data.text);
             wrap.appendChild(what);
             frag.appendChild(wrap);
-          } else if (tag === "c") {
-            frag.appendChild(renderChoice(beat, ctx));
           } else if (tag === "j") {
             frag.appendChild(renderJump(beat, ctx));
           }
         }
         flushMeta();
         flushBranches();
+        flushDice();
         return frag;
       };
 
