@@ -132,25 +132,42 @@
           return;
         }
         const list = ui.el("div", "filter-results-list");
-        indexes.slice(0, RESULT_LIMIT).forEach((index) => {
-          const node = graph.nodes[index];
-          const item = ui.el("button",
-            `result-item row row-sm${store.state.selectedId === node.id ? " is-active" : ""}`);
-          item.type = "button";
-          item.dataset.id = node.id;
-          item.appendChild(ui.el("span", "ri-id", node.id));
-          item.appendChild(ui.el("span", "ri-ch", i18n.chapterTitle(graph.chapterOf(node))));
-          item.addEventListener("click", () => {
-            close();
-            store.select(node.id, { history: true });
-          });
-          list.appendChild(item);
-        });
+        const more = ui.el("div", "filter-results-more");
+        let shown = 0;
+
+        const paintMore = () => {
+          const left = indexes.length - shown;
+          more.textContent = left > 0 ? i18n.t("filterResultsMore", { n: left }) : "";
+          more.hidden = left <= 0;
+        };
+
+        const appendChunk = () => {
+          const slice = indexes.slice(shown, shown + RESULT_LIMIT);
+          for (const index of slice) {
+            const node = graph.nodes[index];
+            const item = ui.el("button",
+              `result-item row row-sm${store.state.selectedId === node.id ? " is-active" : ""}`);
+            item.type = "button";
+            item.dataset.id = node.id;
+            item.appendChild(ui.el("span", "ri-id", node.id));
+            item.appendChild(ui.el("span", "ri-ch", i18n.chapterTitle(graph.chapterOf(node))));
+            item.addEventListener("click", () => {
+              close();
+              store.select(node.id, { history: true });
+            });
+            list.appendChild(item);
+          }
+          shown += slice.length;
+          paintMore();
+        };
+
+        list.addEventListener("scroll", () => {
+          if (list.scrollHeight - list.scrollTop - list.clientHeight < 40) appendChunk();
+        }, { passive: true });
+
         box.appendChild(list);
-        if (indexes.length > RESULT_LIMIT) {
-          box.appendChild(ui.el("div", "filter-results-more",
-            i18n.t("filterResultsMore", { n: indexes.length - RESULT_LIMIT })));
-        }
+        box.appendChild(more);
+        appendChunk();
       };
 
       const updateUi = () => {

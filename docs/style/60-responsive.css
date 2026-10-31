@@ -155,7 +155,7 @@ body[data-layout="mobile"] .reader-actions { gap: 0; }
 
 body[data-layout="mobile"] .reader-body { padding: var(--sp-5) var(--sp-4) 56px; }
 
-body[data-layout="mobile"] .say.narration { max-width: none; }
+body[data-layout="mobile"] .say.narration { width: 100%; }
 
 body[data-layout="mobile"] .option-body { padding-left: var(--sp-4); }
 
