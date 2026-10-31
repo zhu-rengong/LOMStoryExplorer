@@ -159,7 +159,7 @@
         if (kind === "check") renderCondBlock(list, key, method);
 
         const rowOf = (node) => {
-          const row = ui.el("div", "lookup-item row row-tall row-accent");
+          const row = ui.el("div", "lookup-item row row-tall");
           const top = ui.el("div", "li-top");
           top.appendChild(ui.el("span", "li-id", node.id));
           top.appendChild(ui.el("span", "li-ch", i18n.chapterTitle(graph.chapterOf(node))));

@@ -208,12 +208,10 @@
 }
 
 .rail-toggle {
-  display: none;
   place-items: center;
 }
 
 .rail-close {
-  display: none;
   place-items: center;
   width: var(--ctl-sm);
   height: var(--ctl-sm);

@@ -130,7 +130,10 @@
   font-size: var(--rd-fs-think, var(--rd-fs));
   font-weight: var(--rd-w-think, 400);
   letter-spacing: .03em;
-  text-shadow: 0 0 1px var(--think-ghost), 0 0 2px var(--think-ghost);
+  text-shadow:
+    0 0 2px var(--think-ghost),
+    0 0 6px var(--think-ghost-soft),
+    0 0 12px var(--think-ghost-soft);
 }
 
 .choice {
@@ -143,12 +146,16 @@
   content: "";
   position: absolute;
   left: 0;
-  top: 4px;
-  bottom: 4px;
+  top: 8px;
+  bottom: 8px;
   width: 2px;
-  border-radius: 2px;
+  border-radius: 1px;
   background: var(--line-2);
+  transition: background-color var(--t-fast) var(--ease);
 }
+
+.choice:hover::before,
+.choice:focus-within::before { background: var(--accent); }
 
 .choice > .meta-action { margin: var(--rd-gap-3) 0 var(--rd-gap-2); }
 
@@ -170,10 +177,7 @@
 
 .option-head:hover { background: var(--surface-hover); color: var(--ink); }
 
-.option.is-open > .option-head {
-  color: var(--accent-strong);
-  background: var(--accent-soft);
-}
+.option-head:hover .option-idx { color: var(--accent); }
 
 .option.is-open:has(> .option-head:hover) > .option-body { background: var(--surface-hover); }
 
@@ -189,8 +193,6 @@
   text-align: right;
   transition: color var(--t-fast) var(--ease);
 }
-
-.option.is-open .option-idx { color: var(--accent); }
 
 .option-main {
   flex: 1;
@@ -239,12 +241,16 @@
   content: "";
   position: absolute;
   left: 0;
-  top: 2px;
-  bottom: 2px;
+  top: 8px;
+  bottom: 8px;
   width: 2px;
-  border-radius: 2px;
+  border-radius: 1px;
   background: var(--line-2);
+  transition: background-color var(--t-fast) var(--ease);
 }
+
+.branch-group:hover::before,
+.branch-group:focus-within::before { background: var(--accent); }
 
 .branch-group > .branch { margin: 0; }
 
