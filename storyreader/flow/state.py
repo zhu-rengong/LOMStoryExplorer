@@ -44,8 +44,8 @@ def as_text(value: Any) -> str | None:
     return None
 
 
-def short(expr: L.Expr, limit: int = 120) -> str:
-    text = expr.text()
+def short(expr: L.Expression, limit: int = 120) -> str:
+    text = L.text(expr)
     return text if len(text) <= limit else text[: limit - 1] + "…"
 
 

@@ -16,78 +16,93 @@ class ExpressionEvaluator:
     def __init__(self, flow: Any) -> None:
         self.flow = flow
 
-    def eval(self, expr: L.Expr, state: EvalState) -> Any:
-        if isinstance(expr, L.Str):
-            return TextRef(expr.value)
-        if isinstance(expr, L.Num):
-            return int(expr.value)
-        if isinstance(expr, L.Literal):
-            return {"nil": None, "true": True, "false": False}[expr.value]
+    def eval(self, expr: L.Expression, state: EvalState) -> Any:
+        if isinstance(expr, L.String):
+            return TextRef(L.string_value(expr))
+        if isinstance(expr, L.Number):
+            return int(expr.n)
+        if isinstance(expr, L.Nil):
+            return None
+        if isinstance(expr, L.TrueExpr):
+            return True
+        if isinstance(expr, L.FalseExpr):
+            return False
         if isinstance(expr, L.Name):
             return state.env.get(expr.id, Unknown(expr.id))
         if isinstance(expr, L.Index):
-            base = self.eval(expr.obj, state)
-            key = as_text(self.eval(expr.key, state)) or expr.key.text()
-            if isinstance(base, dict):
-                return base.get(key, Unknown(expr.text()))
-            return Unknown(expr.text())
+            return self._index(expr, state)
         if isinstance(expr, L.Table):
-            table: dict[str, Any] = {}
-            auto = 1
-            for key_expr, value_expr in expr.fields:
-                value = self.eval(value_expr, state)
-                if key_expr is None:
-                    table[str(auto)] = value
-                    auto += 1
-                else:
-                    key = as_text(self.eval(key_expr, state)) or key_expr.text()
-                    table[key] = value
-            return table
-        if isinstance(expr, L.Un):
-            operand = self.eval(expr.operand, state)
-            if expr.op == "-" and isinstance(operand, int) and not isinstance(operand, bool):
-                return -operand
-            return Unknown(expr.text())
-        if isinstance(expr, L.Bin):
+            return self._table(expr, state)
+        if isinstance(expr, L.UnaryOp):
+            return self._unary(expr, state)
+        if isinstance(expr, L.BinaryOp):
             return self._binary(expr, state)
-        if isinstance(expr, L.Call):
+        if isinstance(expr, L.Call | L.Invoke):
             return self.flow.calls.eval_call(expr, state)
-        return Unknown(expr.text() if isinstance(expr, L.Expr) else "")
+        return Unknown(L.text(expr) if isinstance(expr, L.Expression) else "")
 
-    def _binary(self, expr: L.Bin, state: EvalState) -> Any:
-        if expr.op == "..":
+    def _index(self, expr: L.Index, state: EvalState) -> Any:
+        base = self.eval(expr.value, state)
+        key = L.index_key(expr) or as_text(self.eval(expr.idx, state)) or L.text(expr.idx)
+        if isinstance(base, dict):
+            return base.get(key, Unknown(L.text(expr)))
+        return Unknown(L.text(expr))
+
+    def _table(self, expr: L.Table, state: EvalState) -> dict[str, Any]:
+        table: dict[str, Any] = {}
+        auto = 1
+        for field in expr.fields:
+            value = self.eval(field.value, state)
+            key = L.field_key(field)
+            if key is None and field.key is not None:
+                key = as_text(self.eval(field.key, state)) or L.text(field.key)
+            if key is None:
+                table[str(auto)] = value
+                auto += 1
+            else:
+                table[key] = value
+        return table
+
+    def _unary(self, expr: L.UnaryOp, state: EvalState) -> Any:
+        operand = self.eval(expr.operand, state)
+        if isinstance(expr, L.UMinusOp) and isinstance(operand, int) and not isinstance(operand, bool):
+            return -operand
+        return Unknown(L.text(expr))
+
+    def _binary(self, expr: L.BinaryOp, state: EvalState) -> Any:
+        op = L.operator(expr)
+        if op == "..":
             left = as_text(self.eval(expr.left, state))
             right = as_text(self.eval(expr.right, state))
             if left is not None and right is not None:
                 return TextRef(left + right)
-            return Unknown(expr.text())
-        if expr.op == "or":
-            if isinstance(expr.left, L.Bin) and expr.left.op == "and" \
-                    and isinstance(expr.right, L.Str) and expr.right.value.startswith("~"):
+            return Unknown(L.text(expr))
+        if op == "or":
+            if isinstance(expr.left, L.BinaryOp) and L.operator(expr.left) == "and" \
+                    and isinstance(expr.right, L.String) and L.string_value(expr.right).startswith("~"):
                 return Locked(
                     available=self.eval(expr.left.right, state),
-                    locked=TextRef(expr.right.value.lstrip("~")),
-                    cond=expr.left.left.text(),
+                    locked=TextRef(L.string_value(expr.right).lstrip("~")),
+                    cond=L.text(expr.left.left),
                 )
             left = self.eval(expr.left, state)
             return left if isinstance(left, TextRef) else self.eval(expr.right, state)
-        if expr.op == "and":
+        if op == "and":
             return self.eval(expr.right, state)
-        return Unknown(expr.text())
+        return Unknown(L.text(expr))
 
-    def eval_stmt_value(self, expr: L.Expr, state: EvalState, beats: list[Any],
+    def eval_stmt_value(self, expr: L.Expression, state: EvalState, beats: list[Any],
                         label: str) -> tuple[Any, dict[str, Any] | None]:
-        if isinstance(expr, L.Index) and isinstance(expr.obj, L.Name) \
-                and expr.obj.id == "dicemenudialog" and isinstance(expr.key, L.Str) \
-                and expr.key.value == "ResultSelection":
+        if isinstance(expr, L.Index) and isinstance(expr.value, L.Name) \
+                and expr.value.id == "dicemenudialog" and L.index_key(expr) == "ResultSelection":
             beats.append(None)
-            return Unknown(expr.text()), {"index": len(beats) - 1, "var": "", "options": list(state.menu_options)}
-        if isinstance(expr, L.Call):
+            return Unknown(L.text(expr)), {"index": len(beats) - 1, "var": "", "options": list(state.menu_options)}
+        if isinstance(expr, L.Call | L.Invoke):
             obj, method = callee(expr)
             if not obj and method == "choose" and expr.args:
                 options = self.flow.calls.option_list(self.eval(expr.args[0], state))
                 beats.append(None)
-                return Unknown(expr.text()), {"index": len(beats) - 1, "var": "", "options": options}
+                return Unknown(L.text(expr)), {"index": len(beats) - 1, "var": "", "options": options}
             if obj == "checkpointmanager" and method in ("Switch", "Dice", "Condition", "Position"):
                 value = self.eval(expr, state)
                 if isinstance(value, Mark) and method == "Dice":
@@ -97,8 +112,8 @@ class ExpressionEvaluator:
             return self.eval(expr, state), None
         return self.eval(expr, state), None
 
-    def cond_kind(self, cond: L.Expr, state: EvalState) -> str:
-        if isinstance(cond, L.Call):
+    def cond_kind(self, cond: L.Expression, state: EvalState) -> str:
+        if isinstance(cond, L.Call | L.Invoke):
             obj, method = callee(cond)
             if obj == "checkpointmanager":
                 return {"Switch": "switch", "Dice": "dice",
@@ -109,10 +124,10 @@ class ExpressionEvaluator:
             if isinstance(value, Mark) and value.kind in _MARK_KINDS:
                 return value.kind
             return "if"
-        if isinstance(cond, L.Bin):
+        if isinstance(cond, L.BinaryOp):
             left = self.cond_kind(cond.left, state)
             right = self.cond_kind(cond.right, state)
-            if cond.op in ("and", "or"):
+            if L.operator(cond) in ("and", "or"):
                 return left if left == right else "if"
             if left == "if":
                 return right
@@ -121,8 +136,8 @@ class ExpressionEvaluator:
             return left if left == right else "if"
         return "if"
 
-    def cond_label(self, cond: L.Expr, state: EvalState) -> str:
-        if isinstance(cond, L.Call):
+    def cond_label(self, cond: L.Expression, state: EvalState) -> str:
+        if isinstance(cond, L.Call | L.Invoke):
             obj, method = callee(cond)
             if obj == "checkpointmanager" and cond.args:
                 key = as_text(self.eval(cond.args[0], state)) or ""
@@ -134,37 +149,39 @@ class ExpressionEvaluator:
             if obj == "statmodifymanager" and method.startswith("Get"):
                 key = as_text(self.eval(cond.args[0], state)) if cond.args else ""
                 if not key and cond.args:
-                    key = cond.args[0].text().strip("\"'")
+                    key = L.text(cond.args[0]).strip("\"'")
                 return f"屬性「{key}」"
             return short(cond)
-        if isinstance(cond, L.Bin):
-            if cond.op in ("and", "or"):
-                joiner = " 且 " if cond.op == "and" else " 或 "
+        if isinstance(cond, L.BinaryOp):
+            op = L.operator(cond)
+            if op in ("and", "or"):
+                joiner = " 且 " if op == "and" else " 或 "
                 return self.cond_label(cond.left, state) + joiner + self.cond_label(cond.right, state)
             left = self.cond_label(cond.left, state)
             right = self.cond_label(cond.right, state)
-            return f"{left} {cond.op} {right}"
+            return f"{left} {op} {right}"
         if isinstance(cond, L.Name):
             value = state.env.get(cond.id)
             if isinstance(value, Mark):
                 name = _COND_KIND_BY_MARK.get(value.kind, "判定")
                 return f"{name}「{value.key}」"
             return cond.id
-        if isinstance(cond, L.Str):
-            return cond.value
-        if isinstance(cond, L.Num):
-            return num_text(cond.value)
-        if isinstance(cond, L.Un):
-            if cond.op == "-":
+        if isinstance(cond, L.String):
+            return L.string_value(cond)
+        if isinstance(cond, L.Number):
+            return num_text(cond.n)
+        if isinstance(cond, L.UnaryOp):
+            if isinstance(cond, L.UMinusOp):
                 value = self.eval(cond.operand, state)
                 if isinstance(value, int) and not isinstance(value, bool):
                     return str(-value)
-                if isinstance(cond.operand, L.Num):
-                    return num_text(-cond.operand.value)
+                if isinstance(cond.operand, L.Number):
+                    return num_text(-cond.operand.n)
             return short(cond)
         if isinstance(cond, L.Index):
-            if isinstance(cond.key, L.Str):
-                base = self.cond_label(cond.obj, state) if isinstance(cond.obj, L.Expr) else ""
-                return f"{base}.{cond.key.value}"
+            key = L.index_key(cond)
+            if key is not None:
+                base = self.cond_label(cond.value, state) if isinstance(cond.value, L.Expression) else ""
+                return f"{base}.{key}"
             return short(cond)
         return short(cond)
