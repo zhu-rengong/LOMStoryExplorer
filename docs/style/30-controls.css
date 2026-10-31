@@ -74,7 +74,7 @@
   border-bottom-color: currentColor;
 }
 
-.btn-link:active { opacity: .7; }
+.btn-link:active { color: var(--accent-strong); border-bottom-color: currentColor; }
 
 .btn-mono {
   font-family: var(--font-mono);
@@ -231,7 +231,7 @@
   background: transparent;
   color: var(--ink-2);
   font-family: var(--font-ui);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   text-align: left;
   cursor: pointer;
   transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
@@ -240,9 +240,9 @@
 
 .row:hover { background: var(--surface-hover); color: var(--ink); }
 
-.row:active { background: var(--surface-active); }
+.row:active { background: var(--surface-active); color: var(--ink); }
 
-.row.is-active { background: var(--accent-soft); color: var(--accent-strong); }
+.row.is-active { background: var(--surface-hover); color: var(--accent-strong); }
 
 .row-sm { padding: 4px var(--sp-2); }
 
@@ -254,7 +254,7 @@
 .row-accent.is-active { border-left-color: var(--accent); }
 
 .row.is-on {
-  background: var(--accent-soft);
+  background: var(--surface-hover);
   color: var(--accent-strong);
 }
 
@@ -290,14 +290,13 @@
   min-height: 32px;
   padding: 0 var(--sp-2);
   border-radius: var(--r-sm);
-  font-size: var(--fs-base);
 }
 
 .menu-item.is-on { color: var(--accent-strong); }
 
 .menu-item.is-on::after {
   content: "✓";
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   color: var(--accent);
 }
 
@@ -355,7 +354,7 @@
   max-width: 62%;
   color: var(--accent-strong);
   font-family: var(--font-mono);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

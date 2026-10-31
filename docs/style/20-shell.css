@@ -362,18 +362,14 @@
   place-items: center;
   width: 24px;
   height: 24px;
+  padding: 0;
   transform: translateY(-50%);
-  border: 0;
-  border-radius: var(--r-sm);
-  background: var(--surface);
-  color: var(--ink-4);
   opacity: 0;
-  transition: opacity var(--t-fast) var(--ease), color var(--t-fast) var(--ease);
+  transition: opacity var(--t-fast) var(--ease), color var(--t-fast) var(--ease),
+              background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
 .rail-item .ri-del svg { width: 13px; height: 13px; }
-
-.rail-item .ri-del:hover { color: var(--danger); }
 
 .rail-item:hover .ri-del,
 .rail-item:focus-within .ri-del { opacity: 1; }
