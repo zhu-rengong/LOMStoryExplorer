@@ -523,6 +523,45 @@ body.is-gripping { cursor: col-resize; user-select: none; }
 .branch-head { user-select: none; }
 .branch-head .cond { cursor: pointer; }
 
+.branch.is-empty { border-left: 2px dotted var(--reader-line-2); }
+.branch-group > .branch.is-empty { border-left: 0; }
+
+.branch.is-empty > .branch-head {
+  min-height: 0;
+  padding: 2px var(--rd-pad);
+  background-color: transparent;
+  color: var(--reader-fg-3);
+  cursor: default;
+}
+.branch.is-empty > .branch-head:hover,
+.branch.is-empty > .branch-head:active {
+  background-color: transparent;
+  color: var(--reader-fg-3);
+}
+.branch.is-empty > .branch-head .cond,
+.branch.is-empty > .branch-head .cond.is-expr {
+  color: var(--reader-fg-3);
+  cursor: default;
+}
+.branch.is-empty > .branch-head .cond .cx-var {
+  border-color: var(--reader-line);
+  background: transparent;
+  color: var(--reader-fg-3);
+}
+
+.branch-empty {
+  flex: none;
+  padding: 0 5px;
+  border: 1px dashed var(--reader-line-2);
+  border-radius: var(--r-2);
+  color: var(--reader-fg-3);
+  font-family: var(--font-ui);
+  font-size: var(--fs-xs);
+  line-height: 1.5;
+  letter-spacing: .1em;
+  white-space: nowrap;
+}
+
 .cond-lookup {
   --control-fg: var(--reader-fg-3);
   --control-fg-hover: var(--reader-accent);

@@ -171,19 +171,35 @@
 
       const renderBranch = (beat, ctx) => {
         const data = schema.branch(beat);
-        const box = ui.el("div", `branch${data.beats.length ? "" : " is-open"}`);
+        const box = ui.el("div", "branch");
         box.dataset.beat = `bt${ctx.seq++}`;
-        const head = ui.el("div", "branch-head row row-sm");
-        head.setAttribute("role", "button");
-        head.tabIndex = 0;
-        head.setAttribute("aria-expanded", data.beats.length ? "false" : "true");
+        const body = ui.el("div", "branch-body");
+        body.appendChild(renderBeats(data.beats, ctx));
+        const empty = !body.childNodes.length;
+        if (empty) box.classList.add("is-empty");
+
+        const head = ui.el("div", empty ? "branch-head" : "branch-head row row-sm");
         const cond = ui.el("span", "cond", data.label);
         if (data.label) {
           cond.title = data.label;
           cond.dataset.label = data.label;
         }
         head.appendChild(cond);
-        upgradeBranchCond(cond, data.label, data.kind, ctx);
+        upgradeBranchCond(cond, data.label, data.kind, empty ? { lookup: null } : ctx);
+
+        if (empty) {
+          const hint = i18n.t("previewEmpty");
+          const tag = ui.el("span", "branch-empty", i18n.t("branchEmpty"));
+          tag.title = hint;
+          tag.setAttribute("aria-label", hint);
+          head.appendChild(tag);
+          box.appendChild(head);
+          return box;
+        }
+
+        head.setAttribute("role", "button");
+        head.tabIndex = 0;
+        head.setAttribute("aria-expanded", "false");
 
         const target = ctx.lookup && ctx.lookup.targetOf
           ? ctx.lookup.targetOf(extractKey(data.label) || data.label)
@@ -202,9 +218,6 @@
           });
           head.appendChild(lookupBtn);
         }
-
-        const body = ui.el("div", "branch-body");
-        body.appendChild(renderBeats(data.beats, ctx));
 
         const toggle = () => {
           const open = box.classList.toggle("is-open");
