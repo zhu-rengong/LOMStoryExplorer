@@ -129,6 +129,10 @@
   font-size: var(--rd-fs-think, var(--rd-fs));
   font-weight: var(--rd-w-think, 400);
   letter-spacing: .03em;
+  text-shadow:
+    0 0 3px var(--think-ghost),
+    0 0 8px var(--think-ghost-soft),
+    0 0 16px var(--think-ghost-soft);
 }
 
 .choice {
