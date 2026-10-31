@@ -364,7 +364,9 @@
 }
 
 .type-tab:enabled.is-on,
-.type-tab:enabled[aria-selected="true"] {
+.type-tab:enabled[aria-selected="true"],
+.seg-btn:enabled.is-on,
+.seg-btn:enabled[aria-pressed="true"] {
   border-color: var(--ink-2);
   color: var(--accent-strong);
   box-shadow: 0 1px 3px rgba(69, 64, 55, .20);
