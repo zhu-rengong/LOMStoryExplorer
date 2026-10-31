@@ -9,7 +9,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: var(--canvas);
+  background: var(--surface);
   color: var(--ink);
   font-family: var(--font-ui);
   font-size: var(--fs-base);
@@ -107,13 +107,13 @@ kbd {
   border-bottom-width: 2px;
   border-radius: var(--r-sm);
   background: var(--surface);
-  color: var(--ink-3);
+  color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   line-height: 1;
 }
 
-::placeholder { color: var(--ink-4); }
+::placeholder { color: var(--ink-2); opacity: .55; }
 
 * { scrollbar-width: thin; scrollbar-color: var(--line-2) transparent; }
 
@@ -123,7 +123,7 @@ kbd {
 
 *::-webkit-scrollbar-thumb {
   border: 3px solid transparent;
-  border-radius: var(--r-pill);
+  border-radius: var(--r-sm);
   background: var(--line-2);
   background-clip: content-box;
 }

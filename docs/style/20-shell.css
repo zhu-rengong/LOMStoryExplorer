@@ -7,7 +7,7 @@
   gap: var(--sp-5);
   height: var(--masthead-h);
   padding: 0 var(--sp-6);
-  background: var(--canvas);
+  background: var(--surface);
   border-bottom: 1px solid var(--line-1);
 }
 
@@ -78,12 +78,12 @@
 .brand-main p {
   flex: 0 1 auto;
   letter-spacing: .1em;
-  color: var(--ink-3);
+  color: var(--ink-2);
 }
 
 .brand-build {
   letter-spacing: .06em;
-  color: var(--ink-4);
+  color: var(--ink-2);
 }
 
 .brand-build:empty { display: none; }
@@ -112,7 +112,7 @@
   left: 14px;
   width: 16px;
   height: 16px;
-  color: var(--ink-3);
+  color: var(--ink-2);
   pointer-events: none;
   transition: color var(--t-base) var(--ease);
 }
@@ -129,10 +129,10 @@
   color: var(--ink-2);
   font-family: var(--font-ui);
   font-size: var(--fs-xs);
-  transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+  transition: border-color var(--t-fast) var(--ease);
 }
 
-.search-input:hover { border-color: var(--line-2); background: var(--surface-hover); }
+.search-input:hover { border-color: var(--line-2); }
 
 .search-input::-webkit-search-cancel-button { appearance: none; }
 
@@ -144,8 +144,8 @@
   padding: 0 4px;
   border: 1px solid var(--line-1);
   border-radius: var(--r-sm);
-  background: var(--surface-2);
-  color: var(--ink-4);
+  background: var(--surface);
+  color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   line-height: 16px;
@@ -185,7 +185,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: var(--canvas);
+  background: var(--surface);
   border-right: 1px solid var(--line-1);
   overflow: hidden;
 }
@@ -205,7 +205,7 @@
   font-size: var(--fs-xs);
   font-weight: 600;
   letter-spacing: .34em;
-  color: var(--ink-3);
+  color: var(--ink-2);
 }
 
 .rail-toggle {
@@ -245,7 +245,7 @@
   width: 14px;
   height: 14px;
   transform: translateY(-50%);
-  color: var(--ink-4);
+  color: var(--ink-2);
   pointer-events: none;
   transition: color var(--t-base) var(--ease);
 }
@@ -271,7 +271,7 @@
   font-weight: 500;
   letter-spacing: .18em;
   text-transform: uppercase;
-  color: var(--ink-4);
+  color: var(--ink-2);
 }
 
 .rail-group::before {
@@ -311,7 +311,7 @@
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   font-variant-numeric: tabular-nums;
-  color: var(--ink-4);
+  color: var(--ink-2);
   text-align: right;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -323,13 +323,13 @@
   height: 5px;
   flex: none;
   margin-right: 2px;
-  border-radius: var(--r-pill);
-  background: var(--ink-4);
+  border-radius: var(--r-sm);
+  background: var(--ink-2);
 }
 
 .rail-item .ri-entry.is-combat { background: var(--danger); }
 
-.rail-item .ri-entry.is-free { background: var(--ok); }
+.rail-item .ri-entry.is-free { background: var(--ink-2); }
 
 .rail-item .ri-del {
   position: absolute;
@@ -365,7 +365,7 @@
 
 .rail-item.rail-chap:hover {
   border-left-color: var(--line-3);
-  background: var(--surface-hover);
+  background: var(--surface);
   color: var(--ink);
 }
 
@@ -385,7 +385,7 @@
   color: inherit;
 }
 
-.rail-item.rail-chap .ri-meta { color: var(--ink-4); }
+.rail-item.rail-chap .ri-meta { color: var(--ink-2); }
 
 .rail-body {
   margin: 2px 0 var(--sp-2) 12px;
@@ -402,10 +402,10 @@
   background: transparent;
 }
 
-.rail-body .rail-item:hover { background: var(--surface-hover); }
+.rail-body .rail-item:hover { background: var(--surface); }
 
 .rail-body .rail-item.is-on {
-  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .rail-body .rail-item.is-on .ri-id { color: var(--accent-strong); }
@@ -421,7 +421,7 @@
 }
 
 .rail-body .rail-item.is-card.is-on {
-  background: var(--accent-soft);
+  color: var(--accent-strong);
 }
 
 .rail-empty {
@@ -429,7 +429,7 @@
   font-family: var(--font-display);
   font-size: var(--fs-sm);
   line-height: 1.9;
-  color: var(--ink-3);
+  color: var(--ink-2);
 }
 
 .rail-list > .btn-link {
@@ -474,7 +474,7 @@
   font-size: var(--fs-micro);
   letter-spacing: .14em;
   text-transform: uppercase;
-  color: var(--ink-3);
+  color: var(--ink-2);
   white-space: nowrap;
   overflow: hidden;
 }
@@ -488,7 +488,7 @@
 }
 
 .crumb .crumb-time {
-  color: var(--ink-4);
+  color: var(--ink-2);
   letter-spacing: .08em;
   text-transform: none;
 }

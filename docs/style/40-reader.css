@@ -31,9 +31,9 @@
   width: 84px;
   height: 84px;
   margin-bottom: var(--sp-3);
-  border: 1px solid var(--accent-line);
-  border-radius: 3px;
-  background: var(--accent-soft);
+  border: 1px solid var(--accent);
+  border-radius: var(--r-sm);
+  background: var(--surface);
   color: var(--accent);
   font-family: var(--font-display);
   font-size: 40px;
@@ -51,7 +51,7 @@
 
 .empty-state p {
   max-width: 26em;
-  color: var(--ink-3);
+  color: var(--ink-2);
   font-size: var(--fs-base);
   line-height: 1.9;
   letter-spacing: .02em;
@@ -62,7 +62,7 @@
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   letter-spacing: .08em;
-  color: var(--ink-4);
+  color: var(--ink-2);
 }
 
 .say {
@@ -107,7 +107,7 @@
 }
 
 .say.narration .what {
-  color: var(--ink-3);
+  color: var(--ink-2);
   font-family: var(--rd-font-narration, var(--font-reading));
   font-size: var(--rd-fs-narration, var(--rd-fs-sm));
   font-weight: var(--rd-w-narration, 400);
@@ -117,22 +117,18 @@
 }
 
 .say.think .who {
-  color: var(--ink-3);
+  color: var(--ink-2);
   font-weight: var(--rd-w-speaker, 400);
   letter-spacing: .1em;
   opacity: .9;
 }
 
 .say.think .what {
-  color: var(--ink-3);
+  color: var(--ink-2);
   font-family: var(--rd-font-think, var(--font-reading));
   font-size: var(--rd-fs-think, var(--rd-fs));
   font-weight: var(--rd-w-think, 400);
   letter-spacing: .03em;
-  text-shadow:
-    0 0 3px var(--think-ghost),
-    0 0 8px var(--think-ghost-soft),
-    0 0 16px var(--think-ghost-soft);
 }
 
 .choice {
@@ -222,7 +218,7 @@
   flex: none;
   width: 18px;
   padding: 4px 0 0;
-  color: var(--ink-4);
+  color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   font-variant-numeric: tabular-nums;
@@ -254,7 +250,7 @@
   font-family: var(--rd-font-option-cond, var(--font-mono));
   font-size: var(--rd-fs-option-cond, var(--fs-xs));
   font-weight: var(--rd-w-option-cond, 400);
-  color: var(--ink-4);
+  color: var(--ink-2);
 }
 
 .option-body {
@@ -296,7 +292,7 @@
   align-items: center;
   gap: var(--sp-2);
   padding: 6px 0;
-  color: var(--ink-4);
+  color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   line-height: 1.6;
@@ -338,18 +334,18 @@
 
 .branch.is-empty > .branch-head {
   padding: 2px 0;
-  color: var(--ink-4);
+  color: var(--ink-2);
   cursor: default;
 }
 
-.branch.is-empty > .branch-head .cond { color: var(--ink-4); }
+.branch.is-empty > .branch-head .cond { color: var(--ink-2); }
 
 .branch-empty {
   flex: none;
   padding: 0 6px;
   border: 1px solid var(--line-1);
-  border-radius: 3px;
-  color: var(--ink-4);
+  border-radius: var(--r-sm);
+  color: var(--ink-2);
   font-family: var(--font-ui);
   font-size: var(--fs-micro);
   line-height: 1.6;
@@ -391,7 +387,7 @@
   display: inline-block;
   min-width: 18px;
   margin-right: 5px;
-  color: var(--ink-4);
+  color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   letter-spacing: .08em;
@@ -416,7 +412,7 @@
 .cx-gtag {
   border: 1px solid transparent;
   border-radius: var(--r-sm);
-  background: var(--surface-2);
+  background: var(--surface);
 }
 
 .cx-var {
@@ -433,25 +429,24 @@
 
 .cx-dice {
   padding: 0 5px;
-  color: var(--ink-3);
+  color: var(--ink-2);
   font-size: var(--fs-micro);
 }
 
 .cx-type {
-  color: var(--ink-4);
+  color: var(--ink-2);
   font-size: var(--fs-micro);
   letter-spacing: .04em;
 }
 
-.cx-id { color: var(--ink-4); font-size: var(--fs-micro); }
+.cx-id { color: var(--ink-2); font-size: var(--fs-micro); }
 
 .cx-neg { color: var(--danger); font-size: var(--fs-micro); }
 
 .cx-var.is-link { cursor: pointer; }
 
 .cx-var.is-link:hover {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
+  border-color: var(--accent);
   color: var(--accent-strong);
 }
 
@@ -460,7 +455,7 @@
   text-underline-offset: 3px;
 }
 
-.cx-var.is-link:active { background: var(--surface-active); }
+.cx-var.is-link:active { background: var(--surface); }
 
 .cx-group {
   display: inline-flex;
@@ -471,7 +466,7 @@
 
 .cx-gtag {
   padding: 0 5px;
-  color: var(--ink-4);
+  color: var(--ink-2);
   font-size: var(--fs-micro);
   letter-spacing: .04em;
 }
@@ -479,9 +474,9 @@
 .cx-gitems { color: var(--ink-2); }
 
 .cx-bracket,
-.cx-gsep { color: var(--ink-4); }
+.cx-gsep { color: var(--ink-2); }
 
-.cx-empty { color: var(--ink-4); }
+.cx-empty { color: var(--ink-2); }
 
 .cx-fallback {
   display: inline-block;
@@ -503,8 +498,8 @@
   margin: var(--rd-gap-3) 0 var(--rd-gap-4);
   padding: var(--sp-4) var(--sp-5);
   border: 1px solid var(--line-1);
-  border-radius: var(--r-md);
-  background: var(--lore-wash);
+  border-radius: var(--r-sm);
+  background: var(--surface);
 }
 
 .lore-text .lore-p {
@@ -523,8 +518,8 @@
 .chip-stat {
   border: 1px solid transparent;
   border-radius: var(--r-sm);
-  background: var(--surface-2);
-  color: var(--ink-3);
+  background: var(--surface);
+  color: var(--ink-2);
 }
 
 .scene-switch {
@@ -544,13 +539,13 @@
 }
 
 .scene-switch .scene-label {
-  color: var(--ink-4);
+  color: var(--ink-2);
   letter-spacing: .1em;
 }
 
 .scene-switch .scene-name { color: var(--ink); }
 
-.scene-switch .scene-key { color: var(--ink-4); }
+.scene-switch .scene-key { color: var(--ink-2); }
 
 .scene-switch .scene-arrow { color: var(--accent); }
 
@@ -572,7 +567,7 @@
 .jump .arrow { color: var(--accent); }
 
 .jump .option-cond {
-  color: var(--ink-4);
+  color: var(--ink-2);
   font-size: var(--fs-micro);
 }
 
@@ -580,14 +575,14 @@
   border-style: dashed;
   border-color: var(--line-2);
   background: transparent;
-  color: var(--ink-4);
+  color: var(--ink-2);
   cursor: default;
 }
 
 .jump.dynamic:hover {
   border-color: var(--line-1);
   background: transparent;
-  color: var(--ink-4);
+  color: var(--ink-2);
 }
 
 .meta-group {
@@ -632,7 +627,7 @@
 }
 
 .sk-caption {
-  color: var(--ink-4);
+  color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   letter-spacing: .1em;
@@ -641,7 +636,7 @@
 .sk-line {
   height: 12px;
   border-radius: var(--r-sm);
-  background: var(--surface-sunken);
+  background: var(--line-1);
   animation: sk-pulse 1.4s ease-in-out infinite;
 }
 

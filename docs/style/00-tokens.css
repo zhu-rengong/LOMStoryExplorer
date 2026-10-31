@@ -1,18 +1,10 @@
 :root {
   color-scheme: light;
 
-  --canvas: #F2ECDC;
   --surface: #FBF7EB;
-  --surface-2: #F6F0E0;
-  --surface-sunken: #EDE6D3;
-  --surface-hover: #F7F1E1;
-  --surface-active: #E8E1CD;
-  --lore-wash: #FCF9EE;
 
   --ink: #1B1A15;
   --ink-2: #454037;
-  --ink-3: #746D5D;
-  --ink-4: #A09784;
 
   --line-1: #DFD8C3;
   --line-2: #C8BFA6;
@@ -21,21 +13,12 @@
   --accent: #4C7268;
   --accent-strong: #33544B;
   --accent-soft: #E5EDE6;
-  --accent-line: #A8C0B4;
-  --on-accent: #FBF8EE;
 
   --seal: #A8402C;
   --seal-rim: rgba(251, 246, 234, .42);
   --on-seal: #FBF3E6;
 
   --danger: #9B3A29;
-  --danger-soft: #F7E3DA;
-  --danger-line: #DEB2A3;
-
-  --ok: #4E6B46;
-
-  --think-ghost: rgba(116, 109, 93, .30);
-  --think-ghost-soft: rgba(116, 109, 93, .15);
 
   --scrim: rgba(27, 26, 21, .38);
   --scrim-soft: rgba(27, 26, 21, .18);
@@ -50,9 +33,6 @@
   --sp-8: 64px;
 
   --r-sm: 2px;
-  --r-md: 3px;
-  --r-lg: 4px;
-  --r-pill: 999px;
 
   --ctl-sm: 30px;
   --ctl-md: 36px;
@@ -96,11 +76,6 @@
   --z-drawer: 40;
   --z-pop: 45;
   --z-toast: 50;
-
-  --shadow-1: 0 1px 2px rgba(27, 26, 21, .05);
-  --shadow-pop: 0 2px 6px rgba(27, 26, 21, .06), 0 24px 48px -24px rgba(27, 26, 21, .26);
-  --shadow-sheet: -24px 0 64px -32px rgba(27, 26, 21, .3);
-  --shadow-deep: 0 16px 40px -16px rgba(27, 26, 21, .55);
 
   --ease: cubic-bezier(.22, .61, .36, 1);
   --t-fast: 120ms;
