@@ -1,5 +1,6 @@
 :root {
-  --frame-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2010%2010'%3E%3Crect%20x='1'%20y='1'%20width='8'%20height='8'%20fill='none'%20stroke='%23000'%20stroke-width='2'/%3E%3C/svg%3E");
+  --frame-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%208%208'%3E%3Crect%20x='1'%20y='1'%20width='6'%20height='6'%20fill='none'%20stroke='%23000'%20stroke-width='2'/%3E%3C/svg%3E");
+  --frame-mask-soft: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%208%208'%3E%3Crect%20x='1'%20y='1'%20width='6'%20height='6'%20fill='none'%20stroke='%23000'%20stroke-width='2'%20stroke-opacity='.28'/%3E%3C/svg%3E");
 }
 
 #reader:not(.is-open) .reader-head,
@@ -152,9 +153,9 @@
 .branch-group::before {
   content: "";
   position: absolute;
-  left: 4px;
-  top: 10px;
-  bottom: 10px;
+  left: 3px;
+  top: 8px;
+  bottom: 8px;
   z-index: 2;
   width: 2px;
   background-color: currentColor;
@@ -171,14 +172,14 @@
   top: 0;
   bottom: 0;
   z-index: 2;
-  width: 10px;
+  width: 8px;
   background-color: currentColor;
-  -webkit-mask-image: var(--frame-mask), var(--frame-mask);
-  -webkit-mask-size: 10px 10px, 10px 10px;
+  -webkit-mask-image: var(--frame-mask), var(--frame-mask-soft);
+  -webkit-mask-size: 8px 8px, 8px 8px;
   -webkit-mask-position: 0 0, 0 100%;
   -webkit-mask-repeat: no-repeat;
-  mask-image: var(--frame-mask), var(--frame-mask);
-  mask-size: 10px 10px, 10px 10px;
+  mask-image: var(--frame-mask), var(--frame-mask-soft);
+  mask-size: 8px 8px, 8px 8px;
   mask-position: 0 0, 0 100%;
   mask-repeat: no-repeat;
   pointer-events: none;
@@ -212,7 +213,7 @@
   top: 0;
   bottom: 0;
   right: 0;
-  left: -12px;
+  left: -13px;
   z-index: -1;
   background-image: linear-gradient(90deg, var(--accent-mist) 0%, transparent 100%);
   -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
@@ -323,7 +324,7 @@
   top: 0;
   bottom: 0;
   right: 0;
-  left: -10px;
+  left: -11px;
   z-index: -1;
   background-image: linear-gradient(90deg, var(--accent-mist) 0%, transparent 100%);
   -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
