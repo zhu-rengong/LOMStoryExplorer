@@ -469,7 +469,6 @@
   font-family: var(--rd-font-narration, var(--font-reading));
   font-size: var(--rd-fs-narration, var(--rd-fs-sm));
   font-weight: var(--rd-w-narration, 400);
-  font-style: italic;
 }
 
 .prev-line[data-type="think"] .prev-body {
@@ -477,7 +476,6 @@
   font-family: var(--rd-font-think, var(--font-reading));
   font-size: var(--rd-fs-think, var(--rd-fs));
   font-weight: var(--rd-w-think, 400);
-  font-style: italic;
 }
 
 .prev-line[data-type="option"] .prev-body {
@@ -870,7 +868,7 @@
 
 .branch-preview .bp-line + .bp-line { margin-top: 3px; }
 
-.branch-preview .bp-line.is-narration { color: var(--ink-3); font-style: italic; }
+.branch-preview .bp-line.is-narration { color: var(--ink-3); }
 
 .branch-preview .bp-line.is-meta,
 .branch-preview .bp-line.is-jump,

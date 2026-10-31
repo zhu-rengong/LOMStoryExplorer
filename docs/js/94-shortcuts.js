@@ -30,8 +30,8 @@
   ];
 
   SR.define("shortcuts",
-    ["store", "i18n", "overlay", "ui", "panels"],
-    ({ store, i18n, overlay, ui, panels }) => {
+    ["store", "i18n", "overlay", "ui"],
+    ({ store, i18n, overlay, ui }) => {
       const $ = ui.$;
       let openFlag = false;
 
@@ -101,24 +101,6 @@
           return;
         }
         if (typingInField()) return;
-
-        if (panels.lookup.open) {
-          if (event.key === "ArrowDown") {
-            event.preventDefault();
-            panels.moveLookup(1);
-            return;
-          }
-          if (event.key === "ArrowUp") {
-            event.preventDefault();
-            panels.moveLookup(-1);
-            return;
-          }
-          if (event.key === "Enter") {
-            event.preventDefault();
-            panels.chooseLookup();
-            return;
-          }
-        }
 
         if (event.key === "/") {
           event.preventDefault();

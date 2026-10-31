@@ -11,7 +11,7 @@
 
       const NAME_GROUP = { check: "checks", flag: "flags", rel: "rels", stat: "stats" };
 
-      const lookup = { items: [], active: 0, trigger: null, open: false, seq: 0 };
+      const lookup = { open: false, seq: 0 };
 
       let facetSets = null;
       let nameCache = { lang: "", index: null };
@@ -112,21 +112,6 @@
         return { items: graph.lookup(kind, key), groups: null };
       };
 
-      const paintLookupActive = () => {
-        const list = $("lookupList");
-        if (!list) return;
-        const rows = list.querySelectorAll(".lookup-item");
-        rows.forEach((row, index) => row.classList.toggle("is-active", index === lookup.active));
-        const active = rows[lookup.active];
-        if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest" });
-      };
-
-      const moveLookup = (delta) => {
-        if (!lookup.items.length) return;
-        lookup.active = (lookup.active + delta + lookup.items.length) % lookup.items.length;
-        paintLookupActive();
-      };
-
       const hideLookup = () => {
         const panel = $("lookupPanel");
         if (panel) panel.hidden = true;
@@ -135,14 +120,6 @@
 
       const closeLookup = () => {
         if (!overlay.close("lookup")) hideLookup();
-      };
-
-      const chooseLookup = () => {
-        const node = lookup.items[lookup.active];
-        if (!node) return false;
-        closeLookup();
-        store.select(node.id, { history: true });
-        return true;
       };
 
       const positionLookup = (trigger) => {
@@ -183,7 +160,6 @@
 
         const rowOf = (node) => {
           const row = ui.el("div", "lookup-item row row-tall row-accent");
-          row.setAttribute("role", "option");
           const top = ui.el("div", "li-top");
           top.appendChild(ui.el("span", "li-id", node.id));
           top.appendChild(ui.el("span", "li-ch", i18n.chapterTitle(graph.chapterOf(node))));
@@ -214,11 +190,7 @@
           data.items.forEach((node) => list.appendChild(rowOf(node)));
         }
 
-        lookup.items = data.items;
-        lookup.active = 0;
-        lookup.trigger = trigger || null;
         lookup.open = true;
-        paintLookupActive();
         panel.hidden = false;
         overlay.open("lookup", { trigger: trigger || null });
         positionLookup(trigger);
@@ -432,7 +404,6 @@
       return {
         attachLookupAnchor,
         bindBranchPreview,
-        chooseLookup,
         closeLookup,
         ensureFacetSets,
         extractKey: beats.extractKey,
@@ -441,9 +412,7 @@
         lookup,
         lookupCount,
         lookupTargetOf,
-        moveLookup,
         openLookup,
-        paintLookupActive,
         positionLookup,
         renderCondBlock,
         renderCondModel,

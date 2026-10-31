@@ -11,7 +11,7 @@ window.SR_I18N = {
       meta: "{nodes} 個劇本 · {edges} 條連線 · {chapters} 個章節 · {date}",
       gameVersion: "遊戲 {ver}",
       gameBuild: "build {build}",
-      searchPlaceholder: "搜尋對白、旁白、心聲、選項、劇情點（/ 聚焦）",
+      searchPlaceholder: "搜尋對白、旁白、心聲、選項、劇情點",
       searchTitle: "搜尋對白、旁白、心聲、選項、劇情點",
       moreTitle: "更多",
       moreLang: "語言",
@@ -274,7 +274,7 @@ window.SR_I18N = {
       lookupCheck: "判定此檢查點的劇本",
       lookupEmpty: "沒有找到相關劇本",
       lookupStat: "改動此屬性的劇本",
-      lookupHint: "↑↓ 選擇 · Enter 跳轉 · Esc 關閉",
+      lookupHint: "Esc 關閉",
       timeStages: "上,中,下",
       timeFull: "{y}年{m}月{s}旬"
     },
@@ -284,7 +284,7 @@ window.SR_I18N = {
       meta: "{nodes} 个剧本 · {edges} 条连线 · {chapters} 个章节 · {date}",
       gameVersion: "游戏 {ver}",
       gameBuild: "build {build}",
-      searchPlaceholder: "搜索对白、旁白、心声、选项、剧情点（/ 聚焦）",
+      searchPlaceholder: "搜索对白、旁白、心声、选项、剧情点",
       searchTitle: "搜索对白、旁白、心声、选项、剧情点",
       moreTitle: "更多",
       moreLang: "语言",
@@ -547,7 +547,7 @@ window.SR_I18N = {
       lookupCheck: "判定此检查点的剧本",
       lookupEmpty: "没有找到相关剧本",
       lookupStat: "改动此属性的剧本",
-      lookupHint: "↑↓ 选择 · Enter 跳转 · Esc 关闭",
+      lookupHint: "Esc 关闭",
       timeStages: "上,中,下",
       timeFull: "{y}年{m}月{s}旬"
     },
@@ -557,7 +557,7 @@ window.SR_I18N = {
       meta: "{nodes} scripts · {edges} links · {chapters} chapters · {date}",
       gameVersion: "game {ver}",
       gameBuild: "build {build}",
-      searchPlaceholder: "Search dialogue, narration, inner voice, options, lore (/ to focus)",
+      searchPlaceholder: "Search dialogue, narration, inner voice, options, lore",
       searchTitle: "Search dialogue, narration, inner voice, options and lore",
       moreTitle: "More",
       moreLang: "Language",
@@ -820,7 +820,7 @@ window.SR_I18N = {
       lookupCheck: "Scripts that test this checkpoint",
       lookupEmpty: "No related scripts",
       lookupStat: "Scripts that change this stat",
-      lookupHint: "↑↓ pick · Enter open · Esc close",
+      lookupHint: "Esc to close",
       timeStages: "early,mid,late",
       timeFull: "{s} of month {m}, year {y}"
     }
