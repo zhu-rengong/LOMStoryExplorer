@@ -62,8 +62,9 @@
   const DEFAULTS = {
     reading: "serif",
     readingCustom: "",
-    ui: "system",
+    ui: "serif",
     uiCustom: "",
+    uiV2: true,
     scale: 130,
     leading: 1.85,
     measure: MEASURE_DEFAULT,
@@ -194,6 +195,7 @@
       readingCustom: DEFAULTS.readingCustom,
       ui: DEFAULTS.ui,
       uiCustom: DEFAULTS.uiCustom,
+      uiV2: true,
       scale: DEFAULTS.scale,
       leading: DEFAULTS.leading,
       measure: DEFAULTS.measure,
@@ -214,6 +216,8 @@
     if (typeof source.readingCustom === "string") state.readingCustom = source.readingCustom;
     if (typeof source.ui === "string") state.ui = source.ui;
     if (typeof source.uiCustom === "string") state.uiCustom = source.uiCustom;
+    if (source.uiV2 !== true && state.ui === "system") state.ui = "serif";
+    state.uiV2 = true;
     state.scale = Math.round(clampNumber(source.scale, 80, 200, DEFAULTS.scale) / 5) * 5;
     state.leading = clampNumber(source.leading, 1.2, 2.6, DEFAULTS.leading);
     state.measure = Math.round(clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT));

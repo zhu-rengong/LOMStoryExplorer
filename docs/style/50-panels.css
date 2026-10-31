@@ -908,12 +908,12 @@
   max-width: min(520px, calc(100vw - 32px));
   padding: 10px 18px;
   transform: translateX(-50%);
-  border-radius: var(--r-pill);
+  border-radius: var(--r-sm);
   background: var(--ink);
   color: var(--canvas);
   font-size: var(--fs-sm);
   letter-spacing: .03em;
-  box-shadow: 0 16px 40px -16px rgba(22, 19, 14, .55);
+  box-shadow: var(--shadow-deep);
   animation: fade-in var(--t-slow) var(--ease);
 }
 

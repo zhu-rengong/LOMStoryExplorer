@@ -1,53 +1,60 @@
 :root {
   color-scheme: light;
 
-  --canvas: #FAF9F6;
-  --surface: #FFFFFF;
-  --surface-2: #F7F4EE;
-  --surface-sunken: #F2EEE6;
-  --surface-hover: #F6F2EB;
-  --surface-active: #EFE9DE;
-  --lore-wash: #FDFCF9;
+  --canvas: #F2ECDC;
+  --surface: #FBF7EB;
+  --surface-2: #F6F0E0;
+  --surface-sunken: #EDE6D3;
+  --surface-hover: #F7F1E1;
+  --surface-active: #E8E1CD;
+  --lore-wash: #FCF9EE;
 
-  --ink: #16130E;
-  --ink-2: #4B463D;
-  --ink-3: #7C7566;
-  --ink-4: #A49C8C;
+  --ink: #1B1A15;
+  --ink-2: #454037;
+  --ink-3: #746D5D;
+  --ink-4: #A09784;
 
-  --line-1: #E8E3D9;
-  --line-2: #D8D0C1;
-  --line-3: #BCB2A0;
+  --line-1: #DFD8C3;
+  --line-2: #C8BFA6;
+  --line-3: #ABA188;
 
-  --accent: #A63B2A;
-  --accent-strong: #7E2A1D;
-  --accent-soft: #F7E8E3;
-  --accent-line: #D9B5A9;
-  --accent-mist: rgba(166, 59, 42, .10);
-  --on-accent: #FFFFFF;
+  --accent: #4C7268;
+  --accent-strong: #33544B;
+  --accent-soft: #E5EDE6;
+  --accent-line: #A8C0B4;
+  --accent-mist: rgba(76, 114, 104, .10);
+  --on-accent: #FBF8EE;
 
-  --danger: #9B2C1F;
-  --danger-soft: #F8E7E2;
-  --danger-line: #E2B6AB;
+  --seal: #A8402C;
+  --seal-strong: #862F1F;
+  --seal-rim: rgba(251, 246, 234, .42);
+  --on-seal: #FBF3E6;
 
-  --ok: #3E6B4F;
-  --ok-soft: #E9F0EA;
-  --ok-line: #B7CCBD;
+  --danger: #9B3A29;
+  --danger-soft: #F7E3DA;
+  --danger-line: #DEB2A3;
+
+  --ok: #4E6B46;
+  --ok-soft: #E9EEE0;
+  --ok-line: #B7C6A7;
 
   --warn: #8A6A22;
-  --warn-soft: #F6EFDC;
+  --warn-soft: #F5EDD5;
 
-  --cool: #3C5560;
-  --cool-soft: #E7EDEE;
+  --cool: #3A5A6E;
+  --cool-soft: #E6ECEE;
 
-  --spk-0: #8A5A2B;
-  --spk-1: #A63B2A;
-  --spk-2: #3C5560;
+  --spk-0: #8A5A2C;
+  --spk-1: #A8402C;
+  --spk-2: #3A5A6E;
 
-  --think-ghost: rgba(124, 117, 102, .30);
-  --think-ghost-soft: rgba(124, 117, 102, .15);
+  --think-ghost: rgba(116, 109, 93, .30);
+  --think-ghost-soft: rgba(116, 109, 93, .15);
 
-  --scrim: rgba(22, 19, 14, .36);
-  --scrim-soft: rgba(22, 19, 14, .18);
+  --scrim: rgba(27, 26, 21, .38);
+  --scrim-soft: rgba(27, 26, 21, .18);
+
+  --paper-tex: repeating-linear-gradient(90deg, rgba(120, 104, 76, .04) 0 1px, transparent 1px 5px);
 
   --sp-1: 4px;
   --sp-2: 8px;
@@ -58,10 +65,10 @@
   --sp-7: 48px;
   --sp-8: 64px;
 
-  --r-sm: 4px;
-  --r-md: 8px;
-  --r-lg: 12px;
-  --r-xl: 16px;
+  --r-sm: 2px;
+  --r-md: 3px;
+  --r-lg: 4px;
+  --r-xl: 6px;
   --r-pill: 999px;
 
   --ctl-sm: 30px;
@@ -70,16 +77,16 @@
   --row-h: 34px;
   --row-pad: 10px;
 
-  --fs-micro: 10.5px;
-  --fs-xs: 11.5px;
-  --fs-sm: 12.5px;
-  --fs-base: 13.5px;
+  --fs-micro: 11px;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-base: 14px;
   --fs-md: 15px;
   --fs-h: 18px;
   --fs-title: 22px;
   --fs-display: 30px;
 
-  --font-ui: "Inter", "PingFang TC", "PingFang SC", "Source Han Sans TC", "Noto Sans TC", "Microsoft JhengHei", "Microsoft YaHei", system-ui, sans-serif;
+  --font-ui: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", "STSong", Georgia, "SimSun", serif;
   --font-display: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", "STSong", Georgia, "SimSun", serif;
   --font-mono: "Cascadia Mono", "Sarasa Mono TC", ui-monospace, Consolas, "Courier New", monospace;
   --font-reading: var(--font-display);
@@ -107,10 +114,11 @@
   --z-pop: 45;
   --z-toast: 50;
 
-  --shadow-1: 0 1px 2px rgba(22, 19, 14, .05);
-  --shadow-pop: 0 2px 6px rgba(22, 19, 14, .06), 0 24px 48px -24px rgba(22, 19, 14, .26);
-  --shadow-sheet: -24px 0 64px -32px rgba(22, 19, 14, .3);
-  --shadow-lift: 0 1px 2px rgba(22, 19, 14, .04);
+  --shadow-1: 0 1px 2px rgba(27, 26, 21, .05);
+  --shadow-pop: 0 2px 6px rgba(27, 26, 21, .06), 0 24px 48px -24px rgba(27, 26, 21, .26);
+  --shadow-sheet: -24px 0 64px -32px rgba(27, 26, 21, .3);
+  --shadow-lift: 0 1px 2px rgba(27, 26, 21, .04);
+  --shadow-deep: 0 16px 40px -16px rgba(27, 26, 21, .55);
 
   --ease: cubic-bezier(.22, .61, .36, 1);
   --t-fast: 120ms;
