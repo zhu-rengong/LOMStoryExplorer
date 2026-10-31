@@ -1016,8 +1016,6 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding-top: var(--sp-3);
-  border-top: 1px solid var(--line-1);
 }
 
 .stat-card .stat-value {
@@ -1076,25 +1074,39 @@
   padding: 0 var(--sp-5) var(--sp-5);
 }
 
+.stats-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  padding: var(--sp-3) 0;
+  background: var(--surface);
+}
+
 .stats-table {
   width: 100%;
-  margin-top: var(--sp-3);
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0;
   color: var(--ink-2);
   font-size: var(--fs-sm);
 }
 
+.stats-table col.col-name { width: 44%; }
+
+.stats-table col.col-num { width: 14%; }
+
 .stats-table th,
 .stats-table td { padding: 8px 10px; }
 
+.stats-table .name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .stats-table thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  border-bottom: 0;
+  border-bottom: 1px solid var(--line-2);
   background: var(--surface);
-  box-shadow: inset 0 -1px 0 var(--line-2);
   color: var(--ink-4);
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
@@ -1162,7 +1174,6 @@
 .stats-table tfoot th,
 .stats-table tfoot td {
   border-top: 1px solid var(--line-2);
-  background: var(--surface-2);
   color: var(--ink);
   font-weight: 600;
 }

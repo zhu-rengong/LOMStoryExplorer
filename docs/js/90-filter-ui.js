@@ -357,18 +357,6 @@
         else close();
       };
 
-      const clear = () => {
-        clearTimeout(timer);
-        const input = $("filterExpr");
-        if (input) {
-          input.value = "";
-          input.focus();
-        }
-        hideSuggest();
-        apply("");
-        updateUi();
-      };
-
       const bind = () => {
         const fieldBox = $("filterFieldChips");
         if (fieldBox) {
@@ -489,9 +477,6 @@
           });
         }
 
-        const clearButton = $("filterClear");
-        if (clearButton) clearButton.addEventListener("click", clear);
-
         overlay.register("filterPanel", {
           id: "filterPanel",
           triggerId: "filterBtn",
@@ -510,7 +495,6 @@
       return {
         apply,
         bind,
-        clear,
         close,
         open,
         reset: () => {

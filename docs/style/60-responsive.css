@@ -252,6 +252,12 @@ body[data-layout="mobile"] .io-status { left: 12px; bottom: 12px; }
 
   .stat-card { flex: 1 1 calc(50% - var(--sp-4)); }
 
+  .stats-table { font-size: var(--fs-micro); }
+
+  .stats-table col.col-name { width: 38%; }
+
+  .stats-table col.col-num { width: 15.5%; }
+
   .stats-table th,
   .stats-table td { padding: 7px 6px; }
 

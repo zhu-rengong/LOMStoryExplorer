@@ -125,15 +125,15 @@
 }
 
 .say.think .what {
-  color: var(--ink-2);
+  color: var(--ink-3);
   font-family: var(--rd-font-think, var(--font-reading));
   font-size: var(--rd-fs-think, var(--rd-fs));
   font-weight: var(--rd-w-think, 400);
   letter-spacing: .03em;
   text-shadow:
-    0 0 2px var(--think-ghost),
-    0 0 6px var(--think-ghost-soft),
-    0 0 12px var(--think-ghost-soft);
+    0 0 3px var(--think-ghost),
+    0 0 8px var(--think-ghost-soft),
+    0 0 16px var(--think-ghost-soft);
 }
 
 .choice {
@@ -148,14 +148,16 @@
   left: 0;
   top: 8px;
   bottom: 8px;
-  width: 2px;
-  border-radius: 1px;
-  background: var(--line-2);
-  transition: background-color var(--t-fast) var(--ease);
+  width: 10px;
+  border-top: 2px solid var(--line-2);
+  border-left: 2px solid var(--line-2);
+  border-bottom: 2px solid var(--line-2);
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  transition: border-color var(--t-fast) var(--ease);
 }
 
-.choice:hover::before,
-.choice:focus-within::before { background: var(--accent); }
+.choice:hover::before { border-color: var(--accent); }
 
 .choice > .meta-action { margin: var(--rd-gap-3) 0 var(--rd-gap-2); }
 
@@ -243,14 +245,16 @@
   left: 0;
   top: 8px;
   bottom: 8px;
-  width: 2px;
-  border-radius: 1px;
-  background: var(--line-2);
-  transition: background-color var(--t-fast) var(--ease);
+  width: 10px;
+  border-top: 2px solid var(--line-2);
+  border-left: 2px solid var(--line-2);
+  border-bottom: 2px solid var(--line-2);
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  transition: border-color var(--t-fast) var(--ease);
 }
 
-.branch-group:hover::before,
-.branch-group:focus-within::before { background: var(--accent); }
+.branch-group:hover::before { border-color: var(--accent); }
 
 .branch-group > .branch { margin: 0; }
 

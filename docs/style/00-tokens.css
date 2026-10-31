@@ -41,8 +41,8 @@
   --spk-1: #A63B2A;
   --spk-2: #3C5560;
 
-  --think-ghost: rgba(22, 19, 14, .13);
-  --think-ghost-soft: rgba(22, 19, 14, .07);
+  --think-ghost: rgba(124, 117, 102, .30);
+  --think-ghost-soft: rgba(124, 117, 102, .15);
 
   --scrim: rgba(22, 19, 14, .36);
   --scrim-soft: rgba(22, 19, 14, .18);

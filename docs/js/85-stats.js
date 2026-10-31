@@ -175,6 +175,13 @@
         return row;
       };
 
+      const colgroup = () => {
+        const group = ui.el("colgroup");
+        group.appendChild(ui.el("col", "col-name"));
+        for (let index = 0; index < 4; index++) group.appendChild(ui.el("col", "col-num"));
+        return group;
+      };
+
       const renderTable = () => {
         const body = $("statsBody");
         if (!body) return;
@@ -184,7 +191,10 @@
           return;
         }
         body.replaceChildren();
-        const table = ui.el("table", "stats-table");
+
+        const headBox = ui.el("div", "stats-head");
+        const headTable = ui.el("table", "stats-table");
+        headTable.appendChild(colgroup());
         const head = ui.el("thead");
         const headRow = ui.el("tr");
         ["statsChapter", "statsStories", "statsZh", "statsEn", "statsSum"].forEach((key, index) => {
@@ -193,7 +203,12 @@
           headRow.appendChild(cell);
         });
         head.appendChild(headRow);
-        table.appendChild(head);
+        headTable.appendChild(head);
+        headBox.appendChild(headTable);
+        body.appendChild(headBox);
+
+        const table = ui.el("table", "stats-table");
+        table.appendChild(colgroup());
 
         const tbody = ui.el("tbody");
         const foot = [0, 0];
