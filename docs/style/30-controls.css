@@ -31,8 +31,11 @@
 }
 
 .btn:enabled:active:not(:hover) {
-  border-color: var(--line-hold);
   background: var(--surface-hold);
+}
+
+.btn:enabled:active:not(:hover):where(:not([aria-selected="true"]):not([aria-pressed="true"])) {
+  border-color: var(--line-hold);
 }
 
 .btn:enabled:active:not(:hover):not(.is-on):not(.btn-primary):not([aria-expanded="true"]):not([aria-pressed="true"]) {
