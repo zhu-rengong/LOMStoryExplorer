@@ -1,5 +1,5 @@
 :root {
-  --brace-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2012%20100'%20preserveAspectRatio='none'%3E%3Cpath%20d='M11%201C7%201%206%207%206%2015V41C6%2047%204%2049%201%2050C4%2051%206%2053%206%2059V85C6%2093%207%2099%2011%2099'%20fill='none'%20stroke='%23000'%20stroke-width='2'%20stroke-linecap='round'%20vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --brace-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2012%20100'%20preserveAspectRatio='none'%3E%3Cpath%20d='M11%201C7%201%206%207%206%2015V85C6%2093%207%2099%2011%2099'%20fill='none'%20stroke='%23000'%20stroke-width='2'%20stroke-linecap='round'%20vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
 }
 
 #reader:not(.is-open) .reader-head,
@@ -143,6 +143,7 @@
 
 .choice {
   position: relative;
+  isolation: isolate;
   margin: var(--rd-gap-4) 0;
   padding-left: 18px;
 }
@@ -170,6 +171,23 @@
 .choice:hover::before,
 .branch-group:hover::before { background-color: var(--accent); }
 
+.choice::after,
+.branch-group::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: linear-gradient(90deg, transparent 0%, var(--accent-mist) 80%, transparent 100%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--t-base) var(--ease);
+}
+
+.choice:hover::after,
+.branch-group:hover::after { opacity: 1; }
+
 .choice > .meta-action { margin: var(--rd-gap-3) 0 var(--rd-gap-2); }
 
 .option + .option { border-top: 1px solid var(--line-1); }
@@ -188,11 +206,11 @@
   transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
 }
 
-.option-head:hover { background: var(--surface-hover); color: var(--ink); }
+.option-head:hover { background: transparent; color: var(--ink); }
 
 .option-head:hover .option-idx { color: var(--accent); }
 
-.option.is-open:has(> .option-head:hover) > .option-body { background: var(--surface-hover); }
+.option-head:active { background: transparent; }
 
 .option-idx {
   flex: none;
@@ -246,6 +264,7 @@
 
 .branch-group {
   position: relative;
+  isolation: isolate;
   margin: var(--rd-gap-3) 0 var(--rd-gap-4);
   padding-left: var(--sp-4);
 }
@@ -278,7 +297,9 @@
   transition: color var(--t-fast) var(--ease);
 }
 
-.branch-head:hover { color: var(--ink-2); }
+.branch-head:hover { background: transparent; color: var(--ink-2); }
+
+.branch-head:active { background: transparent; }
 
 .branch-head .cond {
   flex: 1;
@@ -304,8 +325,6 @@
   padding: 4px 0 var(--sp-3) var(--sp-3);
   transition: background-color var(--t-fast) var(--ease);
 }
-
-.branch.is-open:has(> .branch-head:hover) > .branch-body { background: var(--surface-hover); }
 
 .branch:not(.is-open) .branch-body { display: none; }
 
@@ -490,7 +509,7 @@
   padding: var(--sp-4) var(--sp-5);
   border: 1px solid var(--line-1);
   border-radius: var(--r-md);
-  background: var(--canvas);
+  background: var(--lore-wash);
 }
 
 .lore-text .lore-p {

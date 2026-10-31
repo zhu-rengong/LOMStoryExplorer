@@ -37,6 +37,13 @@
 
 .brand-text {
   display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.brand-main {
+  display: flex;
   align-items: baseline;
   gap: var(--sp-3);
   min-width: 0;
@@ -56,19 +63,30 @@
   text-overflow: ellipsis;
 }
 
-.brand-text p {
-  flex: 0 1 auto;
+.brand-main p,
+.brand-build {
   min-width: 0;
-  margin-top: 0;
+  margin: 0;
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   font-variant-numeric: tabular-nums;
-  letter-spacing: .1em;
-  color: var(--ink-3);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.brand-main p {
+  flex: 0 1 auto;
+  letter-spacing: .1em;
+  color: var(--ink-3);
+}
+
+.brand-build {
+  letter-spacing: .06em;
+  color: var(--ink-4);
+}
+
+.brand-build:empty { display: none; }
 
 .searchwrap {
   position: relative;

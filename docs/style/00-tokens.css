@@ -7,6 +7,7 @@
   --surface-sunken: #F2EEE6;
   --surface-hover: #F6F2EB;
   --surface-active: #EFE9DE;
+  --lore-wash: #FDFCF9;
 
   --ink: #16130E;
   --ink-2: #4B463D;
@@ -21,6 +22,7 @@
   --accent-strong: #7E2A1D;
   --accent-soft: #F7E8E3;
   --accent-line: #D9B5A9;
+  --accent-mist: rgba(166, 59, 42, .10);
   --on-accent: #FFFFFF;
 
   --danger: #9B2C1F;

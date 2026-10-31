@@ -8,7 +8,7 @@ window.SR_I18N = {
     "zh-tw": {
       appTitle: "活俠傳 · 劇本檢索",
       loading: "載入中…",
-      meta: "{nodes} 個劇本 · {edges} 條連線 · {chapters} 個章節 · {date}",
+      meta: "{nodes} 個劇本 · {edges} 條連線 · {chapters} 個章節",
       gameVersion: "遊戲 {ver}",
       gameBuild: "build {build}",
       searchPlaceholder: "搜尋對白、旁白、心聲、選項、劇情點",
@@ -280,7 +280,7 @@ window.SR_I18N = {
     "zh-cn": {
       appTitle: "活侠传 · 剧本检索",
       loading: "加载中…",
-      meta: "{nodes} 个剧本 · {edges} 条连线 · {chapters} 个章节 · {date}",
+      meta: "{nodes} 个剧本 · {edges} 条连线 · {chapters} 个章节",
       gameVersion: "游戏 {ver}",
       gameBuild: "build {build}",
       searchPlaceholder: "搜索对白、旁白、心声、选项、剧情点",
@@ -552,7 +552,7 @@ window.SR_I18N = {
     "en": {
       appTitle: "Legend of Mortal · Script Explorer",
       loading: "Loading…",
-      meta: "{nodes} scripts · {edges} links · {chapters} chapters · {date}",
+      meta: "{nodes} scripts · {edges} links · {chapters} chapters",
       gameVersion: "game {ver}",
       gameBuild: "build {build}",
       searchPlaceholder: "Search dialogue, narration, inner voice, options, lore",

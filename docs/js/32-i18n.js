@@ -201,24 +201,29 @@
       const menu = document.getElementById("langMenu");
       if (menu) menu.setAttribute("aria-label", t("moreLang"));
 
-      const meta = graph.chapters.length;
-      const counts = graph.nodes.length;
-      const edges = graph.edges.length;
-      let text = t("meta", {
-        nodes: counts,
-        edges: edges,
-        chapters: meta,
-        date: graph.nodes.length ? window.SR_DATA.meta.generated : "",
+      const countsText = t("meta", {
+        nodes: graph.nodes.length,
+        edges: graph.edges.length,
+        chapters: graph.chapters.length,
       });
-      const game = window.SR_DATA.meta.game || {};
-      const parts = [];
-      if (game.version) parts.push(t("gameVersion", { ver: game.version }));
-      if (game.build) parts.push(t("gameBuild", { build: game.build }));
-      if (parts.length) text += ` · ${parts.join(" · ")}`;
       const line = document.getElementById("metaLine");
       if (line) {
-        line.textContent = text;
-        line.title = text;
+        line.textContent = countsText;
+        line.title = countsText;
+      }
+
+      const game = window.SR_DATA.meta.game || {};
+      const parts = [];
+      if (graph.nodes.length && window.SR_DATA.meta.generated) {
+        parts.push(window.SR_DATA.meta.generated);
+      }
+      if (game.version) parts.push(t("gameVersion", { ver: game.version }));
+      if (game.build) parts.push(t("gameBuild", { build: game.build }));
+      const buildText = parts.join(" · ");
+      const build = document.getElementById("buildLine");
+      if (build) {
+        build.textContent = buildText;
+        build.title = buildText;
       }
     };
 
