@@ -12,7 +12,7 @@ The site is a zero-build static bundle. `docs/index.html` works when opened dire
 ## Requirements
 
 - Python 3.10 or newer
-- `UnityPy`, `TypeTreeGeneratorAPI` and `luaparser` (see `requirements.txt`) for asset extraction and script analysis
+- `UnityPy`, `TypeTreeGeneratorAPI`, `tree-sitter` and `tree-sitter-lua` (see `requirements.txt`) for asset extraction and script analysis
 - A local copy of the game for extraction (`MORTAL_GAME_DIR` or `--game`)
 - Node.js is only useful for `node --check` syntax checks during development
 
@@ -41,7 +41,7 @@ storyreader/
   manifest.py                extraction manifest and freshness checks
   wire.py                    schema constants and data entry names
   model.py                   domain dataclasses and cache codecs
-  lua/                       luaparser facade, clause walking and label rendering
+  lua/                       tree-sitter facade, clause walking and label rendering
   game/                      Unity asset access, scripts, locales, checkpoints, entries, lore, game info
   flow/                      story analyzer (statements, calls, expressions, state)
   build/                     chapters, facets, graph, sharding, rendering, word count, report

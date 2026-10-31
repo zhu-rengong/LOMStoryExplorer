@@ -37,37 +37,48 @@ _FX_OBJECTS = ("menudialogs", "mainui", "flowcharts", "getvar", "runblock", "run
 
 _LITERAL = re.compile(r'"([^"]*)"')
 
-
-def callee(expr: L.Call | L.Invoke) -> tuple[str, str]:
-    if isinstance(expr, L.Invoke):
-        return _receiver(expr.source), expr.func.id if isinstance(expr.func, L.Name) else L.text(expr.func)
-    func = expr.func
-    if isinstance(func, L.Name):
-        return "", func.id
-    if isinstance(func, L.Index):
-        key = L.index_key(func)
-        if key is not None:
-            receiver = _receiver(func.value)
-            if receiver:
-                return receiver, key
-    return "", L.text(func)
+_INDEX_KINDS = ("dot_index_expression", "bracket_index_expression")
 
 
-def _receiver(node: L.Expression) -> str:
-    if isinstance(node, L.Name):
-        return node.id
-    if isinstance(node, L.Index):
-        key = L.index_key(node)
-        if key is not None:
-            base = _receiver(node.value)
-            return f"{base}.{key}" if base else key
+def callee(expr: L.Node) -> tuple[str, str]:
+    name = expr.child_by_field_name("name")
+    if name is None:
+        return "", L.text(expr)
+    if name.type == "identifier":
+        return "", L.text(name)
+    if name.type == "method_index_expression":
+        return _receiver(name.child_by_field_name("table")), L.text(name.child_by_field_name("method"))
+    if name.type == "dot_index_expression":
+        receiver = _receiver(name.child_by_field_name("table"))
+        if receiver:
+            return receiver, L.text(name.child_by_field_name("field"))
+    return "", L.text(name)
+
+
+def _receiver(node: L.Node | None) -> str:
+    if node is None:
+        return ""
+    if node.type == "identifier":
+        return L.text(node)
+    if node.type == "dot_index_expression":
+        base = _receiver(node.child_by_field_name("table"))
+        key = L.text(node.child_by_field_name("field"))
+        return f"{base}.{key}" if base else key
+    if node.type == "method_index_expression":
+        base = _receiver(node.child_by_field_name("table"))
+        key = L.text(node.child_by_field_name("method"))
+        return f"{base}.{key}" if base else key
+    if node.type == "parenthesized_expression":
+        children = node.named_children
+        return _receiver(children[0]) if children else ""
     return L.text(node)
 
 
 def _saydialog_of(arg: Any) -> str:
-    if not isinstance(arg, L.Index):
+    if arg.type != "dot_index_expression":
         return ""
-    if isinstance(arg.value, L.Name) and arg.value.id == "saydialogs":
+    table = arg.child_by_field_name("table")
+    if table is not None and table.type == "identifier" and L.text(table) == "saydialogs":
         return L.index_key(arg) or ""
     return ""
 
@@ -76,9 +87,9 @@ class CallHandler:
     def __init__(self, flow: Any) -> None:
         self.flow = flow
 
-    def eval_call(self, expr: L.Call | L.Invoke, state: EvalState) -> Any:
+    def eval_call(self, expr: L.Node, state: EvalState) -> Any:
         obj, method = callee(expr)
-        args = expr.args
+        args = L.arguments(expr)
         if method == "GetStoryText" and args:
             key = as_text(self.flow.eval(args[0], state))
             return TextRef(key, keyed=True) if key else Unknown(L.text(expr))
@@ -96,16 +107,17 @@ class CallHandler:
             return Mark(method.lower(), key or L.text(expr))
         return Unknown(L.text(expr))
 
-    def handle_call(self, call: L.Call | L.Invoke, state: EvalState, beats: list[Any],
+    def handle_call(self, call: L.Node, state: EvalState, beats: list[Any],
                     label: str) -> dict[str, Any] | None:
         obj, method = callee(call)
-        args = call.args
+        args = L.arguments(call)
 
         for arg in args:
-            if isinstance(arg, L.Call | L.Invoke):
+            if arg.type == "function_call":
                 inner_obj, inner_method = callee(arg)
-                if inner_obj == "dicemenudialog" and inner_method == "ExecuteRoll" and arg.args:
-                    state.menu_options = self.option_list(self.flow.eval(arg.args[0], state))
+                inner_args = L.arguments(arg)
+                if inner_obj == "dicemenudialog" and inner_method == "ExecuteRoll" and inner_args:
+                    state.menu_options = self.option_list(self.flow.eval(inner_args[0], state))
 
         if method == "say" and not obj:
             self._say(state, args, beats)
@@ -119,7 +131,7 @@ class CallHandler:
 
         if method == "setsaydialog" and not obj:
             dialog = _saydialog_of(args[0]) if args else ""
-            if not dialog and args and isinstance(args[0], L.Index):
+            if not dialog and args and args[0].type in _INDEX_KINDS:
                 dialog = as_text(self.flow.eval(args[0], state)) or ""
             if dialog:
                 state.dialog = dialog
@@ -170,7 +182,7 @@ class CallHandler:
         self.flow.ctx.fx_count += 1
         return None
 
-    def _say(self, state: EvalState, args: Sequence[L.Expression], beats: list[Any]) -> None:
+    def _say(self, state: EvalState, args: Sequence[L.Node], beats: list[Any]) -> None:
         if not args:
             return
         value = self.flow.eval(args[0], state)
@@ -186,7 +198,7 @@ class CallHandler:
         beats.append(SayBeat(speaker, ref, mode))
         self.flow.ctx.say_count += 1
 
-    def stat_call(self, method: str, args: Sequence[L.Expression], state: EvalState,
+    def stat_call(self, method: str, args: Sequence[L.Node], state: EvalState,
                   beats: list[Any]) -> None:
         if not args:
             return
@@ -256,7 +268,7 @@ class CallHandler:
         else:
             self.flow.ctx.fx_count += 1
 
-    def emit_jump(self, method: str, args: Sequence[L.Expression], state: EvalState,
+    def emit_jump(self, method: str, args: Sequence[L.Node], state: EvalState,
                   beats: list[Any], label: str) -> None:
         target_expr = args[-1] if args else None
         kind = _JUMP_KINDS.get(method, "jump")
@@ -272,7 +284,7 @@ class CallHandler:
         beats.append(JumpBeat(target, ""))
         self.flow.ctx.add_edge(target, kind, label)
 
-    def emit_scene(self, args: Sequence[L.Expression], state: EvalState, beats: list[Any]) -> None:
+    def emit_scene(self, args: Sequence[L.Node], state: EvalState, beats: list[Any]) -> None:
         values = ["", "", ""]
         for index in range(min(len(args), 3)):
             values[index] = as_text(self.flow.eval(args[index], state)) or ""
@@ -330,24 +342,27 @@ class CallHandler:
     def branch_row(option: OptionDraft, sub: list[Any]) -> ChoiceOption:
         return ChoiceOption(option.ref, option.note, option.lock, tuple(sub))
 
-    def if_uses_choice(self, stmt: L.If, var: str) -> bool:
+    def if_uses_choice(self, stmt: L.Node, var: str) -> bool:
         for cond, _ in L.clauses(stmt):
             if cond is not None and self.choice_index(cond, var) is not None:
                 return True
         return False
 
     @staticmethod
-    def choice_index(cond: L.Expression, var: str) -> int | None:
-        if not isinstance(cond, L.BinaryOp) or L.operator(cond) != "==":
+    def choice_index(cond: L.Node, var: str) -> int | None:
+        if cond.type != "binary_expression" or L.operator(cond) != "==":
             return None
-        left, right = cond.left, cond.right
-        if isinstance(left, L.Name) and left.id == var and isinstance(right, L.Number):
-            return int(right.n)
-        if isinstance(right, L.Name) and right.id == var and isinstance(left, L.Number):
-            return int(left.n)
+        left = cond.child_by_field_name("left")
+        right = cond.child_by_field_name("right")
+        if left is None or right is None:
+            return None
+        if left.type == "identifier" and L.text(left) == var and right.type == "number":
+            return int(L.number_value(right))
+        if right.type == "identifier" and L.text(right) == var and left.type == "number":
+            return int(L.number_value(left))
         return None
 
-    def fill_choice(self, pending: dict[str, Any], stmt: L.If, state: EvalState,
+    def fill_choice(self, pending: dict[str, Any], stmt: L.Node, state: EvalState,
                     label: str, beats: list[Any]) -> None:
         option_map = {index: option for index, option in enumerate(pending["options"], start=1)}
         branches: list[ChoiceOption] = []

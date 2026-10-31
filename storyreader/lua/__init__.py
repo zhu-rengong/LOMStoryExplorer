@@ -1,190 +1,261 @@
 from __future__ import annotations
 
-from luaparser import ast
-from luaparser.astnodes import (
-    Assign,
-    BinaryOp,
-    Block,
-    Call,
-    Comment,
-    Do,
-    ElseIf,
-    Expression,
-    FalseExpr,
-    Field,
-    If,
-    Index,
-    IndexNotation,
-    Invoke,
-    LocalAssign,
-    Name,
-    Nil,
-    Node,
-    Number,
-    SemiColon,
-    Statement,
-    String,
-    Table,
-    TrueExpr,
-    UMinusOp,
-    UnaryOp,
-)
+from dataclasses import dataclass
 
-_OPERATORS = {
-    "AddOp": "+",
-    "SubOp": "-",
-    "MultOp": "*",
-    "FloatDivOp": "/",
-    "FloorDivOp": "//",
-    "ModOp": "%",
-    "ExpoOp": "^",
-    "Concat": "..",
-    "EqToOp": "==",
-    "NotEqToOp": "~=",
-    "LessThanOp": "<",
-    "GreaterThanOp": ">",
-    "LessOrEqThanOp": "<=",
-    "GreaterOrEqThanOp": ">=",
-    "AndLoOp": "and",
-    "OrLoOp": "or",
-    "BAndOp": "&",
-    "BOrOp": "|",
-    "BXorOp": "~",
-    "BShiftLOp": "<<",
-    "BShiftROp": ">>",
-    "UMinusOp": "-",
-    "UBNotOp": "~",
-    "ULNotOp": "not",
-    "ULengthOP": "#",
+import tree_sitter_lua
+from tree_sitter import Language, Node, Parser, Tree
+
+_LANGUAGE = Language(tree_sitter_lua.language())
+_PARSER = Parser(_LANGUAGE)
+
+_ESCAPES = {
+    "a": "\a",
+    "b": "\b",
+    "f": "\f",
+    "n": "\n",
+    "r": "\r",
+    "t": "\t",
+    "v": "\v",
+    "\\": "\\",
+    '"': '"',
+    "'": "'",
 }
 
+@dataclass(frozen=True)
+class Script:
+    source: bytes
+    tree: Tree
+    statements: list[Node]
 
-def parse(source: str) -> list[Statement]:
-    return statements(ast.parse(source).body)
+
+class LuaSyntaxError(Exception):
+    def __init__(self, line: int, column: int) -> None:
+        super().__init__(f"syntax error at line {line}, column {column}")
+        self.line = line
+        self.column = column
 
 
-def statements(block: Block | None) -> list[Statement]:
-    if block is None:
+def parse(source: str) -> Script:
+    data = source.encode("utf-8")
+    tree = _PARSER.parse(data)
+    root = tree.root_node
+    if root.has_error:
+        raise LuaSyntaxError(*_error_point(root))
+    return Script(data, tree, statements(root))
+
+
+def statements(node: Node | None) -> list[Node]:
+    if node is None or node.type not in ("chunk", "block"):
         return []
-    return [stmt for stmt in block.body if not isinstance(stmt, (SemiColon, Comment))]
+    return [child for child in node.named_children
+            if child.type not in ("comment", "hash_bang_line")]
 
 
-def clauses(node: If | ElseIf) -> list[tuple[Expression | None, list[Statement]]]:
-    result: list[tuple[Expression | None, list[Statement]]] = []
-    current: Node | None = node
-    while isinstance(current, If | ElseIf):
-        result.append((current.test, statements(current.body)))
-        current = current.orelse
-    if isinstance(current, Block):
-        result.append((None, statements(current)))
+def clauses(node: Node) -> list[tuple[Node | None, list[Node]]]:
+    result: list[tuple[Node | None, list[Node]]] = [
+        (node.child_by_field_name("condition"), statements(node.child_by_field_name("consequence"))),
+    ]
+    for alternative in node.children_by_field_name("alternative"):
+        if alternative.type == "elseif_statement":
+            result.append((alternative.child_by_field_name("condition"),
+                           statements(alternative.child_by_field_name("consequence"))))
+        else:
+            result.append((None, statements(alternative.child_by_field_name("body"))))
     return result
 
 
-def index_key(node: Index) -> str | None:
-    if isinstance(node.idx, Name) and node.notation == IndexNotation.DOT:
-        return node.idx.id
-    if isinstance(node.idx, String):
-        return string_value(node.idx)
+def local_declaration(node: Node) -> tuple[list[Node], list[Node]]:
+    for child in node.named_children:
+        if child.type == "assignment_statement":
+            return assignment(child)
+        if child.type == "variable_list":
+            return _items(child), []
+    return [], []
+
+
+def assignment(node: Node) -> tuple[list[Node], list[Node]]:
+    targets: list[Node] = []
+    values: list[Node] = []
+    for child in node.named_children:
+        if child.type == "variable_list":
+            targets = _items(child)
+        elif child.type == "expression_list":
+            values = _items(child)
+    return targets, values
+
+
+def arguments(call: Node) -> list[Node]:
+    return _items(call.child_by_field_name("arguments"))
+
+
+def index_key(node: Node) -> str | None:
+    field = node.child_by_field_name("field")
+    if field is None:
+        return None
+    if node.type == "dot_index_expression":
+        return _text(field)
+    if field.type == "string":
+        return string_value(field)
     return None
 
 
-def field_key(field: Field) -> str | None:
-    key = field.key
-    if isinstance(key, Name) and not field.between_brackets:
-        return key.id
-    if isinstance(key, String):
-        return string_value(key)
-    return None
+def field_has_key(field: Node) -> bool:
+    return field.child_by_field_name("name") is not None
 
 
-def string_value(node: String) -> str:
-    value = node.s
-    if isinstance(value, bytes):
+def field_key(field: Node) -> str | None:
+    name = field.child_by_field_name("name")
+    if name is None:
+        return None
+    if field.children and field.children[0].type == "[":
+        return string_value(name) if name.type == "string" else None
+    return _text(name)
+
+
+def string_value(node: Node) -> str:
+    content = node.child_by_field_name("content")
+    if content is None:
+        return ""
+    start = node.child_by_field_name("start")
+    raw = content.text
+    if start is not None and start.type == "[[":
+        value = raw.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
+        return value[1:] if value.startswith("\n") else value
+    return _unescape(raw.decode("utf-8"))
+
+
+def number_value(node: Node) -> int | float:
+    raw = _text(node).rstrip("iI")
+    if raw[-2:].lower() == "ll":
+        raw = raw[:-2]
+    if raw[:2].lower() == "0x":
         try:
-            return value.decode("utf-8")
-        except UnicodeDecodeError:
-            return node.raw
-    return value
+            return int(raw, 16)
+        except ValueError:
+            return float.fromhex(raw)
+    if raw[:2].lower() == "0b":
+        return int(raw[2:], 2)
+    try:
+        return int(raw, 10)
+    except ValueError:
+        return float(raw)
 
 
-def operator(node: BinaryOp | UnaryOp) -> str:
-    return _OPERATORS.get(type(node).__name__, "")
+def operator(node: Node) -> str:
+    token = node.child_by_field_name("operator")
+    return token.type if token is not None else ""
 
 
 def text(node: Node | None) -> str:
     if node is None:
         return ""
-    if isinstance(node, String):
+    kind = node.type
+    if kind == "string":
         return '"' + string_value(node).replace('"', '\\"') + '"'
-    if isinstance(node, Number):
-        return _number_text(node.n)
-    if isinstance(node, Nil):
-        return "nil"
-    if isinstance(node, TrueExpr):
-        return "true"
-    if isinstance(node, FalseExpr):
-        return "false"
-    if isinstance(node, Name):
-        return node.id
-    if isinstance(node, Index):
-        key = index_key(node)
-        if key is not None and isinstance(node.idx, Name):
-            return f'{text(node.value)}["{key}"]'
-        return f"{text(node.value)}[{text(node.idx)}]"
-    if isinstance(node, Invoke):
-        return f"{text(node.source)}:{text(node.func)}({_arguments(node.args)})"
-    if isinstance(node, Call):
-        return f"{text(node.func)}({_arguments(node.args)})"
-    if isinstance(node, Table):
+    if kind in ("number", "identifier", "true", "false", "nil"):
+        return _text(node)
+    if kind == "dot_index_expression":
+        return f'{text(node.child_by_field_name("table"))}["{_text(node.child_by_field_name("field"))}"]'
+    if kind == "bracket_index_expression":
+        return f"{text(node.child_by_field_name('table'))}[{text(node.child_by_field_name('field'))}]"
+    if kind == "method_index_expression":
+        return f"{text(node.child_by_field_name('table'))}:{_text(node.child_by_field_name('method'))}"
+    if kind == "function_call":
+        return f"{text(node.child_by_field_name('name'))}({_arguments(node)})"
+    if kind == "table_constructor":
         return "{...}"
-    if isinstance(node, UnaryOp):
-        op = operator(node)
-        return f"{op}{text(node.operand)}" if op else type(node).__name__
-    if isinstance(node, BinaryOp):
-        op = operator(node)
-        return f"{text(node.left)} {op} {text(node.right)}" if op else type(node).__name__
-    return type(node).__name__
+    if kind == "binary_expression":
+        return (f"{text(node.child_by_field_name('left'))} {operator(node)} "
+                f"{text(node.child_by_field_name('right'))}")
+    if kind == "unary_expression":
+        return f"{operator(node)}{text(node.child_by_field_name('operand'))}"
+    if kind == "parenthesized_expression":
+        children = node.named_children
+        return text(children[0]) if children else "()"
+    if kind == "comment":
+        return ""
+    return _text(node)
 
 
-def _arguments(args: list[Expression]) -> str:
-    return ", ".join(text(arg) for arg in args)
+def _arguments(call: Node) -> str:
+    return ", ".join(text(arg) for arg in arguments(call))
 
 
-def _number_text(value: int | float) -> str:
-    number = float(value)
-    return str(int(number)) if number.is_integer() else str(number)
+def _items(node: Node | None) -> list[Node]:
+    if node is None:
+        return []
+    return [child for child in node.named_children if child.type != "comment"]
+
+
+def _text(node: Node | None) -> str:
+    return node.text.decode("utf-8") if node is not None else ""
+
+
+def _error_point(node: Node) -> tuple[int, int]:
+    for child in node.children:
+        if child.type == "ERROR" or child.is_missing:
+            row, column = child.start_point
+            return row + 1, column + 1
+        if child.has_error:
+            return _error_point(child)
+    row, column = node.start_point
+    return row + 1, column + 1
+
+
+def _unescape(raw: str) -> str:
+    out = bytearray()
+    index = 0
+    size = len(raw)
+    while index < size:
+        char = raw[index]
+        if char != "\\" or index + 1 >= size:
+            out.extend(char.encode("utf-8"))
+            index += 1
+            continue
+        nxt = raw[index + 1]
+        if nxt in _ESCAPES:
+            out.extend(_ESCAPES[nxt].encode("utf-8"))
+            index += 2
+            continue
+        if nxt.isdigit():
+            cursor = index + 1
+            while cursor < size and cursor < index + 4 and raw[cursor].isdigit():
+                cursor += 1
+            out.append(int(raw[index + 1:cursor]) & 0xFF)
+            index = cursor
+            continue
+        if nxt == "x" and index + 3 < size:
+            out.append(int(raw[index + 2:index + 4], 16))
+            index += 4
+            continue
+        if nxt == "u" and raw.startswith("u{", index + 1):
+            end = raw.find("}", index + 3)
+            if end >= 0:
+                out.extend(chr(int(raw[index + 3:end], 16)).encode("utf-8"))
+                index = end + 1
+                continue
+        if nxt == "z":
+            index += 2
+            while index < size and raw[index].isspace():
+                index += 1
+            continue
+        out.extend(nxt.encode("utf-8"))
+        index += 2
+    return out.decode("utf-8", "replace")
 
 
 __all__ = [
-    "Assign",
-    "BinaryOp",
-    "Block",
-    "Call",
-    "Comment",
-    "Do",
-    "ElseIf",
-    "Expression",
-    "FalseExpr",
-    "Field",
-    "If",
-    "Index",
-    "IndexNotation",
-    "Invoke",
-    "LocalAssign",
-    "Name",
-    "Nil",
+    "LuaSyntaxError",
     "Node",
-    "Number",
-    "SemiColon",
-    "Statement",
-    "String",
-    "Table",
-    "TrueExpr",
-    "UMinusOp",
-    "UnaryOp",
+    "Script",
+    "arguments",
+    "assignment",
     "clauses",
+    "field_has_key",
     "field_key",
     "index_key",
+    "local_declaration",
+    "number_value",
     "operator",
     "parse",
     "statements",
