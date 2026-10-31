@@ -3,9 +3,7 @@
 
   const SR = window.SR;
 
-  const KEY = "legend-of-mortal.reader.prefs.v2";
-  const LEGACY_SETTINGS = "legend-of-mortal.story-reader.settings.v1";
-  const LEGACY_THEME = "legend-of-mortal.story-reader.theme.v1";
+  const KEY = "legend-of-mortal.explorer.prefs.v1";
 
   const SERIF = '"Source Han Serif TC","Noto Serif TC","Songti TC","Songti SC","STSong",Georgia,"SimSun",serif';
   const SANS = '"PingFang TC","PingFang SC","Source Han Sans TC","Noto Sans TC","Microsoft JhengHei","Microsoft YaHei",system-ui,sans-serif';
@@ -218,33 +216,6 @@
     };
   };
 
-  const readLegacy = () => {
-    const out = {};
-    try {
-      const raw = localStorage.getItem(LEGACY_SETTINGS);
-      const saved = raw ? JSON.parse(raw) : null;
-      if (saved && typeof saved === "object") {
-        if (typeof saved.reading === "string") out.reading = saved.reading;
-        if (typeof saved.readingCustom === "string") out.readingCustom = saved.readingCustom;
-        if (typeof saved.ui === "string") out.ui = saved.ui;
-        if (typeof saved.uiCustom === "string") out.uiCustom = saved.uiCustom;
-        if (saved.scale !== undefined) out.scale = saved.scale;
-        if (saved.leading !== undefined) out.leading = saved.leading;
-        if (saved.measure !== undefined) out.measure = saved.measure;
-        if (saved.types) out.types = saved.types;
-      }
-    } catch {
-      out.broken = true;
-    }
-    try {
-      const mode = localStorage.getItem(LEGACY_THEME);
-      if (THEMES.indexOf(mode) >= 0) out.theme = mode;
-    } catch {
-      out.broken = true;
-    }
-    return out;
-  };
-
   const restore = () => {
     restoreDefaults();
     let saved = null;
@@ -253,7 +224,7 @@
     } catch {
       saved = null;
     }
-    const source = saved && typeof saved === "object" ? saved : readLegacy();
+    const source = saved && typeof saved === "object" ? saved : {};
     if (typeof source.theme === "string" && THEMES.indexOf(source.theme) >= 0) state.theme = source.theme;
     if (typeof source.reading === "string") state.reading = source.reading;
     if (typeof source.readingCustom === "string") state.readingCustom = source.readingCustom;

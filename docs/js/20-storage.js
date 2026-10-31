@@ -4,13 +4,9 @@
   const SR = window.SR;
 
   SR.define("storage", [], () => {
-    const SESSION_KEY = "legend-of-mortal.reader.session.v2";
-    const BOOKMARK_KEY = "legend-of-mortal.reader.bookmarks.v2";
-    const POSITION_KEY = "legend-of-mortal.reader.positions.v2";
-
-    const LEGACY_SESSION = "legend-of-mortal.story-graph.v1";
-    const LEGACY_BOOKMARKS = "legend-of-mortal.story-reader.bookmarks.v1";
-    const LEGACY_POSITIONS = "legend-of-mortal.story-reader.progress.v1";
+    const SESSION_KEY = "legend-of-mortal.explorer.session.v1";
+    const BOOKMARK_KEY = "legend-of-mortal.explorer.bookmarks.v1";
+    const POSITION_KEY = "legend-of-mortal.explorer.positions.v1";
 
     const LIMIT = 500;
 
@@ -32,7 +28,7 @@
     };
 
     const readSession = () => {
-      const saved = read(SESSION_KEY) || read(LEGACY_SESSION);
+      const saved = read(SESSION_KEY);
       if (!saved || typeof saved !== "object") return null;
       return {
         lang: typeof saved.lang === "string" ? saved.lang : "",
@@ -56,10 +52,9 @@
     const bookmarks = new Set();
 
     const loadBookmarks = () => {
-      const saved = read(BOOKMARK_KEY) || read(LEGACY_BOOKMARKS);
-      if (!saved) return bookmarks;
-      const ids = Array.isArray(saved) ? saved : Array.isArray(saved.ids) ? saved.ids : [];
-      for (const id of ids) if (typeof id === "string") bookmarks.add(id);
+      const saved = read(BOOKMARK_KEY);
+      if (!Array.isArray(saved)) return bookmarks;
+      for (const id of saved) if (typeof id === "string") bookmarks.add(id);
       return bookmarks;
     };
 
@@ -68,9 +63,9 @@
     const positions = new Map();
 
     const loadPositions = () => {
-      const saved = read(POSITION_KEY) || read(LEGACY_POSITIONS);
+      const saved = read(POSITION_KEY);
       const map = saved && typeof saved === "object" && !Array.isArray(saved)
-        ? (saved.pos && typeof saved.pos === "object" ? saved.pos : saved)
+        ? (saved.pos && typeof saved.pos === "object" ? saved.pos : {})
         : {};
       for (const id of Object.keys(map)) {
         const value = Number(map[id]);

@@ -35,7 +35,7 @@ try {
     python @extractArgs
     if ($LASTEXITCODE -ne 0) { throw "extract.py failed (exit code $LASTEXITCODE)" }
 
-    Write-Host "`n== build reader data ==" -ForegroundColor Cyan
+    Write-Host "`n== build explorer data ==" -ForegroundColor Cyan
     python "build.py" "--langs" $Langs
     if ($LASTEXITCODE -ne 0) { throw "build.py failed (exit code $LASTEXITCODE)" }
 
@@ -45,7 +45,7 @@ try {
     Write-Host "`n== done ==" -ForegroundColor Green
     Write-Host ("report: {0}" -f (Join-Path $root "data" "report.json"))
     if (-not $NoBrowser) {
-        Write-Host "opening the reader..."
+        Write-Host "opening the explorer..."
         Start-Process $index
     } else {
         Write-Host ("open manually: {0}" -f $index)
