@@ -1,6 +1,6 @@
-# StoryReader
+# StoryExplorer
 
-Offline reader and search tool for the story scripts of *Legend of Mortal*.
+Offline explorer and search tool for the story scripts of *Legend of Mortal*.
 
 The repository contains two halves:
 
@@ -34,7 +34,7 @@ Generated data is ignored by git. Publish the site with `tools/publish-pages.ps1
 
 ```text
 extract.py / build.py        thin command line entry points
-storyreader/
+storyexplorer/
   config.py                  paths, versions, limits, game layout
   console.py                 reporter, diagnostics, exit codes
   cache.py                   atomic writes, JSON/gzip envelopes, fingerprints
