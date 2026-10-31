@@ -11,6 +11,8 @@
       let active = 0;
       let timer = null;
       let lastQuery = "";
+      let warming = null;
+      let warmingLang = "";
 
       const scoped = () => store.state.chapterFilter.size > 0 || !!store.state.filterSet;
 
@@ -92,9 +94,13 @@
         renderScope(frag);
 
         if (!hits.length) {
+          const progress = text.progress(store.state.lang);
+          const loading = query.length >= 2 && !progress.done;
           frag.appendChild(ui.el("div", "drop-empty popover-empty",
-            i18n.t(scoped() ? "searchNoHit" : "searchEmpty")));
-          if (scoped() && query.length >= 2) {
+            loading
+              ? i18n.t("searchLoadingText", { loaded: progress.loaded, total: progress.total })
+              : i18n.t(scoped() ? "searchNoHit" : "searchEmpty")));
+          if (!loading && scoped() && query.length >= 2) {
             const outside = search.countOutside(query);
             if (outside > 0) {
               const more = ui.el("div", "drop-empty popover-empty");
@@ -138,6 +144,31 @@
         return hits.length;
       };
 
+      const warmFullText = (lang) => {
+        if (warming && warmingLang === lang) return warming;
+        warmingLang = lang;
+        const chain = text.ensureAll(lang, (loaded, total) => {
+          ui.progress(i18n.t("searchLoadingText", { loaded, total }));
+        }).then(() => {
+          if (warming === chain) {
+            warming = null;
+            warmingLang = "";
+          }
+          search.invalidate();
+          ui.progress("");
+          const input = $("search");
+          if (input && input.value.trim()) run();
+        }).catch(() => {
+          if (warming === chain) {
+            warming = null;
+            warmingLang = "";
+          }
+          ui.progress("");
+        });
+        warming = chain;
+        return chain;
+      };
+
       const perform = () => {
         const input = $("search");
         if (!input) return;
@@ -145,13 +176,7 @@
         run();
         if (query.length < 2 || text.progress(store.state.lang).done) return;
         ui.progress(i18n.t("searchLoadingText", { loaded: 0, total: 0 }));
-        text.ensureAll(store.state.lang, (loaded, total) => {
-          ui.progress(i18n.t("searchLoadingText", { loaded, total }));
-        }).then(() => {
-          search.invalidate();
-          ui.progress("");
-          if (input.value.trim() === query) run();
-        });
+        warmFullText(store.state.lang);
       };
 
       const onInput = () => {
@@ -180,7 +205,7 @@
         if (!input || !box) return;
         input.addEventListener("input", onInput);
         input.addEventListener("focus", () => {
-          if (input.value.trim()) run();
+          if (input.value.trim()) perform();
         });
         input.addEventListener("keydown", (event) => {
           if (event.key === "Escape") {
@@ -213,6 +238,7 @@
           },
           placement: { align: "start", gap: 8, matchWidth: true, fit: true },
         });
+        if (input.value.trim()) perform();
       };
 
       return {
