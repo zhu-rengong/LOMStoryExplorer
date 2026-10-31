@@ -529,9 +529,7 @@
 .lore-text .lore-p + .lore-p { margin-top: .45em; }
 
 .scene-switch,
-.jump,
-.chip-stat,
-.meta-action {
+.chip-stat {
   border: 1px solid transparent;
   border-radius: var(--r-sm);
   background: var(--surface-2);
@@ -575,16 +573,9 @@
   height: auto;
   margin: 0 0 var(--rd-gap-3);
   padding: 3px 8px;
-  color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
   line-height: 1.7;
-}
-
-.btn.jump:hover {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
 }
 
 .jump .arrow { color: var(--accent); }
@@ -635,24 +626,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.meta-action {
-  gap: 4px;
-  height: auto;
-  min-height: 22px;
-  padding: 2px 7px;
-  font-family: var(--rd-font-label, var(--font-mono));
-  font-size: var(--rd-fs-label, var(--fs-xs));
-  font-weight: var(--rd-w-label, 400);
-  line-height: 1.6;
-  letter-spacing: 0;
-}
-
-.btn.meta-action:hover {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
 }
 
 .is-flash {

@@ -25,6 +25,8 @@
   gap: var(--sp-2);
 }
 
+.filter-row .btn { height: 38px; }
+
 .filter-input-wrap {
   position: relative;
   flex: 1;
@@ -378,26 +380,6 @@
   flex-wrap: wrap;
   gap: 4px;
   margin-bottom: var(--sp-3);
-}
-
-.type-tab {
-  height: 28px;
-  padding: 0 9px;
-  border: 1px solid transparent;
-  border-radius: var(--r-sm);
-  background: transparent;
-  color: var(--ink-3);
-  font-family: var(--font-ui);
-  font-size: var(--fs-xs);
-  letter-spacing: .02em;
-}
-
-.type-tab:hover { background: var(--surface-hover); color: var(--ink); }
-
-.type-tab.is-on {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
 }
 
 .type-panel { padding-top: 2px; }

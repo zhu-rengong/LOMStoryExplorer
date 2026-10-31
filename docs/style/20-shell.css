@@ -166,15 +166,7 @@
   height: 40px;
   padding: 0 var(--sp-3);
   gap: var(--sp-2);
-  border: 1px solid var(--line-1);
-  border-radius: var(--r-md);
-  background: var(--surface);
-  color: var(--ink-2);
-}
-
-.filter-btn:hover {
-  border-color: var(--line-2);
-  color: var(--ink);
+  font-size: var(--fs-xs);
 }
 
 .filter-btn[aria-expanded="true"] {
@@ -248,42 +240,15 @@
 .rail-tabs.tabs {
   flex: none;
   display: flex;
-  gap: var(--sp-4);
+  gap: var(--sp-2);
   margin: 0;
   padding: 0 var(--sp-5);
   border: 0;
-  border-bottom: 1px solid var(--line-1);
-  border-radius: 0;
   background: transparent;
   overflow: visible;
 }
 
-.rail-tabs .rail-tab {
-  position: relative;
-  flex: none;
-  height: 38px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink-3);
-  font-family: var(--font-ui);
-  font-size: var(--fs-sm);
-  letter-spacing: .12em;
-}
-
-.rail-tabs .rail-tab:hover { color: var(--ink); }
-
-.rail-tabs .rail-tab.is-on { color: var(--ink); }
-
-.rail-tabs .rail-tab.is-on::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 2px;
-  background: var(--accent);
-}
+.rail-tabs .rail-tab { flex: none; }
 
 .rail-search {
   position: relative;
