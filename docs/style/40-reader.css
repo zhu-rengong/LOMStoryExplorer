@@ -534,8 +534,9 @@
   max-width: 100%;
   margin: 0 0 var(--rd-gap-3);
   padding: 3px 8px;
-  font-family: var(--font-mono);
-  font-size: var(--fs-xs);
+  font-family: var(--rd-font-label, var(--font-mono));
+  font-size: var(--rd-fs-label, var(--fs-xs));
+  font-weight: var(--rd-w-label, 400);
   line-height: 1.7;
   letter-spacing: .04em;
   user-select: none;
@@ -562,8 +563,9 @@
   height: auto;
   margin: 0 0 var(--rd-gap-3);
   padding: 3px 8px;
-  font-family: var(--font-mono);
-  font-size: var(--fs-xs);
+  font-family: var(--rd-font-label, var(--font-mono));
+  font-size: var(--rd-fs-label, var(--fs-xs));
+  font-weight: var(--rd-w-label, 400);
   line-height: 1.7;
 }
 
@@ -615,6 +617,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.meta-action {
+  height: auto;
+  min-height: 22px;
+  padding: 2px 7px;
+  font-family: var(--rd-font-label, var(--font-mono));
+  font-size: var(--rd-fs-label, var(--fs-xs));
+  font-weight: var(--rd-w-label, 400);
+  line-height: 1.6;
+  letter-spacing: 0;
 }
 
 .is-flash {
