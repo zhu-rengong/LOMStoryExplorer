@@ -319,7 +319,7 @@
 
         const flushDice = () => {
           if (!diceButtons.length) return;
-          const group = ui.el("div", "meta-group");
+          const group = ui.el("div", "meta-group is-dice");
           const chips = ui.el("div", "meta-chips");
           diceButtons.forEach((chip) => chips.appendChild(chip));
           diceButtons = [];

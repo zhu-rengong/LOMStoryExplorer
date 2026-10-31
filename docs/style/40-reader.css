@@ -299,7 +299,7 @@
   position: relative;
   isolation: isolate;
   margin: var(--rd-gap-3) 0 var(--rd-gap-4);
-  padding-left: var(--sp-4);
+  padding-left: 18px;
 }
 
 .branch-group > .branch { margin: 0; }
@@ -324,7 +324,7 @@
   top: 0;
   bottom: 0;
   right: 0;
-  left: -11px;
+  left: -13px;
   z-index: -1;
   background-image: linear-gradient(135deg, var(--accent-mist) 0%, transparent 100%);
   -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 25%, #000 75%, transparent 100%);
@@ -658,6 +658,8 @@
   display: block;
   margin: 0 0 var(--rd-gap-3);
 }
+
+.meta-group.is-dice { padding-left: 18px; }
 
 .meta-chips {
   display: flex;

@@ -159,8 +159,6 @@ body[data-layout="mobile"] .say.narration { width: 100%; }
 
 body[data-layout="mobile"] .option-body { padding-left: var(--sp-4); }
 
-body[data-layout="mobile"] .branch-group { padding-left: var(--sp-3); }
-
 body[data-layout="mobile"] .empty-state h3 { font-size: 22px; }
 
 body[data-layout="mobile"] .empty-state .brush { width: 64px; height: 64px; font-size: 30px; }
