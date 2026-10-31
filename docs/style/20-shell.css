@@ -169,12 +169,6 @@
   font-size: var(--fs-xs);
 }
 
-.filter-btn[aria-expanded="true"] {
-  border-color: var(--accent-line);
-  background: var(--accent-soft);
-  color: var(--accent-strong);
-}
-
 .filter-btn .ico { width: 15px; height: 15px; }
 
 .filter-btn .badge { margin-left: -2px; }
