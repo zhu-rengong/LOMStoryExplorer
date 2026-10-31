@@ -92,7 +92,7 @@
 
 .filter-status.is-error { color: var(--danger); }
 
-.filter-status.is-ok { color: var(--ink-2); }
+.filter-status.is-ok { color: var(--ok); }
 
 .filter-section { margin-top: var(--sp-4); }
 
@@ -193,6 +193,7 @@
   border: 0;
   border-left: 1px solid var(--line-1);
   border-radius: 0;
+  box-shadow: var(--shadow-float);
   animation: slide-in var(--t-slow) var(--ease);
 }
 
@@ -377,7 +378,7 @@
   padding: var(--sp-4);
   border: 1px solid var(--line-1);
   border-radius: var(--r-sm);
-  background: var(--surface);
+  background: var(--surface-inset);
 }
 
 .prev-line {
@@ -644,7 +645,7 @@
   padding: var(--sp-3);
   border: 1px solid var(--line-1);
   border-radius: var(--r-sm);
-  background: var(--surface);
+  background: var(--surface-inset);
 }
 
 .lookup-cond-title {
@@ -724,7 +725,7 @@
   padding: 0 5px;
   border: 1px solid transparent;
   border-radius: var(--r-sm);
-  background: var(--surface);
+  background: var(--surface-inset);
   color: var(--ink-2);
   font-size: var(--fs-micro);
   line-height: 1.7;
@@ -849,6 +850,7 @@
   color: var(--ink-2);
   font-size: var(--fs-sm);
   letter-spacing: .03em;
+  box-shadow: var(--shadow-float);
   animation: fade-in var(--t-slow) var(--ease);
 }
 
@@ -866,6 +868,7 @@
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
   letter-spacing: .06em;
+  box-shadow: var(--shadow-float);
   pointer-events: none;
 }
 
@@ -880,6 +883,7 @@
   max-height: 86vh;
   overflow: hidden;
   transform: translate(-50%, -50%);
+  box-shadow: var(--shadow-float);
   animation: fade-in var(--t-base) var(--ease);
 }
 

@@ -33,7 +33,7 @@
   margin-bottom: var(--sp-3);
   border: 1px solid var(--accent);
   border-radius: var(--r-sm);
-  background: var(--surface);
+  background: var(--surface-inset);
   color: var(--accent);
   font-family: var(--font-display);
   font-size: 40px;
@@ -200,12 +200,12 @@
   gap: var(--sp-3);
   width: 100%;
   padding: 13px 4px;
-  border-radius: 0;
+  border-radius: var(--r-sm);
   background: transparent;
   color: var(--ink-2);
   font-size: var(--rd-fs-option, var(--rd-fs-sm));
   text-align: left;
-  transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+  transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
 }
 
 .option-head:hover { background: transparent; color: var(--ink); }
@@ -412,7 +412,7 @@
 .cx-gtag {
   border: 1px solid transparent;
   border-radius: var(--r-sm);
-  background: var(--surface);
+  background: var(--surface-inset);
 }
 
 .cx-var {
@@ -455,7 +455,7 @@
   text-underline-offset: 3px;
 }
 
-.cx-var.is-link:active { background: var(--surface); }
+.cx-var.is-link:active { border-color: var(--accent-strong); }
 
 .cx-group {
   display: inline-flex;
@@ -483,6 +483,7 @@
   padding: 0 6px;
   border: 1px dashed var(--line-2);
   border-radius: var(--r-sm);
+  background: var(--surface-inset);
   color: var(--ink-2);
   font-family: var(--font-mono);
   letter-spacing: .04em;
@@ -499,7 +500,7 @@
   padding: var(--sp-4) var(--sp-5);
   border: 1px solid var(--line-1);
   border-radius: var(--r-sm);
-  background: var(--surface);
+  background: var(--surface-inset);
 }
 
 .lore-text .lore-p {
@@ -518,7 +519,7 @@
 .chip-stat {
   border: 1px solid transparent;
   border-radius: var(--r-sm);
-  background: var(--surface);
+  background: var(--surface-inset);
   color: var(--ink-2);
 }
 
@@ -642,7 +643,7 @@
 
 .reader-skeleton.is-failed .sk-line { display: none; }
 
-.reader-skeleton.is-failed .sk-caption { color: var(--accent); }
+.reader-skeleton.is-failed .sk-caption { color: var(--danger); }
 
 .reader-skeleton.is-failed .btn { align-self: flex-start; }
 

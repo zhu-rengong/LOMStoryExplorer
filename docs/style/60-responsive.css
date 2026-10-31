@@ -67,6 +67,7 @@ body[data-layout="mobile"] #chapterRail {
   width: min(340px, 86vw);
   background: var(--surface);
   border-right: 1px solid var(--line-1);
+  box-shadow: var(--shadow-float);
   transform: translateX(-101%);
   transition: transform var(--t-slow) var(--ease);
 }

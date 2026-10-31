@@ -2,6 +2,7 @@
   color-scheme: light;
 
   --surface: #FBF7EB;
+  --surface-inset: #F6F0E0;
 
   --ink: #1B1A15;
   --ink-2: #454037;
@@ -19,6 +20,10 @@
   --on-seal: #FBF3E6;
 
   --danger: #9B3A29;
+  --ok: #4E6B46;
+  --warn: #7E5F1A;
+
+  --shadow-float: 0 6px 20px -10px rgba(27, 26, 21, .22);
 
   --scrim: rgba(27, 26, 21, .38);
   --scrim-soft: rgba(27, 26, 21, .18);

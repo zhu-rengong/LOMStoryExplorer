@@ -106,7 +106,7 @@ kbd {
   border: 1px solid var(--line-2);
   border-bottom-width: 2px;
   border-radius: var(--r-sm);
-  background: var(--surface);
+  background: var(--surface-inset);
   color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--fs-micro);

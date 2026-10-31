@@ -125,7 +125,7 @@
   padding: 0 34px 0 38px;
   border: 1px solid var(--line-1);
   border-radius: var(--r-sm);
-  background: var(--surface);
+  background: var(--surface-inset);
   color: var(--ink-2);
   font-family: var(--font-ui);
   font-size: var(--fs-xs);
@@ -144,7 +144,7 @@
   padding: 0 4px;
   border: 1px solid var(--line-1);
   border-radius: var(--r-sm);
-  background: var(--surface);
+  background: var(--surface-inset);
   color: var(--ink-2);
   font-family: var(--font-mono);
   font-size: var(--fs-micro);
@@ -329,7 +329,7 @@
 
 .rail-item .ri-entry.is-combat { background: var(--danger); }
 
-.rail-item .ri-entry.is-free { background: var(--ink-2); }
+.rail-item .ri-entry.is-free { background: var(--ok); }
 
 .rail-item .ri-del {
   position: absolute;
