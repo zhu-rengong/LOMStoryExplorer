@@ -397,6 +397,58 @@ def _dice_label(addition: dict[str, Any], locale: dict[str, Any]) -> str:
     return ""
 
 
+VAR_NAMESPACE = {1: "PlayerStat", 2: "Character", 3: "Flag", 4: "Book", 5: "Misc",
+                 6: "Special", 10: "PlayerTalent", 15: "Library"}
+VAR_NAME_PREFIX = {3: "Name/", 4: "Name/", 5: "Name/", 6: "Name/", 10: "Name/", 15: "Title/"}
+VAR_ID_KEYS = frozenset({4, 5, 6, 10, 15})
+VAR_RAW_KEYS = frozenset({3})
+
+
+def _var_label(node: dict[str, Any], locale: dict[str, Any]) -> str:
+    kind = node.get("type")
+    namespace = VAR_NAMESPACE.get(kind)
+    if namespace is None:
+        return ""
+    table = locale.get(namespace) or {}
+    if not isinstance(table, dict):
+        return ""
+    prefix = VAR_NAME_PREFIX.get(kind, "")
+    name = str(node.get("name") or "")
+    keys: list[str] = []
+    if kind in VAR_ID_KEYS:
+        ident = str(node.get("id") or "")
+        if ident:
+            keys.append(prefix + ident)
+    elif kind in VAR_RAW_KEYS:
+        keys.append(prefix + name)
+    else:
+        segments = _name_segments(name)
+        for index in range(len(segments)):
+            keys.append(prefix + "-".join(segments[index:]))
+    for key in keys:
+        value = table.get(key)
+        if value:
+            return str(value)
+    return ""
+
+
+def _localize_expr(node: Any, locales: dict[str, dict[str, Any]]) -> None:
+    if not isinstance(node, dict):
+        return
+    if node.get("tag") == "var":
+        labels: dict[str, str] = {}
+        for lang, locale in locales.items():
+            label = _var_label(node, locale)
+            if label:
+                labels[lang] = label
+        if labels:
+            node["label"] = labels
+    for key in ("left", "right"):
+        _localize_expr(node.get(key), locales)
+    for item in node.get("items") or []:
+        _localize_expr(item, locales)
+
+
 def _localize_model(model: dict[str, Any], locales: dict[str, dict[str, Any]]) -> None:
     for addition in model.get("additions") or []:
         if not isinstance(addition, dict):
@@ -408,6 +460,9 @@ def _localize_model(model: dict[str, Any], locales: dict[str, dict[str, Any]]) -
                 labels[lang] = label
         if labels:
             addition["label"] = labels
+    for branch in model.get("branches") or []:
+        if isinstance(branch, dict):
+            _localize_expr(branch.get("expr"), locales)
     for variant in model.get("variants") or []:
         if isinstance(variant, dict):
             _localize_model(variant, locales)

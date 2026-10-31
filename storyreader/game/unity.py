@@ -90,38 +90,76 @@ def fingerprint(base_dir: Path) -> str:
 
 class Deref:
     def __init__(self, env: Any, local: dict[int, Any], serialized: Any,
-                 base_dir: Path, adapter: Any) -> None:
+                 base_dir: Path, adapter: Any, store: dict[Any, Any] | None = None) -> None:
         self.env = env
+        self.local = local
+        self.serialized = serialized
         self.base_dir = Path(base_dir)
         self.adapter = adapter
         self.externals = list(getattr(serialized, "externals", []) or [])
-        self.cache: dict[int, dict[int, Any]] = {0: local}
+        self.store: dict[Any, Any] = store if store is not None else {}
+        self.children: dict[int, Deref] = {}
+        self.store.setdefault(self.key(serialized), (env, serialized, local))
 
-    def _objects(self, file_id: int) -> dict[int, Any]:
-        if file_id in self.cache:
-            return self.cache[file_id]
-        table: dict[int, Any] = {}
+    @staticmethod
+    def key(serialized: Any) -> int:
+        return id(serialized)
+
+    def _file(self, file_id: int) -> tuple[Any, Any, dict[int, Any]] | None:
+        if not 1 <= file_id <= len(self.externals):
+            return None
         try:
             name = Path(self.externals[file_id - 1].path).name
-            target = self.base_dir / name
-            if target.is_file():
+        except Exception:
+            return None
+        if not name:
+            return None
+        loaded = self.store[name] if name in self.store else self._load(name)
+        if not isinstance(loaded, tuple):
+            return None
+        return loaded
+
+    def _load(self, name: str) -> tuple[Any, Any, dict[int, Any]] | None:
+        entry = None
+        target = self.base_dir / name
+        if target.is_file():
+            try:
                 sub = unitypy().load(str(target))
                 sub.typetree_generator = self.adapter
-                table = {obj.path_id: obj for obj in sub.objects}
-                self.cache[-file_id] = sub
-        except Exception:
-            table = {}
-        self.cache[file_id] = table
-        return table
+                serialized = getattr(sub, "file", None) or next(iter(sub.files.values()))
+                entry = (sub, serialized, {obj.path_id: obj for obj in sub.objects})
+            except Exception:
+                entry = None
+        self.store[name] = entry
+        if entry is not None:
+            self.store.setdefault(self.key(entry[1]), entry)
+        return entry
 
-    def __call__(self, ref: Any) -> Any:
+    def scope(self, ref: Any) -> tuple[Any, Deref]:
         if not isinstance(ref, dict):
-            return None
+            return None, self
         path_id = int(ref.get("m_PathID") or 0)
         if not path_id:
-            return None
+            return None, self
         file_id = int(ref.get("m_FileID") or 0)
-        return self._objects(file_id).get(path_id)
+        if file_id == 0:
+            return self.local.get(path_id), self
+        entry = self._file(file_id)
+        if entry is None:
+            return None, self
+        env, serialized, table = entry
+        obj = table.get(path_id)
+        if obj is None:
+            return None, self
+        key = self.key(serialized)
+        child = self.children.get(key)
+        if child is None:
+            child = Deref(env, table, serialized, self.base_dir, self.adapter, self.store)
+            self.children[key] = child
+        return obj, child
+
+    def __call__(self, ref: Any) -> Any:
+        return self.scope(ref)[0]
 
 
 class Session:

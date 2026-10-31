@@ -40,6 +40,7 @@ COMPARE = {0: "=", 1: "!=", 2: "<", 3: "≤", 4: ">", 5: "≥"}
 LOGIC = {0: "且", 1: "或"}
 GROUP = {1: "總和", 2: "最大", 3: "最小", 4: "相乘", 5: "全部非零", 6: "任一非零"}
 DICE_FIELD = {0: "_stat", 1: "_relationship", 2: "_talent", 3: "_flag"}
+ITEM_CHECKS = frozenset({4, 5, 6, 10, 15})
 
 CHECKPOINT_CALL = re.compile(
     r'checkpointmanager\.(Switch|Condition|Dice|Position)\(\s*"([^"]{2,60})"')
@@ -166,8 +167,20 @@ def _tree(obj: Any) -> dict[str, Any] | None:
         return None
 
 
+def _item_id(obj: Any) -> str:
+    tree = _tree(obj) or {}
+    value = tree.get("_id")
+    if isinstance(value, bool):
+        return ""
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, int):
+        return str(value)
+    return ""
+
+
 def _group_text(ref: Any, deref: Deref, depth: int = 0) -> str:
-    obj = deref(ref)
+    obj, scope = deref.scope(ref)
     tree = _tree(obj)
     if not tree:
         fallback = ref.get("m_PathID") if isinstance(ref, dict) else None
@@ -175,7 +188,7 @@ def _group_text(ref: Any, deref: Deref, depth: int = 0) -> str:
     name = _label(obj)
     if depth >= MAX_BRANCH_DEPTH:
         return name
-    parts = [_value_text(entry, deref, depth + 1) for entry in tree.get("_value") or []]
+    parts = [_value_text(entry, scope, depth + 1) for entry in tree.get("_value") or []]
     group = GROUP.get(tree.get("_groupType"), "")
     inner = " + ".join(parts) if parts else "空"
     return f"{name}（{group}[{inner}]）" if group else f"{name}（{inner}）"
@@ -225,8 +238,11 @@ def _dice_node() -> dict[str, Any]:
     return {"tag": COND_DICE}
 
 
-def _var_node(check: int, name: str, negative: bool) -> dict[str, Any]:
-    return {"tag": COND_VAR, "type": check, "name": name, "negative": negative}
+def _var_node(check: int, name: str, negative: bool, ident: str = "") -> dict[str, Any]:
+    node: dict[str, Any] = {"tag": COND_VAR, "type": check, "name": name, "negative": negative}
+    if ident:
+        node["id"] = ident
+    return node
 
 
 def _compare_node(op: int, left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
@@ -238,14 +254,14 @@ def _logic_node(op: int, items: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def _group_node(ref: Any, deref: Deref, depth: int = 0) -> dict[str, Any] | None:
-    obj = deref(ref)
+    obj, scope = deref.scope(ref)
     tree = _tree(obj)
     if not tree:
         return None
     name = _label(obj)
     if depth >= MAX_BRANCH_DEPTH:
         return {"tag": COND_GROUP, "group": tree.get("_groupType", 0), "name": name, "items": []}
-    items = [_value_node(entry, deref, depth + 1) for entry in tree.get("_value") or []]
+    items = [_value_node(entry, scope, depth + 1) for entry in tree.get("_value") or []]
     if any(node is None for node in items):
         return None
     return {"tag": COND_GROUP, "group": tree.get("_groupType", 0), "name": name, "items": items}
@@ -271,7 +287,8 @@ def _value_node(entry: dict[str, Any], deref: Deref, depth: int = 0) -> dict[str
     target = deref(ref)
     if target is None:
         return None
-    return _var_node(check, _label(target), negative)
+    ident = _item_id(target) if check in ITEM_CHECKS else ""
+    return _var_node(check, _label(target), negative, ident)
 
 
 def _compare_node_of(item: dict[str, Any], deref: Deref) -> dict[str, Any] | None:

@@ -48,6 +48,12 @@
         return fallbackText || key;
       };
 
+      const localizedName = (node) => {
+        const labels = node && node.label;
+        if (!labels) return "";
+        return labels[store.state.lang] || labels["zh-tw"] || "";
+      };
+
       const countOf = (kind, key) => {
         try {
           if (kind === "flag") {
@@ -101,7 +107,7 @@
         const raw = node.name;
         const kind = LOOKUP_KIND[type] || "";
         const key = lookupKeyOf(kind, raw);
-        const label = displayName(kind, key, raw);
+        const label = localizedName(node) || displayName(kind, key, raw);
         const chip = ui.el("span", "cx-var");
         chip.appendChild(ui.el("span", "cx-type", typeText(type)));
         chip.appendChild(ui.el("span", "cx-name", label));
@@ -193,7 +199,8 @@
         if (node.tag === "var") {
           const kind = LOOKUP_KIND[node.type] || "";
           const key = lookupKeyOf(kind, node.name);
-          return `${typeText(node.type)}（${displayName(kind, key, node.name)}）${node.negative ? "×-1" : ""}`;
+          const name = localizedName(node) || displayName(kind, key, node.name);
+          return `${typeText(node.type)}（${name}）${node.negative ? "×-1" : ""}`;
         }
         if (node.tag === "group") {
           const child = singleChild(node);
