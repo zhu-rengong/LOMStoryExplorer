@@ -25,7 +25,7 @@
   gap: var(--sp-2);
 }
 
-.filter-row .btn { height: 38px; }
+
 
 .filter-input-wrap {
   position: relative;
@@ -33,7 +33,7 @@
   min-width: 0;
 }
 
-.filter-input-wrap .input { height: 38px; }
+
 
 .filter-suggest {
   position: absolute;
@@ -294,7 +294,6 @@
   justify-content: space-between;
   gap: var(--sp-2);
   width: 100%;
-  height: 38px;
   text-align: left;
 }
 
@@ -327,7 +326,7 @@
 .range::-webkit-slider-runnable-track {
   height: 3px;
   border-radius: var(--r-pill);
-  background: var(--line-2);
+  background: var(--line-1);
 }
 
 .range::-webkit-slider-thumb {
@@ -338,7 +337,6 @@
   border: 2px solid var(--surface);
   border-radius: var(--r-pill);
   background: var(--accent);
-  box-shadow: 0 0 0 1px var(--accent-line);
   transition: background var(--t-fast) var(--ease);
 }
 
@@ -347,7 +345,7 @@
 .range::-moz-range-track {
   height: 3px;
   border-radius: var(--r-pill);
-  background: var(--line-2);
+  background: var(--line-1);
 }
 
 .range::-moz-range-thumb {

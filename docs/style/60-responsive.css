@@ -141,8 +141,6 @@ body[data-layout="mobile"] .searchwrap {
   margin: 0;
 }
 
-body[data-layout="mobile"] .search-input { height: 38px; }
-
 body[data-layout="mobile"] .search-key { display: none; }
 
 body[data-layout="mobile"] #statsBtn,

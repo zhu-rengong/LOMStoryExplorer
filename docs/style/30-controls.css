@@ -146,37 +146,30 @@
 
 .input {
   width: 100%;
-  height: var(--ctl-md);
-  padding: 0 var(--sp-3);
+  height: var(--ctl-sm);
+  padding: 0 var(--sp-2);
   border: 1px solid var(--line-1);
   border-radius: var(--r-sm);
   background: var(--surface);
-  color: var(--ink);
+  color: var(--ink-2);
   font-family: var(--font-ui);
-  font-size: var(--fs-base);
-  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease),
-              background-color var(--t-fast) var(--ease);
+  font-size: var(--fs-xs);
+  transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
 }
 
-.input:hover { border-color: var(--line-2); }
-
-.input:focus {
-  outline: none;
-  border-color: var(--accent-line);
-  box-shadow: 0 0 0 3px var(--accent-soft);
-}
+.input:hover { border-color: var(--line-2); background: var(--surface-hover); }
 
 .input.is-error { border-color: var(--danger); }
 
-.input.is-error:focus { box-shadow: 0 0 0 3px var(--danger-soft); }
+.input.is-error:focus-visible { outline-color: var(--danger); }
 
 .input-mono {
   font-family: var(--font-mono);
-  font-size: var(--fs-sm);
+  font-size: var(--fs-xs);
   letter-spacing: 0;
 }
 
-.input-sm { height: var(--ctl-sm); font-size: var(--fs-sm); }
+.input-sm { height: var(--ctl-sm); }
 
 .tabs {
   display: flex;
