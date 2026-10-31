@@ -278,11 +278,6 @@
 
 .row-tall { padding: 8px var(--sp-2); }
 
-.row-accent { border-left: 2px solid transparent; }
-
-.row-accent:hover,
-.row-accent.is-active { border-left-color: var(--accent); }
-
 .row.is-on { color: var(--accent-strong); }
 
 .row:disabled { opacity: .38; cursor: default; }

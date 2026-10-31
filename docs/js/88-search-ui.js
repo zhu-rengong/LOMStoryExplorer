@@ -31,19 +31,6 @@
         return node;
       };
 
-      const paint = () => {
-        const rows = ui.$$(".drop-item", $("searchResults"));
-        rows.forEach((row, index) => row.classList.toggle("is-active", index === active));
-        const current = rows[active];
-        if (current && current.scrollIntoView) current.scrollIntoView({ block: "nearest" });
-      };
-
-      const move = (delta) => {
-        if (!hits.length) return;
-        active = (active + delta + hits.length) % hits.length;
-        paint();
-      };
-
       const hide = () => {
         if (!overlay.close("searchResults")) {
           const box = $("searchResults");
@@ -123,7 +110,7 @@
 
         active = 0;
         hits.forEach((hit, index) => {
-          const item = ui.el("div", "drop-item row row-tall row-accent");
+          const item = ui.el("div", "drop-item row row-tall");
           item.dataset.id = hit.id;
           if (index === 0) item.classList.add("is-active");
           item.appendChild(ui.el("span", "did", hit.id));
@@ -211,16 +198,6 @@
             input.blur();
             return;
           }
-          if (event.key === "ArrowDown") {
-            event.preventDefault();
-            move(1);
-            return;
-          }
-          if (event.key === "ArrowUp") {
-            event.preventDefault();
-            move(-1);
-            return;
-          }
           if (event.key === "Enter") {
             event.preventDefault();
             choose();
@@ -243,7 +220,6 @@
         bind,
         choose,
         hide,
-        move,
         onInput,
         perform,
         reset,

@@ -99,21 +99,6 @@
         if (!overlay.close("filterSuggest")) hideSuggestRaw();
       };
 
-      const paintSuggest = () => {
-        const box = $("filterSuggest");
-        if (!box) return;
-        const rows = box.querySelectorAll(".suggest-item");
-        rows.forEach((row, index) => row.classList.toggle("is-active", index === suggest.active));
-        const current = rows[suggest.active];
-        if (current && current.scrollIntoView) current.scrollIntoView({ block: "nearest" });
-      };
-
-      const moveSuggest = (delta) => {
-        if (!suggest.items.length) return;
-        suggest.active = (suggest.active + delta + suggest.items.length) % suggest.items.length;
-        paintSuggest();
-      };
-
       const renderResults = () => {
         const box = $("filterResults");
         if (!box) return;
@@ -302,7 +287,7 @@
           box.appendChild(ui.el("div", "suggest-empty popover-empty", i18n.t("suggestEmpty")));
         } else {
           suggest.items.forEach((item, index) => {
-            const row = ui.el("button", `suggest-item row row-sm row-accent${index === 0 ? " is-active" : ""}`);
+            const row = ui.el("button", `suggest-item row row-sm${index === 0 ? " is-active" : ""}`);
             row.type = "button";
             row.setAttribute("role", "option");
             const shown = item.kind === "logic" ? item.value : item.value + (item.kind === "field" ? ":" : "");
@@ -456,16 +441,6 @@
                 return;
               }
               hideSuggest();
-              return;
-            }
-            if (event.key === "ArrowDown" && suggest.open) {
-              event.preventDefault();
-              moveSuggest(1);
-              return;
-            }
-            if (event.key === "ArrowUp" && suggest.open) {
-              event.preventDefault();
-              moveSuggest(-1);
               return;
             }
             if (suggest.open && suggest.items.length
