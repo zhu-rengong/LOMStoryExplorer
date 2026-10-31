@@ -35,30 +35,8 @@
   background: var(--surface-hold);
 }
 
-.btn:enabled:active:not(:hover):not(.is-on):not(.btn-primary):not([aria-expanded="true"]):not([aria-pressed="true"]) {
+.btn:enabled:active:not(:hover):not(.is-on):not([aria-expanded="true"]):not([aria-pressed="true"]) {
   color: var(--ink-hold);
-}
-
-.btn-primary:enabled {
-  border-color: var(--accent);
-  color: var(--accent-strong);
-}
-
-.btn-primary:enabled:hover {
-  border-color: var(--accent-strong);
-  background: var(--surface-hover);
-  color: var(--accent-strong);
-}
-
-.btn-primary:enabled:active {
-  border-color: var(--accent-strong);
-  background: var(--surface-active);
-  color: var(--accent-strong);
-}
-
-.btn-primary:enabled:active:not(:hover) {
-  border-color: var(--accent-strong);
-  background: var(--surface-hold);
 }
 
 .btn:disabled { opacity: .38; }
