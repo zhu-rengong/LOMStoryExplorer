@@ -1,5 +1,5 @@
 :root {
-  --frame-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%207%207'%3E%3Crect%20x='1'%20y='1'%20width='5'%20height='5'%20fill='none'%20stroke='%23000'%20stroke-width='2'/%3E%3C/svg%3E");
+  --frame-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%206%206'%3E%3Crect%20x='1'%20y='1'%20width='4'%20height='4'%20fill='none'%20stroke='%23000'%20stroke-width='2'/%3E%3C/svg%3E");
 }
 
 #reader:not(.is-open) .reader-head,
@@ -147,8 +147,8 @@
   content: "";
   position: absolute;
   left: 3px;
-  top: 7px;
-  bottom: 7px;
+  top: 6px;
+  bottom: 6px;
   z-index: 2;
   width: 2px;
   background-color: currentColor;
@@ -159,18 +159,18 @@
 .branch-group::after {
   content: "";
   position: absolute;
-  left: 0;
+  left: 1px;
   top: 0;
   bottom: 0;
   z-index: 2;
-  width: 7px;
+  width: 6px;
   background-color: currentColor;
   -webkit-mask-image: var(--frame-mask), var(--frame-mask);
-  -webkit-mask-size: 7px 7px, 7px 7px;
+  -webkit-mask-size: 6px 6px, 6px 6px;
   -webkit-mask-position: 0 0, 0 100%;
   -webkit-mask-repeat: no-repeat;
   mask-image: var(--frame-mask), var(--frame-mask);
-  mask-size: 7px 7px, 7px 7px;
+  mask-size: 6px 6px, 6px 6px;
   mask-position: 0 0, 0 100%;
   mask-repeat: no-repeat;
   pointer-events: none;
