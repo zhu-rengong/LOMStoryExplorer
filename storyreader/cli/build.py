@@ -15,6 +15,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--lang", default=DEFAULT_LANG,
                         help="default language (also used for edge labels)")
     parser.add_argument("--no-cache", action="store_true", help="ignore the analysis cache")
+    parser.add_argument("--jobs", type=int, default=None,
+                        help="worker processes for script analysis (default: min(cpu//2, 4))")
     parser.add_argument("--full-text", action="store_true",
                         help="emit a single text-<lang>.js bundle (debugging only)")
     args = parser.parse_args(argv)
@@ -30,6 +32,7 @@ def main(argv: list[str] | None = None) -> int:
         default_lang=default_lang,
         use_cache=not args.no_cache,
         full_text=args.full_text,
+        jobs=args.jobs,
         reporter=Reporter(),
     )
     return EXIT_OK if result.ok else EXIT_DATA

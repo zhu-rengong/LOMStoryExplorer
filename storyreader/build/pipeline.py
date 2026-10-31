@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import time
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -94,12 +96,33 @@ def _load_sources(reporter: Reporter) -> dict[str, str]:
     return sources
 
 
-def _analyze_all(sources: dict[str, str], use_cache: bool,
-                 reporter: Reporter) -> tuple[dict[str, ScriptAnalysis], int, int]:
+def default_jobs() -> int:
+    counter = getattr(os, "process_cpu_count", None)
+    cores = counter() if counter is not None else os.cpu_count()
+    return max(1, min((cores or 1) // 2, 4))
+
+
+def _analyze_pending(pending: list[tuple[str, str]], jobs: int,
+                     reporter: Reporter) -> list[tuple[str, bool, ScriptAnalysis]]:
+    if jobs <= 1 or len(pending) < max(8, jobs * 2):
+        return [flow.analyze_task(item) for item in pending]
+    chunk = max(1, len(pending) // (jobs * 8))
+    try:
+        with ProcessPoolExecutor(max_workers=min(jobs, len(pending))) as pool:
+            return list(pool.map(flow.analyze_task, pending, chunksize=chunk))
+    except Exception as exc:
+        reporter.warn(f"parallel analysis unavailable, falling back to serial: {exc}")
+        return [flow.analyze_task(item) for item in pending]
+
+
+def _analyze_all(sources: dict[str, str], use_cache: bool, reporter: Reporter,
+                 jobs: int | None = None) -> tuple[dict[str, ScriptAnalysis], int, int]:
     cache_path = CACHE_DIR / "analysis.json.gz"
     cached = load_envelope(cache_path, CacheKey(FLOW_VERSION, "per-script")) if use_cache else None
     entries: dict[str, Any] = cached if isinstance(cached, dict) else {}
     models: dict[str, ScriptAnalysis] = {}
+    signatures: dict[str, str] = {}
+    pending: list[tuple[str, str]] = []
     reused = 0
     failed = 0
     started = time.time()
@@ -114,19 +137,20 @@ def _analyze_all(sources: dict[str, str], use_cache: bool,
                 continue
             except (KeyError, TypeError, ValueError):
                 pass
-        try:
-            models[sid] = flow.analyze(sid, source)
-        except Exception as exc:
+        signatures[sid] = signature
+        pending.append((sid, source))
+    workers = max(1, jobs) if jobs is not None else default_jobs()
+    for sid, is_failed, model in _analyze_pending(pending, workers, reporter):
+        models[sid] = model
+        if is_failed:
             failed += 1
-            models[sid] = ScriptAnalysis(
-                id=sid, warnings=[f"analysis failed: {type(exc).__name__}: {exc}"])
-        entries[sid] = {"sig": signature, "payload": analysis_to_wire(models[sid])}
+        entries[sid] = {"sig": signatures[sid], "payload": analysis_to_wire(model)}
     if use_cache:
         save_envelope(cache_path, CacheKey(FLOW_VERSION, "per-script"), entries)
     reporter.stage(1, 4, "semantic analysis")
     reporter.info(
-        f"{len(sources)} scripts (reused {reused}, analyzed {len(sources) - reused},"
-        f" failed {failed}), {time.time() - started:.1f}s"
+        f"{len(sources)} scripts (reused {reused}, analyzed {len(pending)},"
+        f" failed {failed}, workers {workers}), {time.time() - started:.1f}s"
     )
     return models, reused, failed
 
@@ -498,6 +522,7 @@ def _gap_report(blob: dict[str, Any]) -> dict[str, Any]:
 
 def run_build(*, langs: tuple[str, ...], default_lang: str,
               use_cache: bool = True, full_text: bool = False,
+              jobs: int | None = None,
               reporter: Reporter | None = None) -> BuildResult:
     reporter = reporter or Reporter()
     if not langs:
@@ -513,7 +538,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     simplified = set(anomalies.get("simplified_only") or [])
     empty = set(anomalies.get("empty") or [])
 
-    models, reused, failed = _analyze_all(sources, use_cache, reporter)
+    models, reused, failed = _analyze_all(sources, use_cache, reporter, jobs)
 
     edges, dynamic, inferred = collect_edges(models, sources)
     scene_total = sum(model.scene_count for model in models.values())
