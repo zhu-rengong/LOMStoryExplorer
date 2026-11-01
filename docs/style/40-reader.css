@@ -325,6 +325,46 @@
   color: var(--ink-2);
 }
 
+.branch-head.row {
+  min-height: var(--ctl-sm);
+  padding: 4px var(--sp-2);
+  border-color: var(--line-1);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--font-ui);
+  letter-spacing: .02em;
+}
+
+.branch-head.row:hover {
+  border-color: var(--line-2);
+  background: var(--surface-hover);
+  color: var(--ink-hover);
+}
+
+.branch-head.row:active {
+  border-color: var(--line-3);
+  background: var(--surface-active);
+  color: var(--ink);
+}
+
+.branch-head.row:active:not(:hover) {
+  border-color: var(--line-hold);
+  background: var(--surface-hold);
+  color: var(--ink-hold);
+}
+
+.branch-head.row .cond {
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 400;
+}
+
+.branch-head.row .cond.is-expr { color: inherit; }
+
+.branch-head.row:active .cond,
+.branch-head.row:active .cond.is-expr { color: inherit; }
+
 .branch.is-open .branch-head { color: var(--ink-2); }
 
 .branch-body {
@@ -556,27 +596,27 @@
 .scene-switch .scene-next { color: var(--ink-2); }
 
 .jump {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  width: fit-content;
-  height: auto;
   margin: 0 0 var(--rd-gap-3);
-  padding: 3px 8px;
-  font-family: var(--rd-font-label, var(--font-mono));
-  font-size: var(--rd-fs-label, var(--fs-xs));
-  font-weight: var(--rd-w-label, 400);
-  line-height: 1.7;
 }
 
 .jump .arrow { color: var(--accent); }
 
 .jump .option-cond {
-  color: var(--ink-2);
-  font-size: var(--fs-micro);
+  color: inherit;
+  font: inherit;
 }
 
 .jump.dynamic {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: fit-content;
+  height: auto;
+  padding: 3px 8px;
+  font-family: var(--rd-font-label, var(--font-mono));
+  font-size: var(--rd-fs-label, var(--fs-xs));
+  font-weight: var(--rd-w-label, 400);
+  line-height: 1.7;
   border-style: dashed;
   border-color: var(--line-2);
   background: transparent;
@@ -617,17 +657,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.meta-action {
-  height: auto;
-  min-height: 22px;
-  padding: 2px 7px;
-  font-family: var(--rd-font-label, var(--font-mono));
-  font-size: var(--rd-fs-label, var(--fs-xs));
-  font-weight: var(--rd-w-label, 400);
-  line-height: 1.6;
-  letter-spacing: 0;
 }
 
 .is-flash {
