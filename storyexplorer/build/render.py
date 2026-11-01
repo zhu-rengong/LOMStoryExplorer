@@ -23,7 +23,7 @@ from ..wire import (
     BEAT_SCENE,
     SAY_MODE_CODE,
 )
-from .wordcount import KINDS, WordCounter
+from .metrics import KINDS, WordCounter
 
 _MENU_LABEL = {
     "zh-tw": {

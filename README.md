@@ -36,22 +36,24 @@ Generated data is ignored by git. Publish the site with `tools/publish-pages.ps1
 extract.py / build.py        thin command line entry points
 storyexplorer/
   config.py                  paths, versions, limits, game layout
-  console.py                 reporter, diagnostics, exit codes
+  console.py                 reporter and exit codes
   cache.py                   atomic writes, JSON/gzip envelopes, fingerprints
   manifest.py                extraction manifest and freshness checks
   wire.py                    schema constants and data entry names
   model.py                   domain dataclasses and cache codecs
+  emit.py                    wire payload writers for graph, text, checkpoints and word count
   lua/                       tree-sitter facade, clause walking and label rendering
   game/                      Unity asset access, scripts, locales, checkpoints, entries, lore, game info
   flow/                      story analyzer (statements, calls, expressions, state)
-  build/                     chapters, facets, graph, sharding, rendering, word count, report
-  emit/                      wire payload writers
+  build/                     chapters, facets, graph, sharding, rendering, metrics, report
   cli/                       extract and build commands
 docs/
   index.html                 single page shell
   vendor/i18next.min.js      vendored i18next runtime, no CDN required
   js/00-runtime.js           SR.define / SR.require / SR.start module runtime
+  js/00-local.js             guarded local storage reads and writes
   js/01-prefs.js             first paint preferences (fonts, size, leading, measure)
+  js/05-ui.js                DOM, timing, query and toggle primitives shared by every module
   js/10-schema.js            data validation and beat codec
   js/15-graph.js             indexes, adjacency, chapters, visibility
   js/20-storage.js           versioned local storage repositories

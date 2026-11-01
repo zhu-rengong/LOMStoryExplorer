@@ -56,8 +56,7 @@ from .graph import (
 from .render import Renderer
 from .report import compose, fmt_bytes, write_report
 from .sharding import assign_checkpoints, pack_stories
-from .times import explicit_times, format_rounds
-from .wordcount import KINDS, WordCounter, add_row, totals, zero_row
+from .metrics import KINDS, WordCounter, add_row, explicit_times, format_rounds, totals, zero_row
 
 
 @dataclass
@@ -518,6 +517,157 @@ def _gap_report(blob: dict[str, Any]) -> dict[str, Any]:
     return {"total": len(gaps), "by_reason": by_reason}
 
 
+def _report_graph(reporter: Reporter, edges: list[Edge], inferred: int,
+                  position_edges: list[Edge], dynamic: list[dict[str, Any]],
+                  scene_total: int, chapters: list[Any], times: dict[str, int],
+                  system: Any, position_stats: dict[str, int],
+                  probe: dict[str, Any]) -> dict[str, Any]:
+    reporter.stage(2, 4, "graph")
+    reporter.info(
+        f"{len(edges)} edges ({inferred} inferred, {len(position_edges)} position),"
+        f" {len(dynamic)} dynamic jumps"
+    )
+    reporter.info(f"{scene_total} scene switches")
+    reporter.info(f"{len(chapters)} chapters; {len(times)} scripts with a fixed date")
+    if times:
+        reporter.info(
+            f"time range: {format_rounds(min(times.values()))} -> {format_rounds(max(times.values()))}")
+    reporter.info(
+        f"system entries: {len(system.entries)} hardcoded, {len(system.sources)} from assets,"
+        f" positions exact {position_stats['exact_names']} + prefix {position_stats['prefix_names']}"
+        f"/{position_stats['names']}"
+    )
+    probe_summary = summarize_probe(dict(probe))
+    if not probe_summary["ok"]:
+        reporter.info(f"system entry probe: {probe_summary['reason']}")
+    return probe_summary
+
+
+def _pack_shards(node_ids: list[str], chapter_index_map: dict[str, int], chapters: list[Any],
+                 stories: dict[str, Any], reporter: Reporter,
+                 full_text: bool) -> tuple[dict[str, str], list[dict[str, Any]]]:
+    if full_text:
+        return {}, []
+    sizes = {sid: len(dump_json(stories.get(sid, [])).encode("utf-8")) for sid in node_ids}
+    shard_of, shards = pack_stories(
+        node_ids, sizes, chapter_index_map, [chapter.id for chapter in chapters])
+    largest = max((shard["bytes"] for shard in shards), default=0)
+    reporter.info(
+        f"story shards: {len(shards)} (largest {fmt_bytes(largest)},"
+        f" budget {fmt_bytes(sum(shard['bytes'] for shard in shards))})"
+    )
+    return shard_of, shards
+
+
+def _emit_checkpoints(reporter: Reporter, locales: dict[str, dict[str, Any]]) -> dict[str, Any]:
+    blob = read_json(CHECKPOINTS_PATH)
+    if not isinstance(blob, dict):
+        blob = {}
+    raw_items = blob.get("items")
+    items = _sanitize_checkpoints(raw_items if isinstance(raw_items, dict) else {})
+    _localize_checkpoints(items, locales)
+    variants = sum(len(model.get("variants") or []) for model in items.values())
+    parts: list[dict[str, Any]] = []
+    mapping: dict[str, int] = {}
+    if items:
+        mapping = assign_checkpoints(sorted(items), CHECKPOINT_SHARDS)
+        parts = write_checkpoint_shards(WEB_DATA_DIR, items, mapping)
+        reporter.info(
+            f"checkpoint conditions: {len(items)} in {len(parts)} shards,"
+            f" {variants} variants, {fmt_bytes(sum(item['bytes'] for item in parts))} total"
+        )
+    else:
+        reporter.info("checkpoint conditions: none")
+    return {
+        "blob": blob,
+        "items": items,
+        "variants": variants,
+        "parts": parts,
+        "mapping": mapping,
+    }
+
+
+def _counts_report(edges: list[Edge], node_ids: list[str], in_degree: dict[str, int],
+                   out_degree: dict[str, int], system_in: dict[str, int],
+                   empty: set[str], simplified: set[str], facets: dict[str, Any],
+                   system: Any, checkpoints: dict[str, Any]) -> tuple[dict[str, Any], ...]:
+    edge_counts = {kind: sum(1 for edge in edges if edge.kind == kind) for kind in EDGE_KINDS}
+    node_counts = {
+        "empty": len(empty),
+        "simplified_only": len(simplified),
+        "no_incoming": sum(1 for sid in node_ids if in_degree[sid] == 0),
+        "no_incoming_after_system": sum(
+            1 for sid in node_ids if in_degree[sid] == 0 and system_in[sid] == 0),
+        "no_incoming_after_entries": sum(
+            1 for sid in node_ids if in_degree[sid] == 0 and sid not in system.sources),
+        "system_in": sum(1 for sid in node_ids if system_in[sid] > 0),
+        "entry_sources": len(system.sources),
+        "no_outgoing": sum(1 for sid in node_ids if out_degree[sid] == 0),
+    }
+    facet_report = {
+        "fields": list(FACET_FIELDS),
+        "speakers": len({key for row in facets.values() for key in row.speakers}),
+        "flags": len({key for row in facets.values() for key in row.flags}),
+        "checks": len({key for row in facets.values() for key in row.checks}),
+        "stats": len({key for row in facets.values() for key in row.stats}),
+        "rels": len({key for row in facets.values() for key in row.rels}),
+        "scripts_with_flag": sum(1 for row in facets.values() if row.flags),
+        "scripts_with_check": sum(1 for row in facets.values() if row.checks),
+        "scripts_with_lock": sum(1 for row in facets.values() if row.locks),
+        "scripts_with_dice": sum(1 for row in facets.values() if row.dice),
+        "scripts_with_options": sum(1 for row in facets.values() if row.options),
+    }
+    parts = checkpoints["parts"]
+    checkpoint_report = {
+        "resolved": len(checkpoints["items"]),
+        "variants": checkpoints["variants"],
+        "bytes": sum(item["bytes"] for item in parts),
+        "mode": "shards" if parts else "none",
+        "shards": len(parts),
+        "by_kind": _count_checkpoint_kinds(checkpoints["items"]),
+        "gaps": _gap_report(checkpoints["blob"]),
+    }
+    return edge_counts, node_counts, facet_report, checkpoint_report
+
+
+def _wordcount_report(langs: tuple[str, ...], wordcount_langs: dict[str, Any],
+                      reporter: Reporter) -> dict[str, Any]:
+    report: dict[str, Any] = {}
+    for lang in langs:
+        data = wordcount_langs[lang]
+        sums = totals(data["chapters"])
+        report[lang] = {
+            "chapters": len(data["chapters"]),
+            "stories": len(data["stories"]),
+            "by_kind": {
+                kind: {"zh": pair[0], "en": pair[1], "sum": pair[0] + pair[1]}
+                for kind, pair in zip(KINDS, sums)
+            },
+            "total": {
+                "zh": sum(pair[0] for pair in sums),
+                "en": sum(pair[1] for pair in sums),
+                "sum": sum(pair[0] + pair[1] for pair in sums),
+            },
+        }
+        reporter.info(
+            f"word count {lang}: {report[lang]['total']['sum']} chars"
+            f" ({report[lang]['stories']} scripts)"
+        )
+    return report
+
+
+def _prune_stale(parts: list[tuple[str, int]], reporter: Reporter) -> None:
+    keep = {name for name, _ in parts}
+    removed = 0
+    for path in sorted(WEB_DATA_DIR.glob("*.js")):
+        if path.name not in keep:
+            path.unlink()
+            removed += 1
+    if removed:
+        reporter.info(f"removed {removed} stale artifacts")
+    write_json(CACHE_DIR / "artifacts.json", {"files": sorted(keep)}, indent=2)
+
+
 def run_build(*, langs: tuple[str, ...], default_lang: str,
               use_cache: bool = True, full_text: bool = False,
               jobs: int | None = None,
@@ -564,24 +714,9 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     for edge in position_edges:
         system_in[edge.target] += 1
 
-    reporter.stage(2, 4, "graph")
-    reporter.info(
-        f"{len(edges)} edges ({inferred} inferred, {len(position_edges)} position),"
-        f" {len(dynamic)} dynamic jumps"
-    )
-    reporter.info(f"{scene_total} scene switches")
-    reporter.info(f"{len(chapters)} chapters; {len(times)} scripts with a fixed date")
-    if times:
-        reporter.info(
-            f"time range: {format_rounds(min(times.values()))} -> {format_rounds(max(times.values()))}")
-    reporter.info(
-        f"system entries: {len(system.entries)} hardcoded, {len(system.sources)} from assets,"
-        f" positions exact {position_stats['exact_names']} + prefix {position_stats['prefix_names']}"
-        f"/{position_stats['names']}"
-    )
-    probe_summary = summarize_probe(dict(probe))
-    if not probe_summary["ok"]:
-        reporter.info(f"system entry probe: {probe_summary['reason']}")
+    probe_summary = _report_graph(
+        reporter, edges, inferred, position_edges, dynamic, scene_total,
+        chapters, times, system, position_stats, probe)
 
     nodes = assemble_nodes(
         node_ids, models, chapter_index_map, out_degree, in_degree, system_in, facets,
@@ -611,21 +746,8 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
             f" unresolved {metrics['lore_missing']})"
         )
 
-    if full_text:
-        shard_of: dict[str, str] = {}
-        shards: list[dict] = []
-    else:
-        sizes = {
-            sid: len(dump_json(renders[langs[0]].stories.get(sid, [])).encode("utf-8"))
-            for sid in node_ids
-        }
-        shard_of, shards = pack_stories(
-            node_ids, sizes, chapter_index_map, [chapter.id for chapter in chapters])
-        largest = max((shard["bytes"] for shard in shards), default=0)
-        reporter.info(
-            f"story shards: {len(shards)} (largest {fmt_bytes(largest)},"
-            f" budget {fmt_bytes(sum(shard['bytes'] for shard in shards))})"
-        )
+    shard_of, shards = _pack_shards(
+        node_ids, chapter_index_map, chapters, renders[langs[0]].stories, reporter, full_text)
 
     parts: list[tuple[str, int]] = []
     languages: dict[str, Any] = {}
@@ -645,27 +767,9 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     wordcount_size = write_wordcount(WEB_DATA_DIR / "wordcount.js", wordcount_payload)
     parts.append(("wordcount.js", wordcount_size))
 
-    checkpoint_blob = read_json(CHECKPOINTS_PATH)
-    if not isinstance(checkpoint_blob, dict):
-        checkpoint_blob = {}
-    raw_items = checkpoint_blob.get("items")
-    checkpoint_items = _sanitize_checkpoints(raw_items if isinstance(raw_items, dict) else {})
-    _localize_checkpoints(checkpoint_items, locales)
-    checkpoint_variants = sum(
-        len(model.get("variants") or []) for model in checkpoint_items.values())
-    checkpoint_parts: list[dict[str, Any]] = []
-    checkpoint_mapping: dict[str, int] = {}
-    if checkpoint_items:
-        checkpoint_mapping = assign_checkpoints(sorted(checkpoint_items), CHECKPOINT_SHARDS)
-        checkpoint_parts = write_checkpoint_shards(WEB_DATA_DIR, checkpoint_items, checkpoint_mapping)
-        parts.extend((item["name"], item["bytes"]) for item in checkpoint_parts)
-        reporter.info(
-            f"checkpoint conditions: {len(checkpoint_items)} in {len(checkpoint_parts)} shards,"
-            f" {checkpoint_variants} variants,"
-            f" {fmt_bytes(sum(item['bytes'] for item in checkpoint_parts))} total"
-        )
-    else:
-        reporter.info("checkpoint conditions: none")
+    checkpoints = _emit_checkpoints(reporter, locales)
+    checkpoint_mapping = checkpoints["mapping"]
+    parts.extend((item["name"], item["bytes"]) for item in checkpoints["parts"])
 
     game = _game_info()
     if game.version or game.build:
@@ -703,72 +807,12 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     graph_size = write_graph(WEB_DATA_DIR / "graph.js", graph_payload)
     parts.append(("graph.js", graph_size))
 
-    keep = {name for name, _ in parts}
-    removed = 0
-    for path in sorted(WEB_DATA_DIR.glob("*.js")):
-        if path.name not in keep:
-            path.unlink()
-            removed += 1
-    if removed:
-        reporter.info(f"removed {removed} stale artifacts")
-    write_json(CACHE_DIR / "artifacts.json", {"files": sorted(keep)}, indent=2)
+    _prune_stale(parts, reporter)
 
-    edge_counts = {kind: sum(1 for edge in edges if edge.kind == kind) for kind in EDGE_KINDS}
-    node_counts = {
-        "empty": len(empty),
-        "simplified_only": len(simplified),
-        "no_incoming": sum(1 for sid in node_ids if in_degree[sid] == 0),
-        "no_incoming_after_system": sum(
-            1 for sid in node_ids if in_degree[sid] == 0 and system_in[sid] == 0),
-        "no_incoming_after_entries": sum(
-            1 for sid in node_ids if in_degree[sid] == 0 and sid not in system.sources),
-        "system_in": sum(1 for sid in node_ids if system_in[sid] > 0),
-        "entry_sources": len(system.sources),
-        "no_outgoing": sum(1 for sid in node_ids if out_degree[sid] == 0),
-    }
-    facet_report = {
-        "fields": list(FACET_FIELDS),
-        "speakers": len({key for row in facets.values() for key in row.speakers}),
-        "flags": len({key for row in facets.values() for key in row.flags}),
-        "checks": len({key for row in facets.values() for key in row.checks}),
-        "stats": len({key for row in facets.values() for key in row.stats}),
-        "rels": len({key for row in facets.values() for key in row.rels}),
-        "scripts_with_flag": sum(1 for row in facets.values() if row.flags),
-        "scripts_with_check": sum(1 for row in facets.values() if row.checks),
-        "scripts_with_lock": sum(1 for row in facets.values() if row.locks),
-        "scripts_with_dice": sum(1 for row in facets.values() if row.dice),
-        "scripts_with_options": sum(1 for row in facets.values() if row.options),
-    }
-    checkpoint_report = {
-        "resolved": len(checkpoint_items),
-        "variants": checkpoint_variants,
-        "bytes": sum(item["bytes"] for item in checkpoint_parts),
-        "mode": "shards" if checkpoint_parts else "none",
-        "shards": len(checkpoint_parts),
-        "by_kind": _count_checkpoint_kinds(checkpoint_items),
-        "gaps": _gap_report(checkpoint_blob),
-    }
-    wordcount_report: dict[str, Any] = {}
-    for lang in langs:
-        data = wordcount_langs[lang]
-        sums = totals(data["chapters"])
-        wordcount_report[lang] = {
-            "chapters": len(data["chapters"]),
-            "stories": len(data["stories"]),
-            "by_kind": {
-                kind: {"zh": pair[0], "en": pair[1], "sum": pair[0] + pair[1]}
-                for kind, pair in zip(KINDS, sums)
-            },
-            "total": {
-                "zh": sum(pair[0] for pair in sums),
-                "en": sum(pair[1] for pair in sums),
-                "sum": sum(pair[0] + pair[1] for pair in sums),
-            },
-        }
-        reporter.info(
-            f"word count {lang}: {wordcount_report[lang]['total']['sum']} chars"
-            f" ({wordcount_report[lang]['stories']} scripts)"
-        )
+    edge_counts, node_counts, facet_report, checkpoint_report = _counts_report(
+        edges, node_ids, in_degree, out_degree, system_in, empty, simplified,
+        facets, system, checkpoints)
+    wordcount_report = _wordcount_report(langs, wordcount_langs, reporter)
 
     default_metrics = (renders[default_lang].metrics
                        if default_lang in renders else renders[langs[0]].metrics)
