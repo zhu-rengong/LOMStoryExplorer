@@ -96,7 +96,6 @@ class ExpressionEvaluator:
                 return Locked(
                     available=self.eval(left_node.child_by_field_name("right"), state),
                     locked=TextRef(L.string_value(right_node).lstrip("~")),
-                    cond=L.text(left_node.child_by_field_name("left")),
                 )
             left = self.eval(left_node, state)
             return left if isinstance(left, TextRef) else self.eval(right_node, state)

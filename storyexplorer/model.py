@@ -11,6 +11,7 @@ from .wire import (
     BEAT_META,
     BEAT_SAY,
     BEAT_SCENE,
+    FACET_LIST_FIELDS,
     SAY_MODE_CODE,
     SAY_MODES,
 )
@@ -46,7 +47,6 @@ class Unknown:
 class Locked:
     available: Any
     locked: TextRef
-    cond: str
 
 
 @dataclass(frozen=True)
@@ -164,7 +164,7 @@ class Facets:
 
     def to_wire(self) -> dict[str, Any]:
         out: dict[str, Any] = {}
-        for name in ("speakers", "flags", "checks", "stats", "rels"):
+        for name in FACET_LIST_FIELDS:
             values = getattr(self, name)
             if values:
                 out[name] = list(values)

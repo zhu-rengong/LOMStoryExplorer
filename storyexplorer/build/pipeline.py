@@ -33,10 +33,10 @@ from ..config import (
 )
 from ..console import Reporter
 from ..emit import (
+    text_payload,
     write_checkpoint_shards,
     write_graph,
-    write_text_full,
-    write_text_head,
+    write_text,
     write_text_shard,
     write_wordcount,
 )
@@ -264,37 +264,35 @@ def _write_language(render: LanguageRender, shard_of: dict[str, str],
     lang = render.lang
     parts: list[tuple[str, int]] = []
     if full_text:
-        payload = {
-            "schema": SCHEMA_VERSION,
-            "lang": lang,
-            "characters": render.characters,
-            "names": render.names,
-            "edgeLabels": render.edge_labels,
-            "missing": render.metrics["missing"],
-            "missingKeys": render.missing[:200],
-            "stories": render.stories,
-            "shardKeys": [],
-            "fullText": True,
-        }
-        size = write_text_full(WEB_DATA_DIR / f"text-{lang}.js", lang, payload)
+        payload = text_payload(
+            lang=lang,
+            characters=render.characters,
+            names=render.names,
+            edge_labels=render.edge_labels,
+            stories=render.stories,
+            shard_keys=(),
+            missing=render.metrics["missing"],
+            missing_keys=render.missing[:200],
+            full_text=True,
+        )
+        size = write_text(WEB_DATA_DIR / f"text-{lang}.js", lang, payload)
         parts.append((f"text-{lang}.js", size))
         head_size = size
         shard_bytes = 0
     else:
         shard_keys = [shard["key"] for shard in shards]
-        payload = {
-            "schema": SCHEMA_VERSION,
-            "lang": lang,
-            "characters": render.characters,
-            "names": render.names,
-            "edgeLabels": render.edge_labels,
-            "missing": render.metrics["missing"],
-            "missingKeys": render.missing[:200],
-            "stories": {},
-            "shardKeys": shard_keys,
-            "fullText": False,
-        }
-        head_size = write_text_head(WEB_DATA_DIR / f"text-{lang}-head.js", lang, payload)
+        payload = text_payload(
+            lang=lang,
+            characters=render.characters,
+            names=render.names,
+            edge_labels=render.edge_labels,
+            stories={},
+            shard_keys=shard_keys,
+            missing=render.metrics["missing"],
+            missing_keys=render.missing[:200],
+            full_text=False,
+        )
+        head_size = write_text(WEB_DATA_DIR / f"text-{lang}-head.js", lang, payload)
         parts.append((f"text-{lang}-head.js", head_size))
         buckets: dict[str, dict[str, list]] = {key: {} for key in shard_keys}
         for sid in render.stories:

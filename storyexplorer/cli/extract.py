@@ -276,6 +276,40 @@ def _manifest(
     )
 
 
+def _rebuild_conditional(game: Path, langs: tuple[str, ...], manifest: dict[str, Any],
+                         args: argparse.Namespace, reporter: Reporter) -> None:
+    redo_checkpoints = args.checkpoints and (
+        not CHECKPOINTS_PATH.exists()
+        or manifest.get("checkpoint_version") != CHECKPOINT_VERSION)
+    redo_entries = args.entries and (
+        not ENTRIES_PATH.exists()
+        or manifest.get("entry_version") != ENTRY_VERSION)
+    redo_lore = args.lore and (
+        not LORE_PATH.exists()
+        or manifest.get("lore_version") != LORE_VERSION)
+    if not (redo_checkpoints or redo_entries or redo_lore):
+        return
+    sources = {}
+    for path in sorted(LUA_DIR.glob("*.lua")):
+        sources[path.stem] = path.read_text(encoding="utf-8")
+    if redo_checkpoints:
+        manifest["checkpoint_stats"] = _extract_checkpoints(game, sources, args.force, reporter)
+    if redo_entries:
+        manifest["entry_stats"] = _extract_entries(game, set(sources), args.force, reporter)
+    if redo_lore:
+        tables = {}
+        for lang in langs:
+            payload = read_json(LOCALE_DIR / f"{lang}.json")
+            tables[lang] = payload if isinstance(payload, dict) else {}
+        manifest["lore_stats"] = _extract_lore(
+            game, sources, tables, langs, args.force, reporter)
+    manifest["checkpoint_version"] = CHECKPOINT_VERSION
+    manifest["entry_version"] = ENTRY_VERSION
+    if args.lore:
+        manifest["lore_version"] = LORE_VERSION
+    write_json(MANIFEST_PATH, manifest, indent=2)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Extract story Lua files and locale tables from the game assets (read only)")
@@ -295,11 +329,10 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     reporter = Reporter()
-    root = Path(args.game).expanduser() if args.game else game_root()
-    if root is None:
+    game = Path(args.game).expanduser() if args.game else game_root()
+    if game is None:
         reporter.error(f"no game directory given; use --game or set {GAME_ENV}")
         return EXIT_USAGE
-    game = root
     if not (resources_path(game).exists() and locale_path(game).exists() and managers_path(game).exists()):
         reporter.error(f"game assets not found under {asset_dir(game)}")
         return EXIT_USAGE
@@ -317,35 +350,7 @@ def main(argv: list[str] | None = None) -> int:
             f"       {manifest.get('script_count')} scripts, "
             + ", ".join(f"{lang} {count} keys"
                         for lang, count in (manifest.get("locale_keys") or {}).items()))
-        redo_checkpoints = args.checkpoints and (
-            not CHECKPOINTS_PATH.exists()
-            or manifest.get("checkpoint_version") != CHECKPOINT_VERSION)
-        redo_entries = args.entries and (
-            not ENTRIES_PATH.exists()
-            or manifest.get("entry_version") != ENTRY_VERSION)
-        redo_lore = args.lore and (
-            not LORE_PATH.exists()
-            or manifest.get("lore_version") != LORE_VERSION)
-        if redo_checkpoints or redo_entries or redo_lore:
-            sources = {}
-            for path in sorted(LUA_DIR.glob("*.lua")):
-                sources[path.stem] = path.read_text(encoding="utf-8")
-            if redo_checkpoints:
-                manifest["checkpoint_stats"] = _extract_checkpoints(game, sources, args.force, reporter)
-            if redo_entries:
-                manifest["entry_stats"] = _extract_entries(game, set(sources), args.force, reporter)
-            if redo_lore:
-                tables = {}
-                for lang in langs:
-                    payload = read_json(LOCALE_DIR / f"{lang}.json")
-                    tables[lang] = payload if isinstance(payload, dict) else {}
-                manifest["lore_stats"] = _extract_lore(
-                    game, sources, tables, langs, args.force, reporter)
-            manifest["checkpoint_version"] = CHECKPOINT_VERSION
-            manifest["entry_version"] = ENTRY_VERSION
-            if args.lore:
-                manifest["lore_version"] = LORE_VERSION
-            write_json(MANIFEST_PATH, manifest, indent=2)
+        _rebuild_conditional(game, langs, manifest, args, reporter)
         return EXIT_OK
 
     corpus = extract_scripts(game, reporter)

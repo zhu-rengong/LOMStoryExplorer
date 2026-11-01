@@ -18,7 +18,8 @@ EDGE_TRAVEL = "travel"
 EDGE_POSITION = "position"
 EDGE_KINDS = (EDGE_JUMP, EDGE_INFERRED, EDGE_TEMP, EDGE_TRAVEL, EDGE_POSITION)
 
-FACET_FIELDS = ("speakers", "flags", "checks", "stats", "rels", "options", "locks", "dice")
+FACET_LIST_FIELDS = ("speakers", "flags", "checks", "stats", "rels")
+FACET_FIELDS = FACET_LIST_FIELDS + ("options", "locks", "dice")
 
 COND_CONST = "const"
 COND_RANDOM = "random"
@@ -27,12 +28,6 @@ COND_VAR = "var"
 COND_GROUP = "group"
 COND_COMPARE = "compare"
 COND_LOGIC = "logic"
-
-CHECKPOINT_KINDS = ("switch", "dice", "condition", "position", "flag")
-
-ENTRY_COMBAT = "combat"
-ENTRY_FREE = "free"
-ENTRY_SOURCES = (ENTRY_FREE, ENTRY_COMBAT)
 
 HARDCODED_ENTRIES = (
     {"id": "ch1_1", "label": "New game start", "source": "SaveSystem.cs L174-L177"},

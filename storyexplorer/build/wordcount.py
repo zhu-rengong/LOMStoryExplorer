@@ -40,11 +40,6 @@ class WordCounter:
     def row(self) -> list[list[int]]:
         return [[self.counts.get(kind, [0, 0])[0], self.counts.get(kind, [0, 0])[1]] for kind in KINDS]
 
-    def merge(self, other: WordCounter) -> None:
-        for kind in KINDS:
-            self.counts[kind][0] += other.counts[kind][0]
-            self.counts[kind][1] += other.counts[kind][1]
-
 
 def zero_row() -> list[list[int]]:
     return [[0, 0] for _ in KINDS]

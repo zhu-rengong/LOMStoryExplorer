@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import tree_sitter_lua
-from tree_sitter import Language, Node, Parser, Tree
+from tree_sitter import Language, Node, Parser
 
 _LANGUAGE = Language(tree_sitter_lua.language())
 _PARSER = Parser(_LANGUAGE)
@@ -23,25 +23,20 @@ _ESCAPES = {
 
 @dataclass(frozen=True)
 class Script:
-    source: bytes
-    tree: Tree
     statements: list[Node]
 
 
 class LuaSyntaxError(Exception):
     def __init__(self, line: int, column: int) -> None:
         super().__init__(f"syntax error at line {line}, column {column}")
-        self.line = line
-        self.column = column
 
 
 def parse(source: str) -> Script:
-    data = source.encode("utf-8")
-    tree = _PARSER.parse(data)
+    tree = _PARSER.parse(source.encode("utf-8"))
     root = tree.root_node
     if root.has_error:
         raise LuaSyntaxError(*_error_point(root))
-    return Script(data, tree, statements(root))
+    return Script(statements(root))
 
 
 def statements(node: Node | None) -> list[Node]:

@@ -11,11 +11,11 @@ _SET_GAME_TIME = re.compile(
     r"luamanager\.SetGameTime\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)")
 
 
-def rounds_of(year: int, month: int, stage: int) -> int:
+def _rounds_of(year: int, month: int, stage: int) -> int:
     return (year - 1) * ROUNDS_PER_YEAR + (month - 1) * ROUNDS_PER_MONTH + stage
 
 
-def date_of(rounds: float) -> tuple[int, int, int]:
+def _date_of(rounds: float) -> tuple[int, int, int]:
     index = max(0, int(rounds) - 1)
     year = index // ROUNDS_PER_YEAR + 1
     rest = index % ROUNDS_PER_YEAR
@@ -23,7 +23,7 @@ def date_of(rounds: float) -> tuple[int, int, int]:
 
 
 def format_rounds(rounds: float) -> str:
-    year, month, stage = date_of(rounds)
+    year, month, stage = _date_of(rounds)
     return f"{year}年{month}月{_STAGE_NAME[stage]}"
 
 
@@ -34,6 +34,6 @@ def explicit_times(sources: Mapping[str, str]) -> dict[str, int]:
             year, month, stage = (int(match.group(index)) for index in (1, 2, 3))
             if not (1 <= year <= 9 and 1 <= month <= 12 and 1 <= stage <= 3):
                 continue
-            result[sid] = rounds_of(year, month, stage)
+            result[sid] = _rounds_of(year, month, stage)
             break
     return result
