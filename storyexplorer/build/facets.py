@@ -46,9 +46,9 @@ def collect_facets(beats: Sequence[object], reads: Iterable[str] | None = None) 
                     continue
                 if beat.kind == "flag":
                     flags.add(beat.key)
-                elif beat.kind == "stat":
+                elif beat.kind in ("stat", "setstat"):
                     stats.add(beat.key)
-                elif beat.kind == "rel":
+                elif beat.kind in ("rel", "setrel"):
                     rels.add(beat.key)
                 elif beat.kind == "dice":
                     checks.add(beat.key)
