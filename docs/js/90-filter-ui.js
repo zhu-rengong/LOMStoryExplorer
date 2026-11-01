@@ -35,6 +35,9 @@
       let suggest = { open: false, items: [], active: 0, from: 0, to: 0, mode: "field" };
       let textCache = { lang: "", count: -1, map: new Map() };
       let contextCache = null;
+      let resultsKey = null;
+      let resultsList = null;
+      let resultsScroll = 0;
 
       const nodeText = (index) => {
         const lang = store.textLang();
@@ -97,17 +100,35 @@
         if (!overlay.close("filterSuggest")) hideSuggestRaw();
       };
 
+      const paintActive = (list) => {
+        if (!list) return;
+        for (const row of list.querySelectorAll(".result-item[data-id]")) {
+          ui.setOn(row, row.dataset.id === store.state.selectedId, "is-active");
+        }
+      };
+
       const renderResults = () => {
         const box = $("filterResults");
         if (!box) return;
         const state = store.state;
         if (!state.filterSet || !state.filterSource.trim()) {
+          resultsKey = null;
+          resultsList = null;
+          resultsScroll = 0;
           box.hidden = true;
           box.replaceChildren();
           return;
         }
-        const indexes = Array.from(state.filterSet);
         box.hidden = false;
+        if (resultsKey && resultsKey.source === state.filterSource && resultsKey.set === state.filterSet) {
+          paintActive(resultsList);
+          if (resultsList) resultsList.scrollTop = resultsScroll;
+          return;
+        }
+        const indexes = Array.from(state.filterSet);
+        resultsKey = { source: state.filterSource, set: state.filterSet };
+        resultsList = null;
+        resultsScroll = 0;
         box.replaceChildren();
         box.appendChild(ui.el("div", "filter-results-title", i18n.t("filterResults", { n: indexes.length })));
         if (!indexes.length) {
@@ -117,6 +138,7 @@
         const list = ui.el("div", "filter-results-list");
         const more = ui.el("div", "filter-results-more");
         let shown = 0;
+        resultsList = list;
 
         const paintMore = () => {
           const left = indexes.length - shown;
@@ -145,12 +167,14 @@
         };
 
         list.addEventListener("scroll", () => {
+          resultsScroll = list.scrollTop;
           if (list.scrollHeight - list.scrollTop - list.clientHeight < 40) appendChunk();
         }, { passive: true });
 
         box.appendChild(list);
         box.appendChild(more);
         appendChunk();
+        paintActive(list);
       };
 
       const updateUi = () => {
@@ -339,6 +363,7 @@
           expr.select();
         }
         updateUi();
+        if (resultsList) resultsList.scrollTop = resultsScroll;
       };
 
       const close = () => {
@@ -497,6 +522,9 @@
         bind,
         reset: () => {
           resetContext();
+          resultsKey = null;
+          resultsList = null;
+          resultsScroll = 0;
           renderFieldChips();
           renderExampleChips();
           updateUi();

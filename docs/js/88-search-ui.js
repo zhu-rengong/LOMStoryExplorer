@@ -16,6 +16,10 @@
       let rendered = 0;
       let active = 0;
       let lastQuery = "";
+      let renderedQuery = "";
+      let renderedFilterSet = null;
+      let savedScroll = 0;
+      let stale = true;
       let warming = null;
       let warmingLang = "";
       let statusCount = null;
@@ -51,11 +55,13 @@
 
       const show = () => {
         const input = $("search");
+        const box = $("searchResults");
         overlay.open("searchResults", {
           trigger: input,
           placement: { align: "start", gap: 8, matchWidth: true, fit: true },
         });
         ui.setExpanded(input, true);
+        if (box) box.scrollTop = savedScroll;
       };
 
       const loadingText = () => {
@@ -133,7 +139,7 @@
         total = result.total;
         outside = result.outside;
         active = 0;
-        const scrollTop = keepScroll ? box.scrollTop : 0;
+        const scrollTop = keepScroll ? savedScroll : 0;
         const limit = keepScroll ? Math.max(rendered, PAGE) : PAGE;
         rendered = Math.min(hits.length, limit);
 
@@ -175,7 +181,11 @@
 
         box.replaceChildren(frag);
         updateStatus(query);
-        box.scrollTop = scrollTop;
+        savedScroll = scrollTop;
+        renderedQuery = query;
+        renderedFilterSet = store.state.filterSet;
+        stale = false;
+        box.scrollTop = savedScroll;
         return hits.length;
       };
 
@@ -201,7 +211,13 @@
           hide();
           return 0;
         }
-        const count = render(query);
+        const filterSet = store.state.filterSet;
+        if (!stale && query === renderedQuery && filterSet === renderedFilterSet && hits.length) {
+          updateStatus(query);
+          show();
+          return hits.length;
+        }
+        const count = render(query, query === renderedQuery && filterSet === renderedFilterSet);
         show();
         return count;
       };
@@ -209,10 +225,14 @@
       const refresh = ui.rafBatch(() => {
         const input = $("search");
         const box = $("searchResults");
-        if (!input || !box || box.hidden) return;
+        if (!input || !box) return;
         const query = input.value.trim();
         if (query.length < 2) return;
         lastQuery = query;
+        if (box.hidden) {
+          stale = true;
+          return;
+        }
         const result = search.search(query);
         if (result.total !== total || !hits.length) {
           render(query, true);
@@ -274,6 +294,10 @@
         outside = 0;
         rendered = 0;
         active = 0;
+        renderedQuery = "";
+        renderedFilterSet = null;
+        savedScroll = 0;
+        stale = true;
         hide();
       };
 
@@ -297,6 +321,7 @@
           }
         });
         box.addEventListener("scroll", () => {
+          savedScroll = box.scrollTop;
           if (box.scrollTop + box.clientHeight >= box.scrollHeight - SCROLL_GAP) appendMore();
         });
         overlay.register("searchResults", {
