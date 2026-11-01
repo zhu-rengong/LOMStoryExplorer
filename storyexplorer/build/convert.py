@@ -1,11 +1,15 @@
 from __future__ import annotations
 
-import difflib
+import hashlib
+import re
 from collections import Counter
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any
 
-from ..config import SCHEMA_VERSION
+from ..cache import file_fingerprint
+from ..config import CONVERT_VERSION, SCHEMA_VERSION
 
 MIN_SUBSTITUTIONS = 2
 MIN_TARGET_SHARE = 0.9
@@ -29,6 +33,9 @@ class Conversion:
         for key in sorted(self.phrases, key=len, reverse=True):
             index.setdefault(key[0], []).append(key)
         self._index = index
+        self._heads = frozenset(index)
+        self._translate = str.maketrans(self.pairs) if self.pairs else {}
+        self._scan = _scanner(index)
 
     def _phrase_at(self, text: str, index: int) -> str:
         for key in self._index.get(text[index], ()):
@@ -40,33 +47,35 @@ class Conversion:
         hit = self.overrides.get(text)
         if hit is not None:
             return hit
-        if not self._index:
-            return "".join(self.pairs.get(char, char) for char in text)
+        scan = self._scan
+        if scan is None or self._heads.isdisjoint(text):
+            return text.translate(self._translate)
         out: list[str] = []
-        index = 0
-        size = len(text)
-        while index < size:
-            key = self._phrase_at(text, index)
-            if key:
-                out.append(self.phrases[key])
-                index += len(key)
+        last = 0
+        matched = False
+        for match in scan.finditer(text):
+            start = match.start()
+            if start < last:
                 continue
-            char = text[index]
-            out.append(self.pairs.get(char, char))
-            index += 1
+            key = self._phrase_at(text, start)
+            if not key:
+                continue
+            matched = True
+            if last < start:
+                out.append(text[last:start].translate(self._translate))
+            out.append(self.phrases[key])
+            last = start + len(key)
+        if not matched:
+            return text.translate(self._translate)
+        if last < len(text):
+            out.append(text[last:].translate(self._translate))
         return "".join(out)
 
 
-def _aligned(source: str, target: str) -> list[tuple[str, str]] | None:
-    out: list[tuple[str, str]] = []
-    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, source, target, autojunk=False).get_opcodes():
-        if tag == "equal":
-            out.extend((source[i1 + offset], source[i1 + offset]) for offset in range(i2 - i1))
-            continue
-        if tag != "replace" or i2 - i1 != j2 - j1:
-            return None
-        out.extend((source[i1 + offset], target[j1 + offset]) for offset in range(i2 - i1))
-    return out
+def _scanner(index: Mapping[str, Any]) -> re.Pattern[str] | None:
+    if not index:
+        return None
+    return re.compile("[" + "".join(re.escape(char) for char in sorted(index)) + "]")
 
 
 def _shared_entries(source_locale: dict[str, Any], target_locale: dict[str, Any]) -> list[tuple[str, str]]:
@@ -83,21 +92,22 @@ def _shared_entries(source_locale: dict[str, Any], target_locale: dict[str, Any]
     return entries
 
 
-def _transitions(entries: list[tuple[str, str]]) -> tuple[dict[str, Counter], int]:
-    counts: dict[str, Counter] = {}
+def _transitions(entries: Sequence[tuple[str, str]]) -> tuple[dict[str, Counter], int]:
+    pairs: Counter = Counter()
     aligned_total = 0
     for source, target in entries:
-        aligned = _aligned(source, target)
-        if aligned is None:
+        if len(source) != len(target):
             continue
         aligned_total += 1
-        for char, mapped in aligned:
-            if ord(char) >= BMP_LIMIT or ord(mapped) >= BMP_LIMIT:
-                continue
-            bucket = counts.get(char)
-            if bucket is None:
-                bucket = counts[char] = Counter()
-            bucket[mapped] += 1
+        pairs.update(zip(source, target))
+    counts: dict[str, Counter] = {}
+    for (char, mapped), count in pairs.items():
+        if ord(char) >= BMP_LIMIT or ord(mapped) >= BMP_LIMIT:
+            continue
+        bucket = counts.get(char)
+        if bucket is None:
+            bucket = counts[char] = Counter()
+        bucket[mapped] += count
     return counts, aligned_total
 
 
@@ -133,11 +143,18 @@ def _runs(left: str, right: str) -> list[tuple[int, int]]:
     return runs
 
 
-def _phrase_candidates(conv: Conversion, entries: list[tuple[str, str]]) -> dict[str, Counter]:
+def _failing(conv: Conversion, entries: Sequence[tuple[str, str]]) -> list[int]:
+    return [index for index, (source, target) in enumerate(entries) if conv.convert(source) != target]
+
+
+def _phrase_candidates(conv: Conversion, entries: Sequence[tuple[str, str]],
+                       pending: Sequence[int]) -> dict[str, Counter]:
     votes: dict[str, Counter] = {}
-    for source, target in entries:
+    pairs = conv.pairs
+    for index in pending:
+        source, target = entries[index]
         converted = conv.convert(source)
-        if len(converted) != len(target) or converted == target:
+        if len(converted) != len(target):
             continue
         for start, stop in _runs(converted, target):
             low = max(0, start - PHRASE_CONTEXT)
@@ -145,50 +162,61 @@ def _phrase_candidates(conv: Conversion, entries: list[tuple[str, str]]) -> dict
             key, value = source[low:high], target[low:high]
             if len(key) < 2:
                 continue
-            if key == value and "".join(conv.pairs.get(char, char) for char in key) == key:
+            if key == value and "".join(pairs.get(char, char) for char in key) == key:
                 continue
             votes.setdefault(key, Counter())[value] += 1
     return votes
 
 
-def _confirmed_phrases(votes: dict[str, Counter], entries: list[tuple[str, str]]) -> dict[str, str]:
+def _confirmed_phrases(votes: dict[str, Counter], entries: Sequence[tuple[str, str]]) -> dict[str, str]:
     if not votes:
         return {}
-    buckets: dict[str, list[str]] = {}
-    for key in votes:
-        buckets.setdefault(key[0], []).append(key)
-    for bucket in buckets.values():
-        bucket.sort(key=len, reverse=True)
+    chosen = {key: bucket.most_common(1)[0][0] for key, bucket in votes.items()}
+    sizes: dict[str, list[tuple[int, dict[str, str]]]] = {}
+    for key, value in chosen.items():
+        groups = sizes.setdefault(key[0], [])
+        for group in groups:
+            if group[0] == len(key):
+                group[1][key] = value
+                break
+        else:
+            groups.append((len(key), {key: value}))
+    for groups in sizes.values():
+        groups.sort(key=lambda item: item[0], reverse=True)
+    scan = _scanner(sizes)
+    if scan is None:
+        return {}
     agree: Counter = Counter()
     seen: Counter = Counter()
     for source, target in entries:
         if len(source) != len(target):
             continue
-        index = 0
-        size = len(source)
-        while index < size:
-            hit = ""
-            for key in buckets.get(source[index], ()):
-                if source.startswith(key, index):
-                    hit = key
-                    break
-            if not hit:
-                index += 1
+        last = 0
+        for match in scan.finditer(source):
+            index = match.start()
+            if index < last:
                 continue
-            value = votes[hit].most_common(1)[0][0]
+            hit = ""
+            for size, table in sizes[source[index]]:
+                if index + size <= len(source):
+                    key = source[index:index + size]
+                    if key in table:
+                        hit = key
+                        break
+            if not hit:
+                continue
+            last = index + len(hit)
             seen[hit] += 1
-            if target[index:index + len(hit)] == value:
+            if target[index:index + len(hit)] == chosen[hit]:
                 agree[hit] += 1
-            index += len(hit)
-    return {key: votes[key].most_common(1)[0][0] for key in votes
-            if seen[key] and agree[key] == seen[key]}
+    return {key: value for key, value in chosen.items() if seen[key] and agree[key] == seen[key]}
 
 
-def _rewrites(conv: Conversion, entries: list[tuple[str, str]]) -> dict[str, str]:
+def _rewrites(conv: Conversion, entries: Sequence[tuple[str, str]],
+              pending: Sequence[int]) -> dict[str, str]:
     candidates: dict[str, Counter] = {}
-    for source, target in entries:
-        if conv.convert(source) == target:
-            continue
+    for index in pending:
+        source, target = entries[index]
         candidates.setdefault(source, Counter())[target] += 1
     out: dict[str, str] = {}
     for source, bucket in candidates.items():
@@ -203,16 +231,31 @@ def build_conversion(lang: str, source: str, source_locale: dict[str, Any],
     entries = _shared_entries(source_locale, target_locale)
     counts, aligned_total = _transitions(entries)
     conv = Conversion(lang=lang, source=source, pairs=_pair_table(counts))
+    pending = _failing(conv, entries)
     for _ in range(PHRASE_ROUNDS):
-        votes = _phrase_candidates(conv, entries)
-        added = {key: value for key, value in _confirmed_phrases(votes, entries).items()
+        votes = {key: value for key, value in _phrase_candidates(conv, entries, pending).items()
                  if key not in conv.phrases}
+        if not votes:
+            break
+        added = _confirmed_phrases(votes, entries)
         if not added:
             break
         conv.phrases.update(added)
         conv.__post_init__()
-    conv.overrides = _rewrites(conv, entries)
-    verified = sum(1 for source_text, target_text in entries if conv.convert(source_text) == target_text)
+        pending = [index for index in pending if conv.convert(entries[index][0]) != entries[index][1]]
+        if not pending:
+            break
+    conv.overrides = _rewrites(conv, entries, pending)
+    failing = set(pending)
+    verified = 0
+    for index, (source_text, target_text) in enumerate(entries):
+        override = conv.overrides.get(source_text)
+        if override is not None:
+            if override == target_text:
+                verified += 1
+            continue
+        if index not in failing:
+            verified += 1
     conv.stats.update({
         "compared": len(entries),
         "aligned": aligned_total,
@@ -226,6 +269,18 @@ def build_conversion(lang: str, source: str, source_locale: dict[str, Any],
     return conv
 
 
+def conversion_fingerprint(source: str, lang: str, source_path: Path, target_path: Path) -> str:
+    material = "|".join((
+        str(CONVERT_VERSION),
+        source,
+        lang,
+        str(file_fingerprint(source_path)["sha256_16"]),
+        str(file_fingerprint(target_path)["sha256_16"]),
+        f"{MIN_SUBSTITUTIONS}:{MIN_TARGET_SHARE}:{MIN_DOMINANCE}:{PHRASE_CONTEXT}:{PHRASE_ROUNDS}",
+    ))
+    return hashlib.sha1(material.encode("utf-8")).hexdigest()[:16]
+
+
 def conversion_payload(conv: Conversion) -> dict[str, Any]:
     return {
         "schema": SCHEMA_VERSION,
@@ -235,6 +290,21 @@ def conversion_payload(conv: Conversion) -> dict[str, Any]:
         "phrases": {key: conv.phrases[key] for key in sorted(conv.phrases)},
         "overrides": {key: conv.overrides[key] for key in sorted(conv.overrides)},
     }
+
+
+def conversion_from_payload(payload: dict[str, Any], stats: dict[str, Any] | None = None) -> Conversion:
+    flat = payload.get("pairs") or ""
+    pairs = {flat[index]: flat[index + 1] for index in range(0, len(flat) - 1, 2)}
+    conv = Conversion(
+        lang=str(payload.get("lang") or ""),
+        source=str(payload.get("source") or ""),
+        pairs=pairs,
+        phrases=dict(payload.get("phrases") or {}),
+        overrides=dict(payload.get("overrides") or {}),
+    )
+    if stats:
+        conv.stats.update(stats)
+    return conv
 
 
 def payload_bytes(payload: dict[str, Any]) -> int:

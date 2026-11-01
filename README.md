@@ -26,7 +26,9 @@ python extract.py --game $env:MORTAL_GAME_DIR
 python build.py
 ```
 
-`run.ps1` wraps both steps and opens the reader. `python extract.py --force` ignores caches and re-reads every asset. `python build.py --no-cache` re-analyzes every Lua script. Script analysis runs in a process pool sized to `min(cpu cores / 2, 4)`; pass `--jobs N` to override the worker count and `--jobs 1` to analyze serially.
+`run.ps1` wraps both steps and opens the reader. `python extract.py --force` ignores caches and re-reads every asset. `python build.py --no-cache` re-analyzes every Lua script and re-derives the conversion table. Script analysis runs in a process pool sized to `min(cpu cores / 2, 4)`; pass `--jobs N` to override the worker count and `--jobs 1` to analyze serially.
+
+The conversion table is derived once per locale revision and cached in `data/cache/convert-<lang>.json.gz`, keyed by the two locale fingerprints and the derivation parameters, so a rebuild after touching only scripts reports `conversion zh-cn: cached in 0.09s`. A cold derivation takes a few seconds.
 
 Generated data is ignored by git. Publish the site with `tools/publish-pages.ps1`, which pushes `docs/` to the `gh-pages` branch without a build step.
 

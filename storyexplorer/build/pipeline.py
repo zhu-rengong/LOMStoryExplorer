@@ -16,6 +16,7 @@ from ..config import (
     CACHE_DIR,
     CHECKPOINTS_PATH,
     CHECKPOINT_SHARDS,
+    CONVERT_VERSION,
     DERIVED_LANGS,
     ENTRIES_PATH,
     FLOW_VERSION,
@@ -43,7 +44,13 @@ from ..emit import (
     write_text_shard,
     write_wordcount,
 )
-from .convert import build_conversion, conversion_payload, payload_bytes
+from .convert import (
+    build_conversion,
+    conversion_fingerprint,
+    conversion_from_payload,
+    conversion_payload,
+    payload_bytes,
+)
 from ..game.entries import summarize as summarize_probe
 from ..game.info import read_game_info
 from ..model import Edge, Facets, GameInfo, ScriptAnalysis, analysis_from_wire, analysis_to_wire
@@ -184,22 +191,47 @@ def _load_derived_locales(langs: tuple[str, ...], source_lang: str,
 
 
 def _emit_conversions(reporter: Reporter, source_lang: str, source_locale: dict,
-                      derived: dict[str, dict]) -> tuple[list[tuple[str, int]], dict[str, str], dict[str, Any]]:
+                      derived: dict[str, dict],
+                      use_cache: bool = True) -> tuple[list[tuple[str, int]], dict[str, str], dict[str, Any]]:
     parts: list[tuple[str, int]] = []
     targets: dict[str, str] = {}
     report: dict[str, Any] = {}
+    source_path = LOCALE_DIR / f"{source_lang}.json"
     for lang, target_locale in derived.items():
-        conv = build_conversion(lang, source_lang, source_locale, target_locale)
-        payload = conversion_payload(conv)
+        started = time.time()
+        cache_path = CACHE_DIR / f"convert-{lang}.json.gz"
+        key = CacheKey(CONVERT_VERSION,
+                       conversion_fingerprint(source_lang, lang, source_path,
+                                              LOCALE_DIR / f"{lang}.json"))
+        cached = load_envelope(cache_path, key) if use_cache else None
+        payload = cached.get("payload") if isinstance(cached, dict) else None
+        if isinstance(payload, dict):
+            conv = conversion_from_payload(payload, cached.get("stats") or {})
+            hit = True
+            payload = conversion_payload(conv)
+        else:
+            conv = build_conversion(lang, source_lang, source_locale, target_locale)
+            payload = conversion_payload(conv)
+            hit = False
+            if use_cache:
+                save_envelope(cache_path, key, {"payload": payload, "stats": conv.stats})
+        elapsed = round(time.time() - started, 2)
         name = f"conv-{lang}.js"
         size = write_conversion(WEB_DATA_DIR / name, lang, payload)
         parts.append((name, size))
         targets[lang] = name
-        report[lang] = {**conv.stats, "bytes": size, "payload_bytes": payload_bytes(payload)}
+        report[lang] = {
+            **conv.stats,
+            "bytes": size,
+            "payload_bytes": payload_bytes(payload),
+            "seconds": elapsed,
+            "cached": hit,
+        }
         reporter.info(
-            f"conversion {lang}: {conv.stats['pairs']} pairs, {conv.stats['phrases']} phrases,"
-            f" {conv.stats['overrides']} overrides, fidelity {conv.stats['fidelity']:.4f},"
-            f" {fmt_bytes(size)}"
+            f"conversion {lang}: {'cached' if hit else 'derived'} in {elapsed:.2f}s,"
+            f" {conv.stats.get('pairs', 0)} pairs, {conv.stats.get('phrases', 0)} phrases,"
+            f" {conv.stats.get('overrides', 0)} overrides,"
+            f" fidelity {conv.stats.get('fidelity', 0):.4f}, {fmt_bytes(size)}"
         )
     return parts, targets, report
 
@@ -805,7 +837,8 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     parts.append(("wordcount.js", wordcount_size))
 
     conv_parts, conv_targets, conv_report = _emit_conversions(
-        reporter, source_lang, locale, _load_derived_locales(DERIVED_LANGS, source_lang, reporter))
+        reporter, source_lang, locale,
+        _load_derived_locales(DERIVED_LANGS, source_lang, reporter), use_cache)
     parts.extend(conv_parts)
 
     checkpoints = _emit_checkpoints(reporter, locale)
