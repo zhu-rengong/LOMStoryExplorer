@@ -9,7 +9,6 @@
 
       let hits = [];
       let active = 0;
-      let timer = null;
       let lastQuery = "";
       let warming = null;
       let warmingLang = "";
@@ -34,9 +33,8 @@
       const hide = () => {
         if (!overlay.close("searchResults")) {
           const box = $("searchResults");
-          const input = $("search");
           if (box) box.hidden = true;
-          if (input) input.setAttribute("aria-expanded", "false");
+          ui.setExpanded($("search"), false);
         }
       };
 
@@ -46,7 +44,7 @@
           trigger: input,
           placement: { align: "start", gap: 8, matchWidth: true, fit: true },
         });
-        if (input) input.setAttribute("aria-expanded", "true");
+        ui.setExpanded(input, true);
       };
 
       const renderScope = (frag) => {
@@ -112,7 +110,7 @@
         hits.forEach((hit, index) => {
           const item = ui.el("div", "drop-item row row-tall");
           item.dataset.id = hit.id;
-          if (index === 0) item.classList.add("is-active");
+          ui.setOn(item, index === 0, "is-active");
           item.appendChild(ui.el("span", "did", hit.id));
           item.appendChild(ui.el("span", "dmeta",
             hit.chapter ? i18n.chapterTitle(hit.chapter) : ""));
@@ -164,10 +162,7 @@
         warmFullText(store.textLang());
       };
 
-      const onInput = () => {
-        clearTimeout(timer);
-        timer = setTimeout(perform, 160);
-      };
+      const onInput = ui.debounce(perform, 160);
 
       const choose = () => {
         const hit = hits[active] || hits[0];
@@ -209,7 +204,7 @@
           group: "menu",
           onHide: () => {
             box.hidden = true;
-            input.setAttribute("aria-expanded", "false");
+            ui.setExpanded(input, false);
           },
           placement: { align: "start", gap: 8, matchWidth: true, fit: true },
         });

@@ -251,12 +251,10 @@
     }
   };
 
+  const LOCAL = window.SR_LOCAL;
+
   const persist = () => {
-    try {
-      localStorage.setItem(KEY, JSON.stringify(state));
-    } catch {
-      return;
-    }
+    LOCAL.setJson(KEY, state);
   };
 
   const snapshot = () => clone(state);
@@ -275,20 +273,11 @@
 
   const restore = () => {
     restoreDefaults();
-    let saved = null;
-    try {
-      saved = JSON.parse(localStorage.getItem(KEY) || "null");
-    } catch {
-      saved = null;
-    }
+    const saved = LOCAL.getJson(KEY);
     let source = saved && typeof saved === "object" ? saved : null;
     if (!source) {
-      try {
-        const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) || "null");
-        source = legacy && typeof legacy === "object" ? { measure: legacy.measure } : null;
-      } catch {
-        source = null;
-      }
+      const legacy = LOCAL.getJson(LEGACY_KEY);
+      source = legacy && typeof legacy === "object" ? { measure: legacy.measure } : null;
     }
     if (!source) return;
     state.measure = Math.round(clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT));

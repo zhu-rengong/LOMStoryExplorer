@@ -14,7 +14,7 @@
     ({ schema, graph, store, i18n, ui, text, condexpr }) => {
       const clampScale = (value) => {
         if (!Number.isFinite(value) || value <= 0) return 1;
-        return Math.max(RICH_MIN, Math.min(RICH_MAX, value));
+        return ui.clamp(value, RICH_MIN, RICH_MAX);
       };
 
       const appendSegment = (parent, chunk, stack) => {
@@ -129,7 +129,7 @@
           wrapper.dataset.opt = `${beatKey}:${index}`;
           const button = ui.el("button", "option-head row");
           button.type = "button";
-          button.setAttribute("aria-expanded", "false");
+          ui.setExpanded(button, false);
           button.appendChild(ui.el("span", "option-idx", String(index + 1)));
 
           const main = ui.el("span", "option-main");
@@ -149,7 +149,7 @@
           body.appendChild(renderBeats(option.beats, ctx));
           button.addEventListener("click", () => {
             const open = wrapper.classList.toggle("is-open");
-            button.setAttribute("aria-expanded", open ? "true" : "false");
+            ui.setExpanded(button, open);
           });
           wrapper.appendChild(button);
           wrapper.appendChild(body);
@@ -188,7 +188,7 @@
 
         head.setAttribute("role", "button");
         head.tabIndex = 0;
-        head.setAttribute("aria-expanded", "false");
+        ui.setExpanded(head, false);
 
         const target = ctx.lookup && ctx.lookup.targetOf
           ? ctx.lookup.targetOf(extractKey(data.label) || data.label)
@@ -210,7 +210,7 @@
 
         const toggle = () => {
           const open = box.classList.toggle("is-open");
-          head.setAttribute("aria-expanded", open ? "true" : "false");
+          ui.setExpanded(head, open);
           if (ctx.preview) ctx.preview.hide();
         };
         head.addEventListener("click", toggle);

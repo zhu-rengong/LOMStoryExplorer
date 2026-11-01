@@ -3,32 +3,17 @@
 
   const SR = window.SR;
 
-  SR.define("storage", [], () => {
+  const LOCAL = window.SR_LOCAL;
+
+  SR.define("storage", ["ui"], ({ ui }) => {
     const SESSION_KEY = "legend-of-mortal.explorer.session.v1";
     const BOOKMARK_KEY = "legend-of-mortal.explorer.bookmarks.v1";
     const POSITION_KEY = "legend-of-mortal.explorer.positions.v1";
 
     const LIMIT = 500;
 
-    const read = (key) => {
-      try {
-        return JSON.parse(localStorage.getItem(key) || "null");
-      } catch {
-        return null;
-      }
-    };
-
-    const write = (key, value) => {
-      try {
-        localStorage.setItem(key, JSON.stringify(value));
-        return true;
-      } catch {
-        return false;
-      }
-    };
-
     const readSession = () => {
-      const saved = read(SESSION_KEY);
+      const saved = LOCAL.getJson(SESSION_KEY);
       if (!saved || typeof saved !== "object") return null;
       return {
         selected: typeof saved.selected === "string" ? saved.selected : "",
@@ -36,33 +21,33 @@
       };
     };
 
-    let sessionTimer = null;
     let pendingSession = null;
+
+    const writeSession = ui.debounce(() => {
+      if (pendingSession) LOCAL.setJson(SESSION_KEY, pendingSession);
+      pendingSession = null;
+    }, 200);
 
     const saveSession = (value) => {
       pendingSession = value;
-      clearTimeout(sessionTimer);
-      sessionTimer = setTimeout(() => {
-        if (pendingSession) write(SESSION_KEY, pendingSession);
-        pendingSession = null;
-      }, 200);
+      writeSession();
     };
 
     const bookmarks = new Set();
 
     const loadBookmarks = () => {
-      const saved = read(BOOKMARK_KEY);
+      const saved = LOCAL.getJson(BOOKMARK_KEY);
       if (!Array.isArray(saved)) return bookmarks;
       for (const id of saved) if (typeof id === "string") bookmarks.add(id);
       return bookmarks;
     };
 
-    const saveBookmarks = () => write(BOOKMARK_KEY, Array.from(bookmarks));
+    const saveBookmarks = () => LOCAL.setJson(BOOKMARK_KEY, Array.from(bookmarks));
 
     const positions = new Map();
 
     const loadPositions = () => {
-      const saved = read(POSITION_KEY);
+      const saved = LOCAL.getJson(POSITION_KEY);
       const map = saved && typeof saved === "object" && !Array.isArray(saved)
         ? (saved.pos && typeof saved.pos === "object" ? saved.pos : {})
         : {};
@@ -75,24 +60,23 @@
       return positions;
     };
 
-    let positionTimer = null;
-
     const savePositions = () => {
       const out = {};
       const keys = Array.from(positions.keys()).slice(-LIMIT);
       for (const id of keys) out[id] = Math.round(positions.get(id) * 1000) / 1000;
-      write(POSITION_KEY, { pos: out });
+      LOCAL.setJson(POSITION_KEY, { pos: out });
     };
+
+    const writePositions = ui.debounce(savePositions, 300);
 
     const rememberPosition = (id, fraction) => {
       if (!id || typeof fraction !== "number" || !Number.isFinite(fraction)) return;
-      positions.set(id, Math.max(0, Math.min(1, fraction)));
-      clearTimeout(positionTimer);
-      positionTimer = setTimeout(savePositions, 300);
+      positions.set(id, ui.clamp(fraction, 0, 1));
+      writePositions();
     };
 
     const flush = () => {
-      if (pendingSession) write(SESSION_KEY, pendingSession);
+      if (pendingSession) LOCAL.setJson(SESSION_KEY, pendingSession);
       savePositions();
       saveBookmarks();
     };

@@ -47,8 +47,7 @@
         const panel = $("helpPanel");
         if (panel) panel.hidden = true;
         openFlag = false;
-        const button = $("helpBtn");
-        if (button) button.setAttribute("aria-expanded", "false");
+        ui.setExpanded($("helpBtn"), false);
       };
 
       const open = () => {
@@ -57,7 +56,7 @@
         renderHelp();
         openFlag = true;
         const button = $("helpBtn");
-        if (button) button.setAttribute("aria-expanded", "true");
+        ui.setExpanded(button, true);
         overlay.open("help", { trigger: button, autofocus: "helpClose" });
       };
 

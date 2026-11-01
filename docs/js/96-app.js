@@ -23,8 +23,8 @@
       const toggleRailButton = (on) => {
         const button = $("railToggle");
         if (!button) return;
-        button.classList.toggle("is-on", on);
-        button.setAttribute("aria-expanded", on ? "true" : "false");
+        ui.setOn(button, on);
+        ui.setExpanded(button, on);
       };
 
       const hideRail = () => {
@@ -105,7 +105,7 @@
           const menu = $("langMenu");
           if (menu) menu.hidden = true;
           const button = $("langBtn");
-          if (button) button.classList.remove("is-on");
+          if (button) ui.setOn(button, false);
         }
       };
 
@@ -137,8 +137,8 @@
         const button = $("langBtn");
         if (!button) return;
         renderLangMenu();
-        button.setAttribute("aria-expanded", "true");
-        button.classList.add("is-on");
+        ui.setExpanded(button, true);
+        ui.setOn(button, true);
         overlay.open("langMenu", { trigger: button });
       };
 
@@ -230,7 +230,7 @@
         if (!menu || !button) return;
         if (menu.hidden) {
           renderNavMenu();
-          button.setAttribute("aria-expanded", "true");
+          ui.setExpanded(button, true);
           overlay.open("navMenu", { trigger: button });
         } else {
           closeNav();
@@ -280,7 +280,7 @@
         const button = $("moreBtn");
         if (!button) return;
         renderMoreMenu();
-        button.setAttribute("aria-expanded", "true");
+        ui.setExpanded(button, true);
         overlay.open("moreMenu", { trigger: button });
       };
 
@@ -354,15 +354,11 @@
           });
         }
 
-        let resizeTimer = null;
-        window.addEventListener("resize", () => {
-          clearTimeout(resizeTimer);
-          resizeTimer = setTimeout(() => {
-            applyLayout(false);
-            panels.hideBranchPreview();
-            closeNav();
-          }, 80);
-        });
+        window.addEventListener("resize", ui.debounce(() => {
+          applyLayout(false);
+          panels.hideBranchPreview();
+          closeNav();
+        }, 80));
 
         window.addEventListener("hashchange", () => {
           const id = readHash();
@@ -404,7 +400,7 @@
             const menu = $("langMenu");
             if (menu) menu.hidden = true;
             const button = $("langBtn");
-            if (button) button.classList.remove("is-on");
+            if (button) ui.setOn(button, false);
           },
           placement: { align: "end", width: 240, fit: true },
         });

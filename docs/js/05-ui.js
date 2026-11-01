@@ -37,6 +37,19 @@
     return wrapped;
   };
 
+  const rafBatch = (fn) => {
+    let handle = 0;
+    return () => {
+      if (handle) return;
+      handle = requestAnimationFrame(() => {
+        handle = 0;
+        fn();
+      });
+    };
+  };
+
+  const normalizeQuery = (value) => String(value || "").trim().toLowerCase();
+
   const NUMBER_RE = /\B(?=(\d{3})+(?!\d))/g;
 
   const formatNumber = (value) => String(Number(value) || 0).replace(NUMBER_RE, ",");
@@ -44,6 +57,16 @@
   const setPressed = (node, on) => {
     if (!node) return;
     node.setAttribute("aria-pressed", on ? "true" : "false");
+  };
+
+  const setExpanded = (node, on) => {
+    if (!node || typeof node.setAttribute !== "function") return;
+    node.setAttribute("aria-expanded", on ? "true" : "false");
+  };
+
+  const setOn = (node, on, token) => {
+    if (!node) return;
+    node.classList.toggle(token || "is-on", !!on);
   };
 
   let toastTimer = null;
@@ -80,7 +103,11 @@
     el,
     focusables,
     formatNumber,
+    normalizeQuery,
     progress,
+    rafBatch,
+    setExpanded,
+    setOn,
     setPressed,
     svg,
     toast,

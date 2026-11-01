@@ -24,7 +24,7 @@
         if (!list) return;
         for (const row of list.querySelectorAll(".rail-item[data-id]")) {
           const on = row.dataset.id === id;
-          row.classList.toggle("is-on", on);
+          ui.setOn(row, on);
           row.setAttribute("aria-selected", on ? "true" : "false");
         }
       };
@@ -40,7 +40,7 @@
           row.appendChild(ui.el("span", "ri-id", id));
           return row;
         }
-        if (store.state.selectedId === id) row.classList.add("is-on");
+        ui.setOn(row, store.state.selectedId === id);
         row.appendChild(ui.el("span", "ri-id", id));
         if (node.entry && ENTRY_KEYS[node.entry]) {
           const mark = ui.el("span", `ri-entry is-${node.entry}`);
@@ -101,7 +101,7 @@
         const list = $("chapterList");
         if (!list) return;
         const search = $("railSearch");
-        const query = search ? search.value.trim().toLowerCase() : "";
+        const query = search ? ui.normalizeQuery(search.value) : "";
         let open = store.state.outlineChapter;
         if (open === undefined) {
           const selected = store.selected();
@@ -156,7 +156,7 @@
         if (box) box.hidden = store.state.railTab === "bookmarks";
         for (const tab of ui.$$(".rail-tab")) {
           const on = tab.dataset.rail === store.state.railTab;
-          tab.classList.toggle("is-on", on);
+          ui.setOn(tab, on);
           tab.setAttribute("aria-selected", on ? "true" : "false");
         }
       };

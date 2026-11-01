@@ -23,8 +23,7 @@
             || current.classList.contains("branch");
           if (foldable && !current.classList.contains("is-open")) {
             current.classList.add("is-open");
-            const head = current.firstElementChild;
-            if (head) head.setAttribute("aria-expanded", "true");
+            ui.setExpanded(current.firstElementChild, true);
           }
           current = current.parentElement;
         }
@@ -74,7 +73,7 @@
       };
 
       const focusText = (id, query) => {
-        const needle = String(query || "").trim().toLowerCase();
+        const needle = ui.normalizeQuery(query);
         pendingHit = id && needle ? { id, query: needle } : null;
       };
 
@@ -82,7 +81,7 @@
         const body = $("readerBody");
         if (!body) return 0;
         const max = body.scrollHeight - body.clientHeight;
-        return max > 0 ? Math.min(1, Math.max(0, body.scrollTop / max)) : 0;
+        return max > 0 ? ui.clamp(body.scrollTop / max, 0, 1) : 0;
       };
 
       const nextTargets = (node) => graph.nextTargets(node);

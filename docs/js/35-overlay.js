@@ -11,7 +11,6 @@
 
     const defs = Object.create(null);
     const stack = [];
-    let refreshRaf = 0;
 
     const $ = (id) => document.getElementById(id);
 
@@ -142,13 +141,9 @@
       place(panel, triggerOf(def), def.placement);
     };
 
-    const refresh = () => {
-      if (refreshRaf) return;
-      refreshRaf = requestAnimationFrame(() => {
-        refreshRaf = 0;
-        for (const layer of stack) reposition(layer.key);
-      });
-    };
+    const refresh = ui.rafBatch(() => {
+      for (const layer of stack) reposition(layer.key);
+    });
 
     const silenceFocusRing = (node) => {
       node.classList.add("is-focus-silent");
@@ -184,7 +179,7 @@
       const panel = panelOf(def);
       if (typeof def.onHide === "function") def.onHide();
       else if (panel) panel.hidden = true;
-      if (def.trigger && def.trigger.setAttribute) def.trigger.setAttribute("aria-expanded", "false");
+      ui.setExpanded(def.trigger, false);
     };
 
     const open = (key, options) => {
@@ -203,13 +198,11 @@
 
       const trigger = triggerOf(def, opts.trigger);
       const previous = def.trigger;
-      if (previous && previous !== trigger && previous.setAttribute) {
-        previous.setAttribute("aria-expanded", "false");
-      }
+      if (previous && previous !== trigger) ui.setExpanded(previous, false);
       if (trigger) def.trigger = trigger;
       panel.hidden = false;
       panel.setAttribute("aria-hidden", "false");
-      if (trigger && trigger.setAttribute) trigger.setAttribute("aria-expanded", "true");
+      ui.setExpanded(trigger, true);
 
       const existing = stack.find((layer) => layer.key === key);
       if (!existing) {

@@ -33,7 +33,6 @@
       const $ = ui.$;
 
       let suggest = { open: false, items: [], active: 0, from: 0, to: 0, mode: "field" };
-      let timer = null;
       let textCache = { lang: "", count: -1, map: new Map() };
       let contextCache = null;
 
@@ -89,9 +88,8 @@
 
       const hideSuggestRaw = () => {
         const box = $("filterSuggest");
-        const input = $("filterExpr");
         if (box) box.hidden = true;
-        if (input) input.setAttribute("aria-expanded", "false");
+        ui.setExpanded($("filterExpr"), false);
         suggest = { open: false, items: [], active: 0, from: 0, to: 0, mode: "field" };
       };
 
@@ -167,12 +165,11 @@
             badge.hidden = true;
           }
         }
-        const button = $("filterBtn");
-        if (button) button.classList.toggle("is-on", active);
+        ui.setOn($("filterBtn"), active);
 
         const expr = $("filterExpr");
         if (expr) {
-          expr.classList.toggle("is-error", !!state.filterError);
+          ui.setOn(expr, state.filterError, "is-error");
           if (document.activeElement !== expr && expr.value !== state.filterSource) {
             expr.value = state.filterSource;
           }
@@ -241,13 +238,10 @@
         return { ok: true, count: result.set ? result.set.size : 0 };
       };
 
-      const schedule = () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-          const expr = $("filterExpr");
-          if (expr) apply(expr.value);
-        }, 250);
-      };
+      const schedule = ui.debounce(() => {
+        const expr = $("filterExpr");
+        if (expr) apply(expr.value);
+      }, 250);
 
       const insertAtCursor = (input, value) => {
         if (!input) return;
@@ -302,7 +296,7 @@
             box.appendChild(row);
           });
         }
-        input.setAttribute("aria-expanded", "true");
+        ui.setExpanded(input, true);
         overlay.open("filterSuggest", {
           trigger: input,
           keep: ["filterPanel"],
@@ -327,9 +321,8 @@
 
       const hideRaw = () => {
         const panel = $("filterPanel");
-        const button = $("filterBtn");
         if (panel) panel.hidden = true;
-        if (button) button.setAttribute("aria-expanded", "false");
+        ui.setExpanded($("filterBtn"), false);
         hideSuggestRaw();
       };
 
@@ -337,7 +330,7 @@
         const panel = $("filterPanel");
         const button = $("filterBtn");
         if (!panel || !button) return;
-        button.setAttribute("aria-expanded", "true");
+        ui.setExpanded(button, true);
         const expr = $("filterExpr");
         if (expr) expr.value = store.state.filterSource;
         overlay.open("filterPanel", { trigger: button });
@@ -451,7 +444,7 @@
             }
             if (event.key === "Enter") {
               event.preventDefault();
-              clearTimeout(timer);
+              schedule.cancel();
               hideSuggest();
               apply(expr.value);
             }
@@ -464,7 +457,7 @@
         const applyButton = $("filterApply");
         if (applyButton) {
           applyButton.addEventListener("click", () => {
-            clearTimeout(timer);
+            schedule.cancel();
             const input = $("filterExpr");
             apply(input ? input.value : "");
           });

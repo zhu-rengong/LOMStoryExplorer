@@ -16,7 +16,6 @@
       let facetSets = null;
       let nameCache = { lang: "", index: null };
       let preview = null;
-      let previewTimer = null;
 
       const ensureFacetSets = () => {
         if (facetSets) return facetSets;
@@ -300,13 +299,12 @@
       };
 
       const hideBranchPreview = () => {
-        if (previewTimer) {
-          clearTimeout(previewTimer);
-          previewTimer = null;
-        }
+        scheduleHide.cancel();
         const node = previewEl();
         if (node) node.hidden = true;
       };
+
+      const scheduleHide = ui.debounce(hideBranchPreview, 120);
 
       const showBranchPreview = (head, payload) => {
         const node = previewEl();
@@ -340,10 +338,7 @@
         let overVar = false;
         head.addEventListener("mouseenter", () => {
           if (box.classList.contains("is-open")) return;
-          if (previewTimer) {
-            clearTimeout(previewTimer);
-            previewTimer = null;
-          }
+          scheduleHide.cancel();
           if (overVar) return;
           showBranchPreview(head, getPayload());
         });
@@ -355,9 +350,7 @@
           if (now) hideBranchPreview();
           else if (!box.classList.contains("is-open")) showBranchPreview(head, getPayload());
         });
-        head.addEventListener("mouseleave", () => {
-          previewTimer = setTimeout(hideBranchPreview, 120);
-        });
+        head.addEventListener("mouseleave", scheduleHide);
         head.addEventListener("focus", () => {
           if (box.classList.contains("is-open")) return;
           showBranchPreview(head, getPayload());

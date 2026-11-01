@@ -28,13 +28,9 @@
     return /hans|-cn|-sg|-my/.test(tag) ? "zh-cn" : "zh-tw";
   };
 
-  const read = () => {
-    try {
-      return localStorage.getItem(KEY) || "";
-    } catch {
-      return "";
-    }
-  };
+  const LOCAL = window.SR_LOCAL;
+
+  const read = () => LOCAL.get(KEY) || "";
 
   const pinned = () => {
     const id = read();
@@ -56,12 +52,7 @@
 
   const pin = (id) => {
     if (!has(id)) return false;
-    try {
-      localStorage.setItem(KEY, id);
-      return true;
-    } catch {
-      return false;
-    }
+    return LOCAL.set(KEY, id);
   };
 
   const htmlOf = (id) => (META[id] && META[id].html) || String(id || DEFAULT);

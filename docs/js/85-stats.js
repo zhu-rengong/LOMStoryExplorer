@@ -79,8 +79,8 @@
         openFlag = false;
         const button = $("statsBtn");
         if (button) {
-          button.classList.remove("is-on");
-          button.setAttribute("aria-expanded", "false");
+          ui.setOn(button, false);
+          ui.setExpanded(button, false);
         }
       };
 
@@ -153,7 +153,7 @@
         nameCell.scope = "row";
         const button = ui.el("button", "stats-expand row");
         button.type = "button";
-        button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        ui.setExpanded(button, isOpen);
         button.appendChild(ui.el("span", "stats-name", i18n.chapterTitle(chapter)));
         nameCell.appendChild(button);
         row.appendChild(nameCell);
@@ -269,8 +269,8 @@
         panel.setAttribute("aria-hidden", "false");
         const button = $("statsBtn");
         if (button) {
-          button.classList.add("is-on");
-          button.setAttribute("aria-expanded", "true");
+          ui.setOn(button, true);
+          ui.setExpanded(button, true);
         }
         renderSummary();
         renderKinds();

@@ -61,7 +61,7 @@
       const renderPickerList = (filter) => {
         const list = $("fontPickerList");
         if (!list) return;
-        const query = (filter || "").trim().toLowerCase();
+        const query = ui.normalizeQuery(filter);
         const items = pickerState.items.filter((item) => (
           !query || item.name.toLowerCase().indexOf(query) >= 0
         ));
@@ -88,7 +88,7 @@
         const list = $("fontPickerList");
         if (!list) return;
         const rows = list.querySelectorAll(".picker-item");
-        rows.forEach((row, index) => row.classList.toggle("is-active", index === pickerState.active));
+        rows.forEach((row, index) => ui.setOn(row, index === pickerState.active, "is-active"));
         const active = rows[pickerState.active];
         if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest" });
       };
@@ -401,7 +401,7 @@
             ? !!type && entry.weight === null
             : entry.weight !== null && Number(button.dataset.weight) === Number(entry.weight);
           button.hidden = inherit && !type;
-          button.classList.toggle("is-on", on);
+          ui.setOn(button, on);
           ui.setPressed(button, on);
         });
 
@@ -422,8 +422,7 @@
         const scrim = $("settingsScrim");
         if (drawer) drawer.hidden = true;
         if (scrim) scrim.hidden = true;
-        const button = $("settingsBtn");
-        if (button) button.setAttribute("aria-expanded", "false");
+        ui.setExpanded($("settingsBtn"), false);
       };
 
       const open = () => {
@@ -433,7 +432,7 @@
         sync();
         if (scrim) scrim.hidden = false;
         const button = $("settingsBtn");
-        if (button) button.setAttribute("aria-expanded", "true");
+        ui.setExpanded(button, true);
         overlay.open("settings", { trigger: button });
         const first = $("typeFontTrigger");
         if (first) first.focus();

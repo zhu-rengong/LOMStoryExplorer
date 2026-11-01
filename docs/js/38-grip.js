@@ -29,7 +29,7 @@
       const bounds = range();
       const room = Math.max(bounds.min, Math.min(bounds.max, available() - 32));
       const max = Math.max(room, Math.min(bounds.max, widthNow()));
-      return Math.round(Math.min(Math.max(value, bounds.min), max));
+      return Math.round(ui.clamp(value, bounds.min, max));
     };
 
     const paint = (value) => {

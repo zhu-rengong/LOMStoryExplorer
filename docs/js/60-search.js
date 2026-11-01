@@ -3,7 +3,7 @@
 
   const SR = window.SR;
 
-  SR.define("search", ["schema", "graph", "store", "text"], ({ schema, graph, store, text }) => {
+  SR.define("search", ["schema", "graph", "store", "text", "ui"], ({ schema, graph, store, text, ui }) => {
     const TOTAL_LIMIT = 24;
 
     let index = { lang: "", count: 0, entries: [] };
@@ -26,9 +26,8 @@
     };
 
     const search = (query) => {
-      const raw = String(query || "").trim();
-      if (raw.length < 2) return [];
-      const lower = raw.toLowerCase();
+      const lower = ui.normalizeQuery(query);
+      if (lower.length < 2) return [];
       const hits = [];
       const data = buildIndex();
       for (const entry of data.entries) {
@@ -47,7 +46,7 @@
     };
 
     const countOutside = (query) => {
-      const lower = String(query || "").trim().toLowerCase();
+      const lower = ui.normalizeQuery(query);
       if (!lower) return 0;
       const data = buildIndex();
       let count = 0;
