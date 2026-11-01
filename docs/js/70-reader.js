@@ -227,8 +227,26 @@
         if (isMobile() && !document.body.dataset.sheet) document.body.dataset.sheet = "half";
       };
 
+      const empty = () => {
+        const body = $("readerBody");
+        const crumb = $("nodeChapter");
+        if (crumb) {
+          crumb.hidden = true;
+          crumb.replaceChildren();
+        }
+        if (!body) return;
+        const state = ui.el("div", "empty-state");
+        state.appendChild(ui.el("span", "brush", i18n.t("emptyBrush")));
+        state.appendChild(ui.el("h3", null, i18n.t("emptyH3")));
+        state.appendChild(ui.el("p", null, i18n.t("emptyP")));
+        state.appendChild(ui.el("p", "hint-line", i18n.t("emptyHint")));
+        body.removeAttribute("aria-busy");
+        body.replaceChildren(state);
+      };
+
       return {
         edgeLabelOf,
+        empty,
         focusText,
         nextTargets,
         render,

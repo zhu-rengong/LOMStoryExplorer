@@ -155,6 +155,7 @@
         renderNavMenu();
         const node = store.selected();
         if (node) reader.render(node);
+        else reader.empty();
         stats.refresh();
         if (store.state.filterSource.trim()) filterUi.apply(store.state.filterSource);
       };
@@ -463,16 +464,7 @@
         if (startId && graph.nodeById.has(startId)) {
           store.select(startId, { history: false });
         } else {
-          const body = $("readerBody");
-          if (body && !body.querySelector(".empty-state")) {
-            body.replaceChildren();
-            const empty = ui.el("div", "empty-state");
-            empty.appendChild(ui.el("span", "brush", i18n.t("emptyBrush")));
-            empty.appendChild(ui.el("h3", null, i18n.t("emptyH3")));
-            empty.appendChild(ui.el("p", null, i18n.t("emptyP")));
-            empty.appendChild(ui.el("p", "hint-line", i18n.t("emptyHint")));
-            body.appendChild(empty);
-          }
+          reader.empty();
         }
 
         text.ensureHead(store.textLang()).then(() => {
