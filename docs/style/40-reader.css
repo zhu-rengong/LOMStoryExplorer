@@ -267,6 +267,24 @@
 
 .option-badges { display: flex; flex-wrap: wrap; gap: var(--rd-gap-1); }
 
+.option-badges .badge {
+  height: auto;
+  min-height: var(--ctl-sm);
+  padding: 2px var(--sp-2);
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-2);
+  font-family: var(--rd-font-option-cond, var(--font-mono));
+  font-size: var(--rd-fs-option-cond, var(--fs-xs));
+  font-weight: var(--rd-w-option-cond, 400);
+  line-height: 1.6;
+  letter-spacing: 0;
+  cursor: default;
+}
+
+.option-badges .badge-danger { color: var(--danger); }
+
 .option-cond {
   font-family: var(--rd-font-option-cond, var(--font-mono));
   font-size: var(--rd-fs-option-cond, var(--fs-xs));
