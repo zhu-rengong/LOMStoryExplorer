@@ -104,21 +104,19 @@
         const data = pack();
         box.replaceChildren();
         const total = [0, 0];
-        let stories = 0;
         if (data) {
           Object.keys(data.stories || {}).forEach((id) => {
             const pair = counts(data.stories[id], "all");
             if (!pair[0] && !pair[1]) return;
             total[0] += pair[0];
             total[1] += pair[1];
-            stories++;
           });
         }
         box.appendChild(statCard("statsZh", total[0]));
         box.appendChild(statCard("statsEn", total[1]));
         box.appendChild(statCard("statsSum", total[0] + total[1]));
         box.appendChild(ui.el("span", "stats-note",
-          i18n.t("statsNote", { n: stories, chapters: graph.chapters.length })));
+          i18n.t("statsNote", { n: graph.nodes.length, chapters: graph.chapters.length })));
       };
 
       const numCell = (value, className) => ui.el("td", `num${className ? ` ${className}` : ""}`,
@@ -158,12 +156,7 @@
         nameCell.appendChild(button);
         row.appendChild(nameCell);
 
-        let stories = 0;
-        storyIdsOf(chapter.id).forEach((id) => {
-          const item = counts((data.stories || {})[id], activeKind);
-          if (item[0] || item[1]) stories++;
-        });
-        row.appendChild(numCell(stories));
+        row.appendChild(numCell(storyIdsOf(chapter.id).length));
         row.appendChild(numCell(pair[0]));
         row.appendChild(numCell(pair[1]));
         row.appendChild(numCell(pair[0] + pair[1], "sum"));

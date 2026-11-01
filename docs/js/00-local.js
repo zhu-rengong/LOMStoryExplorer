@@ -18,6 +18,15 @@
     }
   };
 
+  const remove = (key) => {
+    try {
+      localStorage.removeItem(key);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
   const getJson = (key) => {
     const raw = get(key);
     if (raw === null) return null;
@@ -38,5 +47,5 @@
     return set(key, payload);
   };
 
-  window.SR_LOCAL = { get, getJson, set, setJson };
+  window.SR_LOCAL = { get, getJson, remove, set, setJson };
 })();

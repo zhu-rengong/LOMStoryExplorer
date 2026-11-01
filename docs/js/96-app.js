@@ -373,10 +373,6 @@
 
         const readerBody = $("readerBody");
         if (readerBody) readerBody.addEventListener("click", () => panels.hideBranchPreview());
-
-        window.addEventListener("beforeunload", () => {
-          store.persist();
-        });
       };
 
       const bindOverlays = () => {

@@ -42,16 +42,8 @@
       }
     };
 
-    const persist = () => {
-      storage.saveSession({
-        selected: state.selectedId,
-        filter: state.filterSource,
-      });
-    };
-
     const commit = (...keys) => {
       for (const key of keys) pending.add(key);
-      persist();
       notify();
     };
 
@@ -111,13 +103,6 @@
       if (restored) return;
       restored = true;
       state.lang = lang.initial();
-      const session = storage.readSession();
-      if (session) {
-        if (typeof session.filter === "string") state.filterSource = session.filter;
-        if (session.selected && graph.nodeById.has(session.selected)) {
-          state.selectedId = session.selected;
-        }
-      }
       computeVisible();
       commit("lang", "filter", "visible", "selected");
     };
@@ -131,7 +116,6 @@
       },
       forward,
       isBookmarked: (id) => storage.bookmarks.has(id),
-      persist,
       positionOf: (id) => storage.positionOf(id),
       rememberPosition: (id, fraction) => storage.rememberPosition(id, fraction),
       restore,
