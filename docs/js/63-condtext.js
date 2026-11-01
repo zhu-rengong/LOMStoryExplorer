@@ -20,7 +20,7 @@
     };
 
     const cond = (node) => {
-      if (!node) return "";
+      if (!node || typeof node !== "object") return "";
       if (node.tag === "const") return String(node.value === undefined ? "" : node.value);
       if (node.tag === "random") return i18n.t("cRandom", { min: node.min, max: node.max });
       if (node.tag === "dice") return i18n.t("cDice");
@@ -37,7 +37,7 @@
         });
       }
       if (node.tag === "group") {
-        const items = node.items || [];
+        const items = Array.isArray(node.items) ? node.items : [];
         if (items.length === 1 && node.op === "sum" && !node.negative) return cond(items[0]);
         const inner = items.map(cond).join(" + ");
         return negative(node, i18n.t("cGroup", {
@@ -51,9 +51,10 @@
       }
       if (node.tag === "logic") {
         const joiner = ` ${node.op === "or" ? i18n.t("cxOr") : i18n.t("cxAnd")} `;
-        return (node.items || []).map(cond).join(joiner);
+        const items = Array.isArray(node.items) ? node.items : [];
+        return items.map(cond).join(joiner);
       }
-      return node.text || "";
+      return typeof node.text === "string" ? node.text : "";
     };
 
     const gain = (label, count) => {
@@ -97,22 +98,26 @@
     );
 
     const optionCond = (condition) => {
-      if (!condition) return "";
-      const value = condition.value || "";
-      if (!condition.op) return value;
-      return i18n.t("oCond", { op: condition.op, value });
+      if (!condition || typeof condition !== "object") return "";
+      const value = typeof condition.value === "string" ? condition.value : "";
+      const op = typeof condition.op === "string" ? condition.op : "";
+      if (!op) return value;
+      return i18n.t("oCond", { op, value });
     };
 
-    const needText = (detail) => (detail && detail.need ? detail.need : []).map((item) => (
-      i18n.t("oNeed", {
+    const needText = (detail) => {
+      const need = detail && Array.isArray(detail.need) ? detail.need : [];
+      return need.filter((item) => (
+        item && typeof item === "object" && typeof item.kind === "string" && item.kind
+      )).map((item) => i18n.t("oNeed", {
         label: i18n.t(`need.${item.kind}`, { defaultValue: item.kind }),
-        op: item.op,
-        value: item.value,
-      })
-    )).join(" · ");
+        op: item.op === undefined ? "" : item.op,
+        value: item.value === undefined ? "" : item.value,
+      })).join(" · ");
+    };
 
     const optionHead = (text, detail) => {
-      const action = detail && detail.action
+      const action = detail && typeof detail.action === "string" && detail.action
         ? i18n.t(`menu.${detail.action}`, { defaultValue: detail.action }) : "";
       if (action && text) return i18n.t("optionActionJoin", { action, title: text });
       return action || text || i18n.t("optionOther");

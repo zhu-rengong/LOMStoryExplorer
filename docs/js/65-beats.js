@@ -258,7 +258,8 @@
         return button;
       };
 
-      const renderBeats = (rows, context) => {
+      const renderBeats = (input, context) => {
+        const rows = Array.isArray(input) ? input : [];
         const ctx = context || {};
         const frag = document.createDocumentFragment();
         let metaBuffer = [];
@@ -322,7 +323,7 @@
           frag.appendChild(group);
         };
 
-        for (const row of rows || []) {
+        for (const row of rows) {
           if (!Array.isArray(row) || !row.length) continue;
 
           if (beat.is(row, "branch")) {
