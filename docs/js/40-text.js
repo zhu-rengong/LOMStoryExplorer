@@ -3,99 +3,184 @@
 
   const SR = window.SR;
 
-  SR.define("text", ["schema", "ui", "i18n"], ({ schema, ui, i18n }) => {
+  SR.define("text", ["schema", "ui", "i18n", "convert"], ({ schema, ui, i18n, convert }) => {
     const SHARD_TIMEOUT = 30000;
     const meta = schema.meta;
+    const source = meta.textSource || meta.langs[0] || "";
     const legacy = !!meta.fullText || !Object.keys(meta.shardOf).length || meta.shards.length === 0;
     const keys = meta.shards.map((shard) => shard.key);
 
-    const langs = Object.create(null);
+    const physical = {
+      head: "idle",
+      headPromise: null,
+      shards: Object.create(null),
+      pending: Object.create(null),
+      headError: "",
+      shardError: "",
+    };
+    const views = Object.create(null);
     const queue = [];
     let queueBusy = false;
 
-    const state = (lang) => {
-      let current = langs[lang];
-      if (!current) {
-        current = langs[lang] = {
-          head: "idle",
-          headPromise: null,
-          shards: Object.create(null),
-          pending: Object.create(null),
-          headError: "",
-          shardError: "",
-        };
-      }
-      return current;
+    const rawPack = () => (window.SR_TEXT || {})[source] || null;
+
+    const rawStories = () => {
+      const current = rawPack();
+      return current && current.stories ? current.stories : null;
     };
 
-    const pack = (lang) => (window.SR_TEXT || {})[lang] || null;
+    const viewOf = (lang) => {
+      let view = views[lang];
+      if (!view) {
+        view = views[lang] = {
+          pack: null,
+          characters: null,
+          names: null,
+          edgeLabels: null,
+          stories: Object.create(null),
+        };
+      }
+      return view;
+    };
 
-    const ensureHead = (lang) => {
-      const current = state(lang);
-      if (current.head === "ready") return Promise.resolve(true);
-      if (current.head === "loading") return current.headPromise;
-      current.head = "loading";
-      const src = legacy ? `data/text-${lang}.js` : `data/text-${lang}-head.js`;
-      current.headPromise = ui.loadScript(src).then(() => {
-        if (!pack(lang)) throw new Error(`language pack ${lang} is empty`);
-        current.head = "ready";
-        current.headError = "";
+    const converted = (lang) => lang !== source && convert.ready(lang);
+
+    const convUrl = (lang) => (meta.conv || {})[lang] || "";
+
+    const ensureConvert = (lang) => {
+      if (lang === source) return Promise.resolve(true);
+      const url = convUrl(lang);
+      if (!url) return Promise.resolve(false);
+      if (convert.ready(lang)) return Promise.resolve(true);
+      return convert.ensure(lang, `data/${url}`).then(() => true, () => false);
+    };
+
+    const loadHead = () => {
+      physical.head = "loading";
+      const src = legacy ? `data/text-${source}.js` : `data/text-${source}-head.js`;
+      physical.headPromise = ui.loadScript(src).then(() => {
+        if (!rawPack()) throw new Error(`text pack ${source} is empty`);
+        physical.head = "ready";
+        physical.headError = "";
         if (legacy) {
-          for (const key of keys) current.shards[key] = "ready";
+          for (const key of keys) physical.shards[key] = "ready";
         }
         return true;
       }).catch((error) => {
-        current.head = "failed";
-        current.headError = error && error.message ? error.message : String(error);
-        ui.toast(i18n.t("langFailed", { lang }));
+        physical.head = "failed";
+        physical.headError = error && error.message ? error.message : String(error);
+        ui.toast(i18n.t("langFailed", { lang: source }));
         return false;
       });
-      return current.headPromise;
+      return physical.headPromise;
+    };
+
+    const ensureHead = (lang) => {
+      const current = physical.head === "ready"
+        ? Promise.resolve(true)
+        : (physical.head === "loading" ? physical.headPromise : loadHead());
+      return Promise.all([current, ensureConvert(lang)]).then(([headOk, convOk]) => {
+        if (!headOk) return false;
+        if (!convOk && lang !== source) {
+          ui.toast(i18n.t("langFailed", { lang }));
+          return false;
+        }
+        return true;
+      });
     };
 
     const ensureShard = (lang, key) => {
-      const current = state(lang);
       if (!key) return Promise.resolve(true);
       if (legacy) return Promise.resolve(true);
-      if (current.shards[key] === "ready") return Promise.resolve(true);
-      if (current.pending[key]) return current.pending[key];
-      current.shards[key] = "loading";
-      current.pending[key] = ui.loadScript(`data/text-${lang}-${key}.js`).then(() => {
-        current.shards[key] = "ready";
-        delete current.pending[key];
+      if (physical.shards[key] === "ready") return Promise.resolve(true);
+      if (physical.pending[key]) return physical.pending[key];
+      physical.shards[key] = "loading";
+      physical.pending[key] = ui.loadScript(`data/text-${source}-${key}.js`).then(() => {
+        physical.shards[key] = "ready";
+        delete physical.pending[key];
         return true;
       }).catch((error) => {
-        current.shards[key] = "failed";
-        current.shardError = error && error.message ? error.message : String(error);
-        delete current.pending[key];
+        physical.shards[key] = "failed";
+        physical.shardError = error && error.message ? error.message : String(error);
+        delete physical.pending[key];
         return false;
       });
-      return current.pending[key];
+      return physical.pending[key];
     };
 
-    const hasStory = (lang, id) => {
-      const current = pack(lang);
-      return !!(current && current.stories && Object.prototype.hasOwnProperty.call(current.stories, id));
+    const hasStory = (id) => {
+      const stories = rawStories();
+      return !!stories && Object.prototype.hasOwnProperty.call(stories, id);
     };
 
     const ensureStory = (lang, id) => ensureHead(lang).then(() => {
-      if (hasStory(lang, id)) return true;
+      if (hasStory(id)) return true;
       const key = meta.shardOf[id];
       if (!key) return false;
-      return ensureShard(lang, key).then(() => hasStory(lang, id));
+      return ensureShard(lang, key).then(() => hasStory(id));
     }).catch(() => false);
 
     const story = (lang, id) => {
-      const current = pack(lang);
-      if (!current || !current.stories) return null;
-      return current.stories[id] === undefined ? null : current.stories[id];
+      const stories = rawStories();
+      if (!stories) return null;
+      const beats = stories[id];
+      if (beats === undefined) return null;
+      if (!converted(lang)) return beats;
+      const view = viewOf(lang);
+      let hit = view.stories[id];
+      if (hit === undefined) {
+        hit = convert.rows(lang, beats);
+        view.stories[id] = hit;
+      }
+      return hit;
     };
 
-    const characters = (lang) => (pack(lang) || {}).characters || {};
+    const pack = (lang) => {
+      const raw = rawPack();
+      if (!raw) return null;
+      if (!converted(lang)) return raw;
+      const view = viewOf(lang);
+      if (!view.pack) {
+        view.pack = {
+          schema: raw.schema,
+          lang,
+          source: raw.lang,
+          missing: raw.missing,
+          missingKeys: raw.missingKeys || [],
+          shardKeys: raw.shardKeys || [],
+          fullText: raw.fullText,
+          characters: null,
+          names: null,
+          edgeLabels: null,
+          stories: view.stories,
+        };
+      }
+      const result = view.pack;
+      if (!result.characters) result.characters = convert.group(lang, raw.characters || {});
+      if (!result.names) result.names = convert.group(lang, raw.names || {});
+      if (!result.edgeLabels) result.edgeLabels = convert.group(lang, raw.edgeLabels || {});
+      const stories = raw.stories || {};
+      for (const id of Object.keys(stories)) {
+        if (view.stories[id] === undefined) view.stories[id] = convert.rows(lang, stories[id]);
+      }
+      return result;
+    };
 
-    const names = (lang) => (pack(lang) || {}).names || {};
+    const tableOf = (lang, field) => {
+      const raw = rawPack();
+      if (!raw) return {};
+      const value = raw[field] || {};
+      if (!converted(lang)) return value;
+      const view = viewOf(lang);
+      if (!view[field]) view[field] = convert.group(lang, value);
+      return view[field];
+    };
 
-    const edgeLabels = (lang) => (pack(lang) || {}).edgeLabels || {};
+    const characters = (lang) => tableOf(lang, "characters");
+
+    const names = (lang) => tableOf(lang, "names");
+
+    const edgeLabels = (lang) => tableOf(lang, "edgeLabels");
 
     const edgeLabel = (lang, edgeId, fallback) => {
       const table = edgeLabels(lang);
@@ -103,32 +188,30 @@
     };
 
     const progress = (lang) => {
-      const current = state(lang);
       const total = legacy ? 0 : keys.length;
       let loaded = 0;
       let failed = 0;
       for (const key of keys) {
-        const status = current.shards[key];
+        const status = physical.shards[key];
         if (status === "ready") loaded++;
         else if (status === "failed") failed++;
       }
       return {
-        head: current.head,
+        head: physical.head,
         loaded,
         total,
-        done: total === 0 ? current.head === "ready" : loaded + failed >= total,
-        headError: current.headError || "",
-        shardError: current.shardError || "",
+        done: total === 0 ? physical.head === "ready" : loaded + failed >= total,
+        headError: physical.headError || "",
+        shardError: physical.shardError || "",
       };
     };
 
     const settleShard = (lang, key) => new Promise((resolve) => {
-      const current = state(lang);
       const timer = setTimeout(() => {
-        if (current.shards[key] === "loading") {
-          current.shards[key] = "failed";
-          current.shardError = `timeout: ${key}`;
-          delete current.pending[key];
+        if (physical.shards[key] === "loading") {
+          physical.shards[key] = "failed";
+          physical.shardError = `timeout: ${key}`;
+          delete physical.pending[key];
         }
         resolve(false);
       }, SHARD_TIMEOUT);
@@ -175,15 +258,14 @@
       if (legacy) return 0;
       const max = typeof limit === "number" ? limit : 2;
       if (max <= 0) return 0;
-      const current = state(lang);
       const seen = Object.create(null);
       let queued = 0;
       for (const id of ids || []) {
         if (queued >= max) break;
         const key = meta.shardOf[id];
         if (!key || seen[key]) continue;
-        if (current.shards[key] === "ready" || current.shards[key] === "loading") continue;
-        if (current.pending[key]) continue;
+        if (physical.shards[key] === "ready" || physical.shards[key] === "loading") continue;
+        if (physical.pending[key]) continue;
         seen[key] = 1;
         queue.push({ lang, key });
         queued++;
@@ -195,13 +277,12 @@
     const shardState = (lang, id) => {
       const key = meta.shardOf[id];
       if (!key) return legacy ? "ready" : "missing";
-      return state(lang).shards[key] || "idle";
+      return physical.shards[key] || "idle";
     };
 
     const retry = (lang, id) => {
-      const current = state(lang);
       const key = meta.shardOf[id];
-      if (key && current.shards[key] === "failed") delete current.shards[key];
+      if (key && physical.shards[key] === "failed") delete physical.shards[key];
       return ensureStory(lang, id);
     };
 

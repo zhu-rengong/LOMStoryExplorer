@@ -11,8 +11,8 @@ def compose(*, generated: str, scripts: int, edge_counts: dict[str, int],
             node_counts: dict[str, int], entries: dict[str, Any], facets: dict[str, Any],
             checkpoints: dict[str, Any], lore: dict[str, Any], wordcount: dict[str, Any],
             times: dict[str, Any], chapters: list[dict[str, Any]], text: dict[str, Any],
-            languages: dict[str, Any], dynamic: list[str], analysis: dict[str, Any],
-            artifacts: list[dict[str, Any]]) -> dict[str, Any]:
+            languages: dict[str, Any], conversion: dict[str, Any], dynamic: list[str],
+            analysis: dict[str, Any], artifacts: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "schema": SCHEMA_VERSION,
         "generated": generated,
@@ -28,6 +28,7 @@ def compose(*, generated: str, scripts: int, edge_counts: dict[str, int],
         "chapters": chapters,
         "text": text,
         "languages": languages,
+        "conversion": conversion,
         "dynamic_jumps": dynamic[:200],
         "analysis": analysis,
         "artifacts": artifacts,

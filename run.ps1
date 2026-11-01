@@ -2,6 +2,7 @@
 param(
     [string]$GameDir = $env:MORTAL_GAME_DIR,
     [string]$Langs = "zh-tw,zh-cn",
+    [string]$BuildLangs = "zh-tw",
     [switch]$Force,
     [switch]$NoBrowser
 )
@@ -36,7 +37,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "extract.py failed (exit code $LASTEXITCODE)" }
 
     Write-Host "`n== build explorer data ==" -ForegroundColor Cyan
-    python "build.py" "--langs" $Langs
+    python "build.py" "--langs" $BuildLangs
     if ($LASTEXITCODE -ne 0) { throw "build.py failed (exit code $LASTEXITCODE)" }
 
     $index = Join-Path $root "docs" "index.html"

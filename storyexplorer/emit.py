@@ -7,7 +7,7 @@ from typing import Any
 
 from .cache import atomic_write_text, dump_json
 from .config import CHECKPOINT_SHARDS, SCHEMA_VERSION
-from .wire import GLOBAL_CHECKPOINTS, GLOBAL_GRAPH, GLOBAL_TEXT, GLOBAL_WORDCOUNT
+from .wire import GLOBAL_CHECKPOINTS, GLOBAL_GRAPH, GLOBAL_TEXT, GLOBAL_TEXT_CONV, GLOBAL_WORDCOUNT
 
 
 def write_script(path: Path, body: str) -> int:
@@ -29,6 +29,11 @@ def text_shard_script(lang: str, stories: Any) -> str:
         f"if(!p)return;p.stories=p.stories||{{}};var s={dump_json(stories)};"
         "for(var k in s)p.stories[k]=s[k];})();\n"
     )
+
+
+def conv_script(lang: str, payload: Any) -> str:
+    return (f"window.{GLOBAL_TEXT_CONV}=window.{GLOBAL_TEXT_CONV}||{{}};"
+            f"window.{GLOBAL_TEXT_CONV}[{json.dumps(lang, ensure_ascii=False)}]={dump_json(payload)};\n")
 
 
 def checkpoint_script(items: Any) -> str:
@@ -70,6 +75,10 @@ def write_text(path: Path, lang: str, payload: Mapping[str, Any]) -> int:
 
 def write_text_shard(path: Path, lang: str, stories: Mapping[str, Any]) -> int:
     return write_script(path, text_shard_script(lang, stories))
+
+
+def write_conversion(path: Path, lang: str, payload: Mapping[str, Any]) -> int:
+    return write_script(path, conv_script(lang, payload))
 
 
 def write_wordcount(path: Path, payload: Mapping[str, Any]) -> int:

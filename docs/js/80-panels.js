@@ -4,8 +4,8 @@
   const SR = window.SR;
 
   SR.define("panels",
-    ["store", "graph", "i18n", "beats", "condexpr", "checkpoints", "overlay", "ui", "text"],
-    ({ store, graph, i18n, beats, condexpr, checkpoints, overlay, ui, text }) => {
+    ["store", "graph", "i18n", "beats", "condexpr", "checkpoints", "overlay", "ui", "text", "convert"],
+    ({ store, graph, i18n, beats, condexpr, checkpoints, overlay, ui, text, convert }) => {
       const $ = ui.$;
       const HOVER_OK = !(window.matchMedia && window.matchMedia("(hover: none)").matches);
 
@@ -200,9 +200,9 @@
       const ADDITION_TYPES = ["diceAddStat", "diceAddRel", "diceAddTalent", "diceAddFlag"];
 
       const additionLabel = (item) => {
-        const labels = item.label;
-        if (!labels) return "";
-        return labels[store.textLang()] || labels["zh-tw"] || "";
+        const label = item && item.label;
+        if (typeof label !== "string" || !label) return "";
+        return convert.string(store.textLang(), label);
       };
 
       const additionRow = (item) => {
@@ -256,7 +256,8 @@
           body.appendChild(ui.el("p", "lookup-cond-sub",
             i18n.t("lookupCondPrefix", { prefix: model.prefix || "—" })));
           (model.candidates || []).slice(0, 12).forEach((item) => {
-            const label = item.note ? `${item.name}（${item.note}）` : item.name;
+            const note = item.note ? convert.string(store.textLang(), item.note) : "";
+            const label = note ? `${item.name}（${note}）` : item.name;
             condRow(body, label, i18n.t("lookupCondWeight", { n: item.rate }));
           });
         } else if (kind === "flag") {
@@ -264,7 +265,10 @@
         } else {
           body.appendChild(ui.el("p", "lookup-cond-muted", i18n.t("lookupCondEmpty")));
         }
-        if (model.note) body.appendChild(ui.el("p", "lookup-cond-note", model.note));
+        if (model.note) {
+          body.appendChild(ui.el("p", "lookup-cond-note",
+            convert.string(store.textLang(), model.note)));
+        }
         if (!body.childNodes.length) {
           body.appendChild(ui.el("p", "lookup-cond-muted", i18n.t("lookupCondEmpty")));
         }

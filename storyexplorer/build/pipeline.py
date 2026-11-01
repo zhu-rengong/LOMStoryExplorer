@@ -16,6 +16,7 @@ from ..config import (
     CACHE_DIR,
     CHECKPOINTS_PATH,
     CHECKPOINT_SHARDS,
+    DERIVED_LANGS,
     ENTRIES_PATH,
     FLOW_VERSION,
     LOCALE_DIR,
@@ -25,6 +26,7 @@ from ..config import (
     MANIFEST_PATH,
     REPORT_PATH,
     SCHEMA_VERSION,
+    TEXT_SOURCE_LANG,
     WEB_DATA_DIR,
     game_root,
     install_dir,
@@ -35,11 +37,13 @@ from ..console import Reporter
 from ..emit import (
     text_payload,
     write_checkpoint_shards,
+    write_conversion,
     write_graph,
     write_text,
     write_text_shard,
     write_wordcount,
 )
+from .convert import build_conversion, conversion_payload, payload_bytes
 from ..game.entries import summarize as summarize_probe
 from ..game.info import read_game_info
 from ..model import Edge, Facets, GameInfo, ScriptAnalysis, analysis_from_wire, analysis_to_wire
@@ -165,6 +169,41 @@ def _load_locales(langs: tuple[str, ...], reporter: Reporter) -> dict[str, dict]
     return locales
 
 
+def _load_derived_locales(langs: tuple[str, ...], source_lang: str,
+                          reporter: Reporter) -> dict[str, dict]:
+    locales: dict[str, dict] = {}
+    for lang in langs:
+        if lang == source_lang:
+            continue
+        payload = read_json(LOCALE_DIR / f"{lang}.json")
+        if not isinstance(payload, dict):
+            reporter.warn(f"locale table for {lang} missing, that language stays unavailable")
+            continue
+        locales[lang] = payload
+    return locales
+
+
+def _emit_conversions(reporter: Reporter, source_lang: str, source_locale: dict,
+                      derived: dict[str, dict]) -> tuple[list[tuple[str, int]], dict[str, str], dict[str, Any]]:
+    parts: list[tuple[str, int]] = []
+    targets: dict[str, str] = {}
+    report: dict[str, Any] = {}
+    for lang, target_locale in derived.items():
+        conv = build_conversion(lang, source_lang, source_locale, target_locale)
+        payload = conversion_payload(conv)
+        name = f"conv-{lang}.js"
+        size = write_conversion(WEB_DATA_DIR / name, lang, payload)
+        parts.append((name, size))
+        targets[lang] = name
+        report[lang] = {**conv.stats, "bytes": size, "payload_bytes": payload_bytes(payload)}
+        reporter.info(
+            f"conversion {lang}: {conv.stats['pairs']} pairs, {conv.stats['phrases']} phrases,"
+            f" {conv.stats['overrides']} overrides, fidelity {conv.stats['fidelity']:.4f},"
+            f" {fmt_bytes(size)}"
+        )
+    return parts, targets, report
+
+
 def _names_of(locale: dict, namespace: str, keys: set[str]) -> dict[str, str]:
     table = locale.get(namespace) or {}
     return {key: table[key] for key in sorted(keys) if key in table}
@@ -195,7 +234,7 @@ def render_language(lang: str, locale: dict, node_ids: list[str],
                     chapters, facets: dict[str, Facets], edges: list[Edge],
                     lore: dict[str, str] | None = None) -> LanguageRender:
     started = time.time()
-    renderer = Renderer(locale, lang, lore_fallback=lore)
+    renderer = Renderer(locale, lore_fallback=lore)
     stories: dict[str, list] = {}
     rows: dict[str, list[list[int]]] = {}
     for sid in node_ids:
@@ -453,46 +492,38 @@ def _var_label(node: dict[str, Any], locale: dict[str, Any]) -> str:
     return ""
 
 
-def _localize_expr(node: Any, locales: dict[str, dict[str, Any]]) -> None:
+def _localize_expr(node: Any, locale: dict[str, Any]) -> None:
     if not isinstance(node, dict):
         return
     if node.get("tag") == "var":
-        labels: dict[str, str] = {}
-        for lang, locale in locales.items():
-            label = _var_label(node, locale)
-            if label:
-                labels[lang] = label
-        if labels:
-            node["label"] = labels
+        label = _var_label(node, locale)
+        if label:
+            node["label"] = label
     for key in ("left", "right"):
-        _localize_expr(node.get(key), locales)
+        _localize_expr(node.get(key), locale)
     for item in node.get("items") or []:
-        _localize_expr(item, locales)
+        _localize_expr(item, locale)
 
 
-def _localize_model(model: dict[str, Any], locales: dict[str, dict[str, Any]]) -> None:
+def _localize_model(model: dict[str, Any], locale: dict[str, Any]) -> None:
     for addition in model.get("additions") or []:
         if not isinstance(addition, dict):
             continue
-        labels: dict[str, str] = {}
-        for lang, locale in locales.items():
-            label = _dice_label(addition, locale)
-            if label:
-                labels[lang] = label
-        if labels:
-            addition["label"] = labels
+        label = _dice_label(addition, locale)
+        if label:
+            addition["label"] = label
     for branch in model.get("branches") or []:
         if isinstance(branch, dict):
-            _localize_expr(branch.get("expr"), locales)
+            _localize_expr(branch.get("expr"), locale)
     for variant in model.get("variants") or []:
         if isinstance(variant, dict):
-            _localize_model(variant, locales)
+            _localize_model(variant, locale)
 
 
-def _localize_checkpoints(items: dict[str, Any], locales: dict[str, dict[str, Any]]) -> None:
+def _localize_checkpoints(items: dict[str, Any], locale: dict[str, Any]) -> None:
     for model in items.values():
         if isinstance(model, dict):
-            _localize_model(model, locales)
+            _localize_model(model, locale)
 
 
 def _game_info() -> GameInfo:
@@ -559,13 +590,13 @@ def _pack_shards(node_ids: list[str], chapter_index_map: dict[str, int], chapter
     return shard_of, shards
 
 
-def _emit_checkpoints(reporter: Reporter, locales: dict[str, dict[str, Any]]) -> dict[str, Any]:
+def _emit_checkpoints(reporter: Reporter, locale: dict[str, Any]) -> dict[str, Any]:
     blob = read_json(CHECKPOINTS_PATH)
     if not isinstance(blob, dict):
         blob = {}
     raw_items = blob.get("items")
     items = _sanitize_checkpoints(raw_items if isinstance(raw_items, dict) else {})
-    _localize_checkpoints(items, locales)
+    _localize_checkpoints(items, locale)
     variants = sum(len(model.get("variants") or []) for model in items.values())
     parts: list[dict[str, Any]] = []
     mapping: dict[str, int] = {}
@@ -674,8 +705,14 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
               reporter: Reporter | None = None) -> BuildResult:
     reporter = reporter or Reporter()
     if not langs:
-        reporter.error("no language selected; pass --langs zh-tw,zh-cn")
+        reporter.error("no language selected; pass --langs zh-tw")
         return BuildResult(False, 0, 0, 0, {}, REPORT_PATH)
+    source_lang = TEXT_SOURCE_LANG
+    if source_lang not in langs:
+        reporter.error(f"{source_lang} is required; the reader ships the source text only")
+        return BuildResult(False, 0, 0, 0, {}, REPORT_PATH)
+    if len(langs) > 1:
+        reporter.warn(f"only {source_lang} is rendered; the other languages are derived at runtime")
 
     sources = _load_sources(reporter)
     if not sources:
@@ -723,51 +760,55 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
         empty, simplified, system.sources, times,
     )
 
-    locales = _load_locales(langs, reporter)
+    locales = _load_locales((source_lang,), reporter)
     if locales is None:
         return BuildResult(False, len(node_ids), len(edges), len(chapters), {}, REPORT_PATH)
+    locale = locales[source_lang]
     lore = _load_lore(reporter)
 
     WEB_DATA_DIR.mkdir(parents=True, exist_ok=True)
     reporter.stage(3, 4, "render")
-    renders: dict[str, LanguageRender] = {}
-    for lang in langs:
-        renders[lang] = render_language(
-            lang, locales[lang], node_ids, models, chapter_of_id, chapters, facets, edges, lore)
-        metrics = renders[lang].metrics
-        reporter.info(
-            f"rendered {lang}: {len(renders[lang].stories)} scripts, {metrics['options']} options"
-            f" ({metrics['locked']} locked), {metrics['rich']} rich text,"
-            f" {metrics['missing']} missing keys"
-        )
-        reporter.info(
-            f"inner monologue {metrics['think']} ({metrics['think_named']} with a speaker),"
-            f" lore {metrics['lore']} (fallback {metrics['lore_fallback']},"
-            f" unresolved {metrics['lore_missing']})"
-        )
+    render = render_language(
+        source_lang, locale, node_ids, models, chapter_of_id, chapters, facets, edges, lore)
+    metrics = render.metrics
+    reporter.info(
+        f"rendered {source_lang}: {len(render.stories)} scripts, {metrics['options']} options"
+        f" ({metrics['locked']} locked), {metrics['rich']} rich text,"
+        f" {metrics['missing']} missing keys"
+    )
+    reporter.info(
+        f"inner monologue {metrics['think']} ({metrics['think_named']} with a speaker),"
+        f" lore {metrics['lore']} (fallback {metrics['lore_fallback']},"
+        f" unresolved {metrics['lore_missing']})"
+    )
 
     shard_of, shards = _pack_shards(
-        node_ids, chapter_index_map, chapters, renders[langs[0]].stories, reporter, full_text)
+        node_ids, chapter_index_map, chapters, render.stories, reporter, full_text)
 
     parts: list[tuple[str, int]] = []
     languages: dict[str, Any] = {}
-    wordcount_langs: dict[str, Any] = {}
-    for lang in langs:
-        written, language_report = _write_language(renders[lang], shard_of, shards, full_text)
-        parts.extend(written)
-        languages[lang] = language_report
-        wordcount_langs[lang] = {"chapters": renders[lang].chapters, "stories": renders[lang].rows}
-        reporter.info(
-            f"wrote {lang}: head {fmt_bytes(language_report['head_bytes'])}"
-            + ("" if full_text else
-               f", {language_report['shard_count']} shards {fmt_bytes(language_report['shard_bytes'])}")
-        )
+    written, language_report = _write_language(render, shard_of, shards, full_text)
+    parts.extend(written)
+    languages[source_lang] = language_report
+    reporter.info(
+        f"wrote {source_lang}: head {fmt_bytes(language_report['head_bytes'])}"
+        + ("" if full_text else
+           f", {language_report['shard_count']} shards {fmt_bytes(language_report['shard_bytes'])}")
+    )
 
-    wordcount_payload = {"schema": SCHEMA_VERSION, "kinds": list(KINDS), "langs": wordcount_langs}
+    wordcount_payload = {
+        "schema": SCHEMA_VERSION,
+        "kinds": list(KINDS),
+        "langs": {source_lang: {"chapters": render.chapters, "stories": render.rows}},
+    }
     wordcount_size = write_wordcount(WEB_DATA_DIR / "wordcount.js", wordcount_payload)
     parts.append(("wordcount.js", wordcount_size))
 
-    checkpoints = _emit_checkpoints(reporter, locales)
+    conv_parts, conv_targets, conv_report = _emit_conversions(
+        reporter, source_lang, locale, _load_derived_locales(DERIVED_LANGS, source_lang, reporter))
+    parts.extend(conv_parts)
+
+    checkpoints = _emit_checkpoints(reporter, locale)
     checkpoint_mapping = checkpoints["mapping"]
     parts.extend((item["name"], item["bytes"]) for item in checkpoints["parts"])
 
@@ -781,13 +822,18 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     else:
         reporter.info("game version: unavailable (normal when the game is not installed)")
 
+    display_langs = [source_lang, *conv_targets]
+    if default_lang not in display_langs:
+        default_lang = source_lang
     graph_payload = {
         "schema": SCHEMA_VERSION,
         "meta": {
             "generated": time.strftime("%Y-%m-%d %H:%M:%S"),
             "game": game.to_wire(),
-            "langs": list(langs),
+            "langs": display_langs,
             "defaultLang": default_lang,
+            "textSource": source_lang,
+            "conv": conv_targets,
             "counts": {
                 "scripts": len(node_ids),
                 "edges": len(edges),
@@ -812,10 +858,9 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     edge_counts, node_counts, facet_report, checkpoint_report = _counts_report(
         edges, node_ids, in_degree, out_degree, system_in, empty, simplified,
         facets, system, checkpoints)
-    wordcount_report = _wordcount_report(langs, wordcount_langs, reporter)
+    wordcount_report = _wordcount_report((source_lang,), wordcount_payload["langs"], reporter)
 
-    default_metrics = (renders[default_lang].metrics
-                       if default_lang in renders else renders[langs[0]].metrics)
+    default_metrics = render.metrics
     lore_manifest = (manifest or {}).get("lore_stats") or {}
     lore_report = {
         "items": len(lore),
@@ -850,6 +895,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
             "shards": shards,
         },
         languages=languages,
+        conversion=conv_report,
         dynamic=dynamic,
         analysis={
             "failed": failed,
@@ -870,7 +916,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     if failed:
         reporter.warn(
             f"{failed} scripts failed to parse and were degraded to empty text (see report.json)")
-    if not any(languages[lang]["stories"] for lang in langs):
+    if not render.stories:
         reporter.error("all scripts rendered empty, check the extraction output")
         return BuildResult(False, len(node_ids), len(edges), len(chapters), languages, REPORT_PATH)
     return BuildResult(True, len(node_ids), len(edges), len(chapters), languages, REPORT_PATH)

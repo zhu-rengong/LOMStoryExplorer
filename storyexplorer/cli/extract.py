@@ -11,11 +11,11 @@ from ..config import (
     CACHE_DIR,
     CHECKPOINTS_PATH,
     CHECKPOINT_VERSION,
-    DEFAULT_LANGS,
     ENTRIES_PATH,
     ENTRY_VERSION,
     GAME_ENV,
     LOCALE_DIR,
+    LOCALE_LANGS,
     LORE_PATH,
     LORE_VERSION,
     LUA_DIR,
@@ -314,7 +314,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Extract story Lua files and locale tables from the game assets (read only)")
     parser.add_argument("--game", default=None, help=f"game root directory (defaults to ${GAME_ENV})")
-    parser.add_argument("--langs", default=",".join(DEFAULT_LANGS), help="languages to export")
+    parser.add_argument("--langs", default=",".join(LOCALE_LANGS),
+                        help="locale tables to export; every language is needed to derive conversion")
     parser.add_argument("--force", action="store_true", help="ignore caches and extract again")
     parser.add_argument("--checkpoints", dest="checkpoints", action="store_true", default=True)
     parser.add_argument("--no-checkpoints", dest="checkpoints", action="store_false")

@@ -3,7 +3,7 @@
 
   const SR = window.SR;
 
-  const SCHEMA = 2;
+  const SCHEMA = 3;
 
   const SAY_MODES = ["dialog", "narration", "think"];
 
@@ -71,10 +71,13 @@
   meta.shardOf = meta.shardOf && typeof meta.shardOf === "object" ? meta.shardOf : {};
   meta.checkpointShards = meta.checkpointShards && typeof meta.checkpointShards === "object"
     ? meta.checkpointShards : {};
+  meta.conv = meta.conv && typeof meta.conv === "object" ? meta.conv : {};
   meta.langs = arrays(meta.langs);
   meta.shards = arrays(meta.shards);
   meta.entries = arrays(meta.entries);
   meta.counts = meta.counts || {};
+  meta.textSource = typeof meta.textSource === "string" && meta.textSource
+    ? meta.textSource : (meta.langs[0] || "");
 
   const say = (beat) => ({
     speaker: beat[1] || "",

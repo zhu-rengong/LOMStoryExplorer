@@ -19,8 +19,8 @@
 
   const NAME_GROUP = { check: "checks", flag: "flags", rel: "rels", stat: "stats" };
 
-  SR.define("condexpr", ["checkpoints", "i18n", "text", "ui", "graph", "store"],
-    ({ checkpoints, i18n, text, ui, graph, store }) => {
+  SR.define("condexpr", ["checkpoints", "i18n", "text", "ui", "graph", "store", "convert"],
+    ({ checkpoints, i18n, text, ui, graph, store, convert }) => {
 
       const typeText = (check) => {
         const key = TYPE_KEYS[check];
@@ -49,9 +49,9 @@
       };
 
       const localizedName = (node) => {
-        const labels = node && node.label;
-        if (!labels) return "";
-        return labels[store.textLang()] || labels["zh-tw"] || "";
+        const label = node && node.label;
+        if (typeof label !== "string" || !label) return "";
+        return convert.string(store.textLang(), label);
       };
 
       const countOf = (kind, key) => {
