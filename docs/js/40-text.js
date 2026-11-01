@@ -45,14 +45,10 @@
 
     const converted = (lang) => lang !== source && convert.ready(lang);
 
-    const convUrl = (lang) => (meta.conv || {})[lang] || "";
-
     const ensureConvert = (lang) => {
       if (lang === source) return Promise.resolve(true);
-      const url = convUrl(lang);
-      if (!url) return Promise.resolve(false);
       if (convert.ready(lang)) return Promise.resolve(true);
-      return convert.ensure(lang, `data/${url}`).then(() => true, () => false);
+      return convert.ensure(lang);
     };
 
     const loadHead = () => {

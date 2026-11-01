@@ -16,7 +16,6 @@ from ..config import (
     CACHE_DIR,
     CHECKPOINTS_PATH,
     CHECKPOINT_SHARDS,
-    CONVERT_VERSION,
     DERIVED_LANGS,
     ENTRIES_PATH,
     FLOW_VERSION,
@@ -38,18 +37,10 @@ from ..console import Reporter
 from ..emit import (
     text_payload,
     write_checkpoint_shards,
-    write_conversion,
     write_graph,
     write_text,
     write_text_shard,
     write_wordcount,
-)
-from .convert import (
-    build_conversion,
-    conversion_fingerprint,
-    conversion_from_payload,
-    conversion_payload,
-    payload_bytes,
 )
 from ..game.entries import summarize as summarize_probe
 from ..game.info import read_game_info
@@ -174,66 +165,6 @@ def _load_locales(langs: tuple[str, ...], reporter: Reporter) -> dict[str, dict]
             return None
         locales[lang] = payload
     return locales
-
-
-def _load_derived_locales(langs: tuple[str, ...], source_lang: str,
-                          reporter: Reporter) -> dict[str, dict]:
-    locales: dict[str, dict] = {}
-    for lang in langs:
-        if lang == source_lang:
-            continue
-        payload = read_json(LOCALE_DIR / f"{lang}.json")
-        if not isinstance(payload, dict):
-            reporter.warn(f"locale table for {lang} missing, that language stays unavailable")
-            continue
-        locales[lang] = payload
-    return locales
-
-
-def _emit_conversions(reporter: Reporter, source_lang: str, source_locale: dict,
-                      derived: dict[str, dict],
-                      use_cache: bool = True) -> tuple[list[tuple[str, int]], dict[str, str], dict[str, Any]]:
-    parts: list[tuple[str, int]] = []
-    targets: dict[str, str] = {}
-    report: dict[str, Any] = {}
-    source_path = LOCALE_DIR / f"{source_lang}.json"
-    for lang, target_locale in derived.items():
-        started = time.time()
-        cache_path = CACHE_DIR / f"convert-{lang}.json.gz"
-        key = CacheKey(CONVERT_VERSION,
-                       conversion_fingerprint(source_lang, lang, source_path,
-                                              LOCALE_DIR / f"{lang}.json"))
-        cached = load_envelope(cache_path, key) if use_cache else None
-        payload = cached.get("payload") if isinstance(cached, dict) else None
-        if isinstance(payload, dict):
-            conv = conversion_from_payload(payload, cached.get("stats") or {})
-            hit = True
-            payload = conversion_payload(conv)
-        else:
-            conv = build_conversion(lang, source_lang, source_locale, target_locale)
-            payload = conversion_payload(conv)
-            hit = False
-            if use_cache:
-                save_envelope(cache_path, key, {"payload": payload, "stats": conv.stats})
-        elapsed = round(time.time() - started, 2)
-        name = f"conv-{lang}.js"
-        size = write_conversion(WEB_DATA_DIR / name, lang, payload)
-        parts.append((name, size))
-        targets[lang] = name
-        report[lang] = {
-            **conv.stats,
-            "bytes": size,
-            "payload_bytes": payload_bytes(payload),
-            "seconds": elapsed,
-            "cached": hit,
-        }
-        reporter.info(
-            f"conversion {lang}: {'cached' if hit else 'derived'} in {elapsed:.2f}s,"
-            f" {conv.stats.get('pairs', 0)} pairs, {conv.stats.get('phrases', 0)} phrases,"
-            f" {conv.stats.get('overrides', 0)} overrides,"
-            f" fidelity {conv.stats.get('fidelity', 0):.4f}, {fmt_bytes(size)}"
-        )
-    return parts, targets, report
 
 
 def _names_of(locale: dict, namespace: str, keys: set[str]) -> dict[str, str]:
@@ -836,11 +767,6 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     wordcount_size = write_wordcount(WEB_DATA_DIR / "wordcount.js", wordcount_payload)
     parts.append(("wordcount.js", wordcount_size))
 
-    conv_parts, conv_targets, conv_report = _emit_conversions(
-        reporter, source_lang, locale,
-        _load_derived_locales(DERIVED_LANGS, source_lang, reporter), use_cache)
-    parts.extend(conv_parts)
-
     checkpoints = _emit_checkpoints(reporter, locale)
     checkpoint_mapping = checkpoints["mapping"]
     parts.extend((item["name"], item["bytes"]) for item in checkpoints["parts"])
@@ -855,7 +781,7 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     else:
         reporter.info("game version: unavailable (normal when the game is not installed)")
 
-    display_langs = [source_lang, *conv_targets]
+    display_langs = [source_lang, *DERIVED_LANGS]
     if default_lang not in display_langs:
         default_lang = source_lang
     graph_payload = {
@@ -866,7 +792,6 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
             "langs": display_langs,
             "defaultLang": default_lang,
             "textSource": source_lang,
-            "conv": conv_targets,
             "counts": {
                 "scripts": len(node_ids),
                 "edges": len(edges),
@@ -928,7 +853,6 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
             "shards": shards,
         },
         languages=languages,
-        conversion=conv_report,
         dynamic=dynamic,
         analysis={
             "failed": failed,
