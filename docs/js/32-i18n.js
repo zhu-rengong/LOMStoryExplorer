@@ -101,7 +101,7 @@
     return base[key];
   };
 
-  SR.define("i18n", ["store", "graph", "lang"], ({ store, graph, lang }) => {
+  SR.define("i18n", ["store", "graph", "lang", "settings"], ({ store, graph, lang, settings }) => {
     const state = store.state;
 
     const t = (key, vars) => {
@@ -131,17 +131,10 @@
       ENGINE.changeLanguage(state.lang);
     };
 
-    const typeLabel = (typeId) => t({
-      dialog: "typeDialog",
-      speaker: "typeSpeaker",
-      narration: "typeNarration",
-      think: "typeThink",
-      option: "typeOption",
-      "branch-cond": "typeBranchCond",
-      "option-cond": "typeOptionCond",
-      label: "typeLabel",
-      lore: "typeLore",
-    }[typeId] || "typeDialog");
+    const typeLabel = (typeId) => {
+      const hit = settings.typeById(typeId);
+      return hit ? settings.pickLabel(hit.label, state.lang) : t("typeDialog");
+    };
 
     const chapterTitle = (chapter) => {
       if (!chapter) return t("chOther");

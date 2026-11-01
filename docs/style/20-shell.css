@@ -29,9 +29,9 @@
   background: var(--seal);
   box-shadow: inset 0 0 0 1px var(--seal-rim);
   color: var(--on-seal);
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 600;
+  font-family: var(--rd-ff-heading, var(--font-display));
+  font-size: calc(20px * var(--rd-ts-heading, 1));
+  font-weight: var(--rd-fw-heading, 600);
   line-height: 1;
 }
 
@@ -52,11 +52,11 @@
 .brand-text h1 {
   flex: none;
   min-width: 0;
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 600;
+  font-family: var(--rd-ff-heading, var(--font-display));
+  font-size: calc(15px * var(--rd-ts-heading, 1));
+  font-weight: var(--rd-fw-heading, 600);
   letter-spacing: .16em;
-  line-height: 1.3;
+  line-height: calc(1.3 * var(--rd-lh-heading, 1));
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;
@@ -67,8 +67,9 @@
 .brand-build {
   min-width: 0;
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
+  font-family: var(--rd-ff-meta, var(--font-mono));
+  font-size: calc(var(--fs-micro) * var(--rd-ts-meta, 1));
+  font-weight: var(--rd-fw-meta, 400);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   overflow: hidden;
@@ -127,8 +128,9 @@
   border-radius: var(--r-sm);
   background: var(--surface-inset);
   color: var(--ink-2);
-  font-family: var(--font-ui);
-  font-size: var(--fs-xs);
+  font-family: var(--rd-ff-ui, var(--font-ui));
+  font-size: calc(var(--fs-xs) * var(--rd-ts-ui, 1));
+  font-weight: var(--rd-fw-ui, 400);
   transition: border-color var(--t-fast) var(--ease);
 }
 
@@ -150,8 +152,9 @@
   border-radius: var(--r-sm);
   background: var(--surface-inset);
   color: var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
+  font-family: var(--rd-ff-caption, var(--font-mono));
+  font-size: calc(var(--fs-micro) * var(--rd-ts-caption, 1));
+  font-weight: var(--rd-fw-caption, 400);
   line-height: 16px;
   text-align: center;
   pointer-events: none;
@@ -205,9 +208,9 @@
 .rail-title {
   flex: 1;
   min-width: 0;
-  font-family: var(--font-display);
-  font-size: var(--fs-xs);
-  font-weight: 600;
+  font-family: var(--rd-ff-heading, var(--font-display));
+  font-size: calc(var(--fs-xs) * var(--rd-ts-heading, 1));
+  font-weight: var(--rd-fw-heading, 600);
   letter-spacing: .34em;
   color: var(--ink-2);
 }
@@ -270,9 +273,9 @@
 
 .rail-group {
   margin: var(--sp-4) var(--sp-2) var(--sp-1);
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
-  font-weight: 500;
+  font-family: var(--rd-ff-caption, var(--font-mono));
+  font-size: calc(var(--fs-micro) * var(--rd-ts-caption, 1));
+  font-weight: var(--rd-fw-caption, 400);
   letter-spacing: .18em;
   text-transform: uppercase;
   color: var(--ink-2);
@@ -300,8 +303,9 @@
 .rail-item .ri-id {
   flex: 1;
   min-width: 0;
-  font-family: var(--font-mono);
-  font-size: var(--fs-sm);
+  font-family: var(--rd-ff-id, var(--font-mono));
+  font-size: calc(var(--fs-sm) * var(--rd-ts-id, 1));
+  font-weight: var(--rd-fw-id, 400);
   color: var(--ink);
   letter-spacing: .01em;
   overflow: hidden;
@@ -312,8 +316,9 @@
 .rail-item .ri-meta {
   flex: none;
   max-width: 42%;
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
+  font-family: var(--rd-ff-meta, var(--font-mono));
+  font-size: calc(var(--fs-micro) * var(--rd-ts-meta, 1));
+  font-weight: var(--rd-fw-meta, 400);
   font-variant-numeric: tabular-nums;
   color: var(--ink-2);
   text-align: right;
@@ -380,9 +385,9 @@
 .rail-item.rail-chap .ri-id {
   flex: 1;
   min-width: 0;
-  font-family: var(--font-display);
-  font-size: var(--fs-base);
-  font-weight: 600;
+  font-family: var(--rd-ff-heading, var(--font-display));
+  font-size: calc(var(--fs-base) * var(--rd-ts-heading, 1));
+  font-weight: var(--rd-fw-heading, 600);
   letter-spacing: .04em;
   color: inherit;
 }
@@ -425,9 +430,10 @@
 
 .rail-empty {
   padding: var(--sp-5) var(--sp-3);
-  font-family: var(--font-display);
-  font-size: var(--fs-sm);
-  line-height: 1.9;
+  font-family: var(--rd-ff-empty, var(--font-ui));
+  font-size: calc(var(--fs-sm) * var(--rd-ts-empty, 1));
+  font-weight: var(--rd-fw-empty, 400);
+  line-height: calc(1.9 * var(--rd-lh-empty, 1));
   color: var(--ink-2);
 }
 
@@ -469,8 +475,10 @@
   max-width: 46%;
   min-width: 0;
   margin-bottom: 0;
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
+  font-family: var(--rd-ff-crumb, var(--font-mono));
+  font-size: calc(var(--fs-micro) * var(--rd-ts-crumb, 1));
+  font-weight: var(--rd-fw-crumb, 400);
+  line-height: calc(1.6 * var(--rd-lh-crumb, 1));
   letter-spacing: .14em;
   text-transform: uppercase;
   color: var(--ink-2);
@@ -508,14 +516,15 @@
   min-width: 0;
 }
 
-#nodeTitle {
+#nodeTitle,
+.node-title {
   flex: 1;
   min-width: 0;
-  font-family: var(--font-display);
-  font-size: 26px;
-  font-weight: 600;
+  font-family: var(--rd-ff-title, var(--font-display));
+  font-size: calc(26px * var(--rd-ts-title, 1));
+  font-weight: var(--rd-fw-title, 600);
   letter-spacing: .01em;
-  line-height: 1.25;
+  line-height: calc(1.25 * var(--rd-lh-title, 1));
   color: var(--ink);
   white-space: nowrap;
   overflow: hidden;

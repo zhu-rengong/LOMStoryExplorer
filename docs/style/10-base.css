@@ -11,9 +11,10 @@ body {
   min-height: 0;
   background: var(--surface);
   color: var(--ink);
-  font-family: var(--font-ui);
-  font-size: var(--fs-base);
-  line-height: 1.6;
+  font-family: var(--rd-ff-ui, var(--font-ui));
+  font-size: calc(var(--fs-base) * var(--rd-ts-ui, 1));
+  font-weight: var(--rd-fw-ui, 400);
+  line-height: calc(1.6 * var(--rd-lh-ui, 1));
   overflow: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -108,8 +109,9 @@ kbd {
   border-radius: var(--r-sm);
   background: var(--surface-inset);
   color: var(--ink-2);
-  font-family: var(--font-mono);
-  font-size: var(--fs-micro);
+  font-family: var(--rd-ff-caption, var(--font-mono));
+  font-size: calc(var(--fs-micro) * var(--rd-ts-caption, 1));
+  font-weight: var(--rd-fw-caption, 400);
   line-height: 1;
 }
 

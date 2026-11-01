@@ -182,7 +182,7 @@
         <div class="reader-title-row">
           <div class="reader-headline">
             <p id="nodeChapter" class="crumb" hidden></p>
-            <h2 id="nodeTitle" data-i18n="readerEmptyTitle">尚未選擇劇本</h2>
+            <h2 id="nodeTitle" class="node-title" data-i18n="readerEmptyTitle">尚未選擇劇本</h2>
           </div>
           <div class="reader-actions">
             <button id="backBtn" class="btn btn-icon btn-sm" type="button" data-i18n-title="backTitle" title="上一處（←）" disabled>
@@ -251,7 +251,7 @@
         <h3 class="field-title" data-i18n="fontSize">正文字號</h3>
         <output id="fontScaleOut" class="field-value">100%</output>
       </div>
-      <input id="fontScale" class="range" type="range" min="90" max="140" step="5" value="100"
+      <input id="fontScale" class="range" type="range" min="80" max="200" step="5" value="100"
              data-i18n-label="fontSize" aria-label="正文字號">
     </section>
 
@@ -269,7 +269,8 @@
         <h3 class="field-title" data-i18n="fontTypes">文本類型</h3>
         <span class="field-note" data-i18n="fontTypesHint">可分別設定</span>
       </div>
-      <div class="type-tabs" id="typeTabs" role="tablist"></div>
+      <div class="type-groups" id="typeGroups" role="group" data-i18n-label="fontTypes" aria-label="文本類型"></div>
+      <div class="type-tabs" id="typeChips" role="group" data-i18n-label="fontTypes" aria-label="文本類型"></div>
 
       <div class="type-panel">
         <label class="sub-label" data-i18n="typeFont">字體</label>
@@ -287,6 +288,13 @@
         <input id="typeScale" class="range" type="range" min="70" max="150" step="5" value="100"
                data-i18n-label="typeScale" aria-label="類型字號">
 
+        <div class="field-row sub-row">
+          <label class="sub-label" data-i18n="lineHeight">行距</label>
+          <output id="typeLeadingOut" class="field-value">100%</output>
+        </div>
+        <input id="typeLeading" class="range" type="range" min="80" max="150" step="5" value="100"
+               data-i18n-label="lineHeight" aria-label="類型行距">
+
         <label class="sub-label" data-i18n="typeWeight">字重</label>
         <div class="seg seg-wide tabs" id="weightSeg" role="group">
           <button class="seg-btn tab" type="button" data-weight="400" data-i18n="weightRegular">常規</button>
@@ -298,44 +306,7 @@
 
     <section class="field">
       <h3 class="field-title" data-i18n="previewTitle">預覽</h3>
-      <div class="preview" id="settingsPreview">
-        <p class="prev-line" data-type="dialog">
-          <span class="prev-tag" data-i18n="typeDialog">對白</span>
-          <span class="prev-body" data-i18n="previewText">江湖就是這樣，若想活得長久，還是趁早退隱吧。</span>
-        </p>
-        <p class="prev-line" data-type="speaker">
-          <span class="prev-tag" data-i18n="typeSpeaker">說話人</span>
-          <span class="prev-body" data-i18n="previewWho">唐布衣（飛俠）</span>
-        </p>
-        <p class="prev-line" data-type="narration">
-          <span class="prev-tag" data-i18n="typeNarration">旁白</span>
-          <span class="prev-body" data-i18n="previewNarration">他沉默了一會，終究沒有再說下去。</span>
-        </p>
-        <p class="prev-line" data-type="think">
-          <span class="prev-tag" data-i18n="typeThink">心聲</span>
-          <span class="prev-body" data-i18n="previewThink">這人，怕是不太好惹。</span>
-        </p>
-        <p class="prev-line" data-type="option">
-          <span class="prev-tag" data-i18n="typeOption">選項</span>
-          <span class="prev-body" data-i18n="previewOption">① 說得也是</span>
-        </p>
-        <p class="prev-line" data-type="branch-cond">
-          <span class="prev-tag" data-i18n="typeBranchCond">分支條件</span>
-          <span class="prev-body" data-i18n="previewBranchCond">分支判定「Ch_1_1_001」== 1</span>
-        </p>
-        <p class="prev-line" data-type="option-cond">
-          <span class="prev-tag" data-i18n="typeOptionCond">選項條件</span>
-          <span class="prev-body" data-i18n="previewOptionCond">好感度（唐布衣）≥ 30</span>
-        </p>
-        <p class="prev-line" data-type="label">
-          <span class="prev-tag" data-i18n="typeLabel">標籤</span>
-          <span class="prev-body" data-i18n="previewLabel">旗標「拜師」= 1</span>
-        </p>
-        <p class="prev-line" data-type="lore">
-          <span class="prev-tag" data-i18n="typeLore">劇情點</span>
-          <span class="prev-body" data-i18n="previewLore">唐門弟子趙活，於山門前當眾頂撞掌門。</span>
-        </p>
-      </div>
+      <div class="preview" id="settingsPreview"></div>
     </section>
   </div>
 
