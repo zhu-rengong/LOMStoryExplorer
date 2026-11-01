@@ -90,6 +90,15 @@
     if (!text) target.textContent = "";
   };
 
+  const loadScript = (src, async) => new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = !!async;
+    script.onload = () => resolve(true);
+    script.onerror = () => reject(new Error(`failed to load ${src}`));
+    document.head.appendChild(script);
+  });
+
   const focusables = (root) => {
     const selector = 'a[href], button:not([disabled]), input:not([disabled]), select, textarea, [tabindex]:not([tabindex="-1"])';
     return Array.prototype.filter.call(root.querySelectorAll(selector), (node) => node.offsetParent !== null);
@@ -103,6 +112,7 @@
     el,
     focusables,
     formatNumber,
+    loadScript,
     normalizeQuery,
     progress,
     rafBatch,

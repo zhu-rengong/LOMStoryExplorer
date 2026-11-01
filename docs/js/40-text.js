@@ -29,22 +29,13 @@
 
     const pack = (lang) => (window.SR_TEXT || {})[lang] || null;
 
-    const loadScript = (src) => new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = src;
-      script.async = false;
-      script.onload = () => resolve(true);
-      script.onerror = () => reject(new Error(`failed to load ${src}`));
-      document.head.appendChild(script);
-    });
-
     const ensureHead = (lang) => {
       const current = state(lang);
       if (current.head === "ready") return Promise.resolve(true);
       if (current.head === "loading") return current.headPromise;
       current.head = "loading";
       const src = legacy ? `data/text-${lang}.js` : `data/text-${lang}-head.js`;
-      current.headPromise = loadScript(src).then(() => {
+      current.headPromise = ui.loadScript(src).then(() => {
         if (!pack(lang)) throw new Error(`language pack ${lang} is empty`);
         current.head = "ready";
         current.headError = "";
@@ -68,7 +59,7 @@
       if (current.shards[key] === "ready") return Promise.resolve(true);
       if (current.pending[key]) return current.pending[key];
       current.shards[key] = "loading";
-      current.pending[key] = loadScript(`data/text-${lang}-${key}.js`).then(() => {
+      current.pending[key] = ui.loadScript(`data/text-${lang}-${key}.js`).then(() => {
         current.shards[key] = "ready";
         delete current.pending[key];
         return true;

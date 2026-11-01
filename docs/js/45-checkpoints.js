@@ -3,20 +3,14 @@
 
   const SR = window.SR;
 
-  SR.define("checkpoints", ["schema"], ({ schema }) => {
+  SR.define("checkpoints", ["schema", "ui"], ({ schema, ui }) => {
     const loading = Object.create(null);
 
     const load = (index) => {
       if (index < 0) return Promise.resolve(false);
-      if (loading[index]) return loading[index];
-      loading[index] = new Promise((resolve) => {
-        const script = document.createElement("script");
-        script.src = `data/checkpoints-${index}.js`;
-        script.async = true;
-        script.onload = () => resolve(true);
-        script.onerror = () => resolve(false);
-        document.head.appendChild(script);
-      });
+      if (!loading[index]) {
+        loading[index] = ui.loadScript(`data/checkpoints-${index}.js`, true).catch(() => false);
+      }
       return loading[index];
     };
 

@@ -173,6 +173,16 @@
         });
       };
 
+      const navRow = (id, label, badge, onPick) => {
+        const row = ui.el("button", "nav-item row");
+        row.type = "button";
+        row.appendChild(ui.el("span", "nav-id", id));
+        if (label) row.appendChild(ui.el("span", "nav-label", label));
+        if (badge) row.appendChild(ui.el("span", "nav-badge badge", badge));
+        row.addEventListener("click", onPick);
+        return row;
+      };
+
       const renderNavMenu = () => {
         const menu = $("navMenu");
         const button = $("navBtn");
@@ -192,21 +202,15 @@
           edges.forEach((edge) => {
             const target = pick(edge);
             if (!target) return;
-            const item = ui.el("button", "nav-item row");
-            item.type = "button";
-            item.setAttribute("role", "menuitem");
-            item.appendChild(ui.el("span", "nav-id", target.id));
-            const label = beatsLabel(edge);
-            if (label) item.appendChild(ui.el("span", "nav-label", label));
             let tag = "";
             if (edge.kind === "inferred") tag = i18n.t("navInferred");
             else if (edge.kind === "temp" || edge.kind === "travel") tag = i18n.t("navTemp");
             else if (edge.kind === "position") tag = i18n.t("navPosition");
-            if (tag) item.appendChild(ui.el("span", "nav-badge badge", tag));
-            item.addEventListener("click", () => {
+            const item = navRow(target.id, beatsLabel(edge), tag, () => {
               closeNav();
               store.select(target.id, { history: true });
             });
+            item.setAttribute("role", "menuitem");
             list.appendChild(item);
           });
         };
@@ -262,16 +266,15 @@
           menu.appendChild(ui.el("div", "menu-sep"));
           menu.appendChild(ui.el("div", "menu-head", i18n.t("recentChoices")));
           targets.slice(0, 6).forEach((item) => {
-            const row = ui.el("button", "nav-item row");
-            row.type = "button";
-            row.appendChild(ui.el("span", "nav-id", item.node.id));
-            row.appendChild(ui.el("span", "nav-label", beatsLabel(item.edge)
-              || i18n.chapterTitle(graph.chapterOf(item.node))));
-            row.addEventListener("click", () => {
-              closeMore();
-              store.select(item.node.id, { history: true });
-            });
-            menu.appendChild(row);
+            menu.appendChild(navRow(
+              item.node.id,
+              beatsLabel(item.edge) || i18n.chapterTitle(graph.chapterOf(item.node)),
+              "",
+              () => {
+                closeMore();
+                store.select(item.node.id, { history: true });
+              },
+            ));
           });
         }
       };
