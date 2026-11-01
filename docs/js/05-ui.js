@@ -90,10 +90,10 @@
     if (!text) target.textContent = "";
   };
 
-  const loadScript = (src, async) => new Promise((resolve, reject) => {
+  const loadScript = (src) => new Promise((resolve, reject) => {
     const script = document.createElement("script");
     script.src = src;
-    script.async = !!async;
+    script.async = true;
     script.onload = () => resolve(true);
     script.onerror = () => reject(new Error(`failed to load ${src}`));
     document.head.appendChild(script);

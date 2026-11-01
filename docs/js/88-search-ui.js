@@ -62,17 +62,9 @@
         frag.appendChild(row);
       };
 
-      const run = () => {
-        const input = $("search");
+      const render = (query) => {
         const box = $("searchResults");
-        if (!input || !box) return 0;
-        const query = input.value.trim();
-        lastQuery = query;
-        store.setQuery(query);
-        if (!query) {
-          hide();
-          return 0;
-        }
+        if (!box) return 0;
         hits = search.search(query);
         const frag = document.createDocumentFragment();
         renderScope(frag);
@@ -102,7 +94,6 @@
           }
           active = 0;
           box.replaceChildren(frag);
-          show();
           return 0;
         }
 
@@ -123,15 +114,42 @@
           frag.appendChild(item);
         });
         box.replaceChildren(frag);
-        show();
         return hits.length;
       };
+
+      const run = () => {
+        const input = $("search");
+        const box = $("searchResults");
+        if (!input || !box) return 0;
+        const query = input.value.trim();
+        lastQuery = query;
+        store.setQuery(query);
+        if (!query) {
+          hide();
+          return 0;
+        }
+        const count = render(query);
+        show();
+        return count;
+      };
+
+      const refreshPlaceholder = ui.rafBatch(() => {
+        const input = $("search");
+        const box = $("searchResults");
+        if (!input || !box || box.hidden) return;
+        if (!box.querySelector(".drop-empty.popover-empty")) return;
+        const query = input.value.trim();
+        if (query.length < 2) return;
+        lastQuery = query;
+        render(query);
+      });
 
       const warmFullText = (lang) => {
         if (warming && warmingLang === lang) return warming;
         warmingLang = lang;
         const chain = text.ensureAll(lang, (loaded, total) => {
           ui.progress(i18n.t("searchLoadingText", { loaded, total }));
+          refreshPlaceholder();
         }).then(() => {
           if (warming === chain) {
             warming = null;
@@ -157,8 +175,9 @@
         if (!input) return;
         const query = input.value.trim();
         run();
-        if (query.length < 2 || text.progress(store.textLang()).done) return;
-        ui.progress(i18n.t("searchLoadingText", { loaded: 0, total: 0 }));
+        const progress = text.progress(store.textLang());
+        if (query.length < 2 || progress.done) return;
+        ui.progress(i18n.t("searchLoadingText", { loaded: progress.loaded, total: progress.total }));
         warmFullText(store.textLang());
       };
 

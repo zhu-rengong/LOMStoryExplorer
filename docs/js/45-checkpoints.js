@@ -9,7 +9,7 @@
     const load = (index) => {
       if (index < 0) return Promise.resolve(false);
       if (!loading[index]) {
-        loading[index] = ui.loadScript(`data/checkpoints-${index}.js`, true).catch(() => false);
+        loading[index] = ui.loadScript(`data/checkpoints-${index}.js`).catch(() => false);
       }
       return loading[index];
     };

@@ -4,6 +4,7 @@
   const SR = window.SR;
 
   SR.define("text", ["schema", "ui", "i18n"], ({ schema, ui, i18n }) => {
+    const SHARD_TIMEOUT = 30000;
     const meta = schema.meta;
     const legacy = !!meta.fullText || !Object.keys(meta.shardOf).length || meta.shards.length === 0;
     const keys = meta.shards.map((shard) => shard.key);
@@ -105,16 +106,40 @@
       const current = state(lang);
       const total = legacy ? 0 : keys.length;
       let loaded = 0;
-      for (const key of keys) if (current.shards[key] === "ready") loaded++;
+      let failed = 0;
+      for (const key of keys) {
+        const status = current.shards[key];
+        if (status === "ready") loaded++;
+        else if (status === "failed") failed++;
+      }
       return {
         head: current.head,
         loaded,
         total,
-        done: total === 0 ? current.head === "ready" : loaded >= total,
+        done: total === 0 ? current.head === "ready" : loaded + failed >= total,
         headError: current.headError || "",
         shardError: current.shardError || "",
       };
     };
+
+    const settleShard = (lang, key) => new Promise((resolve) => {
+      const current = state(lang);
+      const timer = setTimeout(() => {
+        if (current.shards[key] === "loading") {
+          current.shards[key] = "failed";
+          current.shardError = `timeout: ${key}`;
+          delete current.pending[key];
+        }
+        resolve(false);
+      }, SHARD_TIMEOUT);
+      ensureShard(lang, key).then(() => {
+        clearTimeout(timer);
+        resolve(true);
+      }, () => {
+        clearTimeout(timer);
+        resolve(false);
+      });
+    });
 
     const ensureAll = (lang, onProgress) => ensureHead(lang).then(() => {
       if (legacy) {
@@ -125,7 +150,7 @@
       const step = () => {
         if (index >= keys.length) return Promise.resolve(true);
         const key = keys[index++];
-        return ensureShard(lang, key).then(() => {
+        return settleShard(lang, key).then(() => {
           if (onProgress) onProgress(index, keys.length);
           return step();
         });
