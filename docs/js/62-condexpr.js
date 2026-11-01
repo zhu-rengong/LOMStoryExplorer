@@ -258,15 +258,12 @@
       };
 
       return {
-        bindVar,
         ensure: checkpoints.ensure,
         fallback,
-        get: checkpoints.get,
         label,
         pick,
         render,
         resultOf,
-        typeText,
       };
     });
 })();

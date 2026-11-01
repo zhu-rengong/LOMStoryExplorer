@@ -136,11 +136,6 @@
       return hit ? settings.pickLabel(hit.label, state.lang) : String(typeId || "");
     };
 
-    const groupLabel = (groupId) => {
-      const hit = settings.groupById(groupId);
-      return hit ? settings.pickLabel(hit.label, state.lang) : String(groupId || "");
-    };
-
     const chapterTitle = (chapter) => {
       if (!chapter) return t("chOther");
       const id = chapter.id || "";
@@ -228,11 +223,7 @@
     return {
       apply,
       chapterTitle,
-      dateOf,
-      groupLabel,
-      has,
       languages,
-      stageNames,
       syncLanguage,
       t,
       timeText,

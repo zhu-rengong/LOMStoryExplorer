@@ -4,10 +4,7 @@
   const SR = window.SR;
 
   SR.define("checkpoints", ["schema"], ({ schema }) => {
-    const mapping = schema.meta.checkpointShards || {};
-    const count = Object.keys(mapping).reduce((max, key) => Math.max(max, mapping[key] + 1), 0);
     const loading = Object.create(null);
-    let allPending = null;
 
     const load = (index) => {
       if (index < 0) return Promise.resolve(false);
@@ -29,15 +26,6 @@
       return load(index);
     };
 
-    const ensureAll = () => {
-      if (!count) return Promise.resolve(false);
-      if (allPending) return allPending;
-      const jobs = [];
-      for (let index = 0; index < count; index++) jobs.push(load(index));
-      allPending = Promise.all(jobs).then((list) => list.some(Boolean));
-      return allPending;
-    };
-
     const get = (key, method) => {
       const all = window.SR_CHECKPOINTS;
       const model = all && key ? all[key] : null;
@@ -51,12 +39,8 @@
     };
 
     return {
-      count,
       ensure,
-      ensureAll,
       get,
-      has: (key, method) => !!get(key, method),
-      shardOf: schema.checkpointShard,
     };
   });
 })();

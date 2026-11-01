@@ -58,7 +58,6 @@
     };
 
     return {
-      buildIndex,
       countOutside,
       invalidate,
       search,

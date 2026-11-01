@@ -44,15 +44,11 @@
 
 .btn svg { width: 16px; height: 16px; }
 
-.btn-lg { height: var(--ctl-lg); padding: 0 var(--sp-4); }
-
 .btn-icon {
   width: var(--ctl-sm);
   padding: 0;
   border: 0;
 }
-
-.btn-icon.btn-lg { width: var(--ctl-lg); }
 
 .btn-link {
   display: inline;

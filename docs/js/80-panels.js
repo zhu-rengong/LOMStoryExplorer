@@ -74,38 +74,6 @@
         return kind ? { kind, key } : null;
       };
 
-      const attachLookupAnchor = (chip, value) => {
-        if (!chip || !value) return;
-        const target = lookupTargetOf(value);
-        if (!target) return;
-        chip.classList.add("is-link");
-        chip.setAttribute("role", "button");
-        chip.tabIndex = 0;
-        chip.title = i18n.t(target.kind === "flag" ? "lookupFlag"
-          : target.kind === "check" ? "lookupCheck"
-            : target.kind === "rel" ? "lookupRel" : "lookupStat");
-        const open = (event) => {
-          event.stopPropagation();
-          openLookup(target.kind, target.key, chip);
-        };
-        chip.addEventListener("click", open);
-        chip.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            open(event);
-          }
-        });
-      };
-
-      const lookupCount = (kind, key) => {
-        if (!key) return 0;
-        if (kind === "flag") {
-          const groups = graph.flagGroups(key);
-          return groups.writes.length + groups.reads.length;
-        }
-        return graph.lookup(kind, key).length;
-      };
-
       const lookupItems = (kind, key) => {
         if (kind === "flag") {
           const groups = graph.flagGroups(key);
@@ -404,26 +372,15 @@
         placement: { align: "start", width: 380, fit: true },
       });
       return {
-        attachLookupAnchor,
         bindBranchPreview,
         closeLookup,
-        ensureFacetSets,
-        extractKey: beats.extractKey,
         hideBranchPreview,
-        hideLookup,
-        lookup,
-        lookupCount,
         lookupTargetOf,
         openLookup,
-        positionLookup,
-        renderCondBlock,
-        renderCondModel,
-        repositionLookup: () => overlay.reposition("lookup"),
         reset: () => {
           resetNameIndex();
           facetSets = null;
         },
-        showBranchPreview,
       };
     });
 })();

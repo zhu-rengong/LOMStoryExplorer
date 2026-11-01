@@ -79,12 +79,9 @@
   applyDocument();
 
   SR.define("lang", [], () => ({
-    detect,
     has,
     htmlOf,
     initial,
     pin,
-    pinned,
-    titleOf,
   }));
 })();

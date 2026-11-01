@@ -485,17 +485,6 @@
         });
       };
 
-      return {
-        applyLayout,
-        bindShell,
-        closeNav,
-        closeRail,
-        openRail,
-        renderNavMenu,
-        setLang,
-        start,
-        toggleNav,
-        toggleRail,
-      };
+      return { start };
     });
 })();

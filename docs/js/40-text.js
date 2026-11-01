@@ -189,33 +189,18 @@
       return ensureStory(lang, id);
     };
 
-    const stateOf = (lang) => {
-      const current = state(lang);
-      return {
-        head: current.head,
-        shards: Object.assign({}, current.shards),
-        headError: current.headError || "",
-      };
-    };
-
     return {
       characters,
       edgeLabel,
-      edgeLabels,
       ensureAll,
       ensureHead,
-      ensureShard,
       ensureStory,
-      hasStory,
-      keys: keys.slice(),
-      legacy,
       names,
       pack,
       prefetch,
       progress,
       retry,
       shardState,
-      state: stateOf,
       story,
     };
   });

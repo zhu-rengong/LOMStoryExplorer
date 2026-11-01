@@ -474,28 +474,13 @@
       };
 
       return {
-        RICH_BASE,
-        RICH_MAX,
-        RICH_MIN,
-        RICH_TAG,
-        SAY_CLASS,
-        appendRich,
-        appendSegment,
         beatsPreview,
-        clampScale,
         entryBadge,
-        entryLabel,
         extractKey,
         firstLineOf,
-        loreBlock,
         previewOfBranches,
         renderBeats,
-        renderBranch,
-        renderChoice,
-        renderJump,
-        renderScene,
         speakerName,
-        stripRich,
       };
     });
 })();

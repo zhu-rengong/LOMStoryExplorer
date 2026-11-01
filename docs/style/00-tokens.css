@@ -36,7 +36,6 @@
   --shadow-float: 0 6px 20px -10px rgba(27, 26, 21, .22);
 
   --scrim: rgba(27, 26, 21, .38);
-  --scrim-soft: rgba(27, 26, 21, .18);
 
   --sp-1: 4px;
   --sp-2: 8px;
@@ -50,10 +49,7 @@
   --r-sm: 2px;
 
   --ctl-sm: 30px;
-  --ctl-md: 36px;
   --ctl-lg: 42px;
-  --row-h: 34px;
-  --row-pad: 10px;
 
   --font-base: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", "STSong", Georgia, "SimSun", serif;
   --font-mono: "Cascadia Mono", "Sarasa Mono TC", ui-monospace, Consolas, "Courier New", monospace;
@@ -62,9 +58,6 @@
   --rd-gap-2: 8px;
   --rd-gap-3: 18px;
   --rd-gap-4: 28px;
-  --rd-pad: 14px;
-  --rd-pad-y: 9px;
-  --rd-indent: 14px;
 
   --masthead-h: 76px;
   --rail-w: 292px;

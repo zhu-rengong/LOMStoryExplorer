@@ -107,11 +107,6 @@
       commit("filter", "visible");
     };
 
-    const refresh = () => {
-      computeVisible();
-      commit("visible");
-    };
-
     const restore = () => {
       if (restored) return;
       restored = true;
@@ -134,16 +129,10 @@
         storage.clearBookmarks();
         commit("bookmarks");
       },
-      commit,
-      count: () => graph.count(),
       forward,
-      get: (key) => state[key],
-      history: () => ({ index: state.hIndex, items: state.history.slice() }),
       isBookmarked: (id) => storage.bookmarks.has(id),
-      nextTargets: (node) => graph.nextTargets(node),
       persist,
       positionOf: (id) => storage.positionOf(id),
-      refresh,
       rememberPosition: (id, fraction) => storage.rememberPosition(id, fraction),
       restore,
       selected,

@@ -91,31 +91,22 @@
       positionTimer = setTimeout(savePositions, 300);
     };
 
-    window.addEventListener("beforeunload", () => {
+    const flush = () => {
       if (pendingSession) write(SESSION_KEY, pendingSession);
       savePositions();
       saveBookmarks();
-    });
+    };
+
+    window.addEventListener("beforeunload", flush);
 
     loadBookmarks();
     loadPositions();
 
     return {
-      BOOKMARK_KEY,
-      POSITION_KEY,
-      SESSION_KEY,
       bookmarks,
-      flush: () => {
-        if (pendingSession) write(SESSION_KEY, pendingSession);
-        savePositions();
-        saveBookmarks();
-      },
-      loadBookmarks,
-      loadPositions,
       positionOf: (id) => (positions.has(id) ? positions.get(id) : 0),
       readSession,
       rememberPosition,
-      saveBookmarks,
       saveSession,
       toggleBookmark: (id) => {
         if (!id) return false;

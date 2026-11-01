@@ -357,15 +357,6 @@
     return { tw: value, cn: value, en: value };
   };
 
-  const labelOf = (kind, id) => {
-    if (kind === "group") {
-      const group = groupById(id);
-      return group ? group.label : { tw: id, cn: id, en: id };
-    }
-    const type = typeById(id);
-    return type ? type.label : { tw: id, cn: id, en: id };
-  };
-
   const parseTarget = (target) => {
     const value = String(target || "");
     if (value.indexOf("group:") === 0) return { scope: "group", id: value.slice(6) };
@@ -384,13 +375,6 @@
   };
 
   const api = {
-    KEY: KEY,
-    base: {
-      font: BASE_FONT,
-      size: BASE_SIZE,
-      leading: BASE_LEADING,
-      weight: BASE_WEIGHT,
-    },
     labels: LABELS,
     presets: {
       fonts: FONTS,
@@ -411,15 +395,8 @@
       notify();
       return snapshot();
     },
-    apply: apply,
     describe: describe,
-    labelOf: labelOf,
     pickLabel: pickLabel,
-    subscribe: (fn) => {
-      const handler = (event) => fn(event.detail);
-      document.addEventListener("sr:prefs", handler);
-      return () => document.removeEventListener("sr:prefs", handler);
-    },
   };
 
   restore();

@@ -274,11 +274,6 @@
       return open(key, options);
     };
 
-    const activePanel = () => {
-      if (!stack.length) return null;
-      return panelOf(defs[stack[stack.length - 1].key]);
-    };
-
     const trapTab = (event) => {
       const def = defs[topKey()];
       if (!def || !TRAP_GROUPS[def.group || "menu"]) return;
@@ -344,19 +339,12 @@
     document.addEventListener("scroll", refresh, true);
 
     return {
-      activePanel,
       close,
-      closeTop,
-      defs,
-      isOpen,
       open,
       place,
-      refresh,
       register,
       reposition,
-      stack,
       toggle,
-      topKey,
     };
   });
 })();

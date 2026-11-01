@@ -488,15 +488,11 @@
       return {
         apply,
         bind,
-        close,
-        open,
         reset: () => {
           resetContext();
           updateUi();
         },
         sync: updateUi,
-        toggle,
-        updateUi,
       };
     });
 })();

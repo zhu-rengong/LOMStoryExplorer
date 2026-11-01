@@ -139,10 +139,7 @@
       };
 
       return {
-        close,
         init,
-        isOpen: () => openFlag,
-        open,
         toggle,
       };
     });

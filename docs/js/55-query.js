@@ -4,8 +4,6 @@
   const SR = window.SR;
 
   SR.define("query", [], () => {
-    const VERSION = 2;
-
     const FIELDS = [
       { id: "speaker", kind: "text", aliases: ["speaker", "say", "說話", "说话", "說話人", "说话人"] },
       { id: "flag", kind: "text", aliases: ["flag", "flags", "標誌", "标志", "旗標", "旗标"] },
@@ -744,16 +742,9 @@
     };
 
     return {
-      FIELDS,
-      KIND_VALUES: KIND_VALUES.slice(),
-      VERSION,
-      VIA_VALUES: VIA_VALUES.slice(),
       compile,
-      evaluate,
       fields: () => FIELDS.slice(),
-      parse,
       suggest,
-      values,
     };
   });
 })();

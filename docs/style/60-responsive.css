@@ -204,9 +204,7 @@ body[data-layout="mobile"] .io-status { left: 12px; bottom: 12px; }
 @media (pointer: coarse) {
   :root {
     --ctl-sm: 36px;
-    --ctl-md: 42px;
     --ctl-lg: 46px;
-    --row-h: 44px;
   }
 
   .branch-head { min-height: 40px; }

@@ -76,16 +76,6 @@
   meta.entries = arrays(meta.entries);
   meta.counts = meta.counts || {};
 
-  const packed = (lang) => (window.SR_TEXT || {})[lang] || null;
-
-  const storyOf = (lang, id) => {
-    const pack = packed(lang);
-    if (!pack || !pack.stories) return null;
-    return pack.stories[id] === undefined ? null : pack.stories[id];
-  };
-
-  const kindOf = (beat) => (Array.isArray(beat) ? beat[0] : "");
-
   const say = (beat) => ({
     speaker: beat[1] || "",
     text: beat[2] || "",
@@ -173,38 +163,25 @@
     return text;
   };
 
-  const checkpoint = (key) => {
-    const all = window.SR_CHECKPOINTS;
-    return all && key ? all[key] || null : null;
-  };
-
   const checkpointShard = (key) => {
     const index = meta.checkpointShards[key];
     return typeof index === "number" ? index : -1;
   };
 
   SR.define("schema", [], () => ({
-    SCHEMA,
-    data: raw,
     meta,
     chapters,
     nodes,
     edges,
     branch,
-    checkpoint,
     checkpointShard,
     choices,
     firstLine,
     jump,
-    kindOf,
     metaBeat,
-    nodeSource: (id) => meta.shardOf[id] || "",
-    pack: packed,
     say,
     scene,
-    storyOf,
     stripRich,
     textOf,
-    walk,
   }));
 })();

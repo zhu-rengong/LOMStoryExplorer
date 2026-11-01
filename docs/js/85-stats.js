@@ -324,9 +324,7 @@
       });
 
       return {
-        close: closePanel,
         init,
-        isOpen: () => openFlag,
         open: openPanel,
         refresh,
       };

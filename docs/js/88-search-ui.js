@@ -218,12 +218,7 @@
 
       return {
         bind,
-        choose,
-        hide,
-        onInput,
-        perform,
         reset,
-        run,
       };
     });
 })();

@@ -40,7 +40,6 @@
     }
 
     const visible = new Uint8Array(nodes.length);
-    const state = { count: nodes.length };
 
     const chapterOf = (node) => chapters[node.chapter] || { id: "", title: "", color: "#8A8578", count: 0 };
 
@@ -58,7 +57,6 @@
         visible[index] = show ? 1 : 0;
         if (show) count++;
       }
-      state.count = count;
       return count;
     };
 
@@ -73,8 +71,6 @@
       return byChapter;
     };
 
-    const edgeLabel = (edge) => edge.label || "";
-
     const nextTargets = (node) => {
       if (!node) return [];
       const seen = new Set();
@@ -86,16 +82,6 @@
         targets.push({ node: target, edge });
       }
       return targets;
-    };
-
-    const idOrder = nodes.map((node) => node.id).sort();
-
-    const nextInChapter = (node) => {
-      if (!node) return null;
-      for (const id of idOrder) {
-        if (id > node.id && nodeById.get(id).chapter === node.chapter) return nodeById.get(id);
-      }
-      return null;
     };
 
     const facetMatches = (node, kind, key) => {
@@ -140,14 +126,12 @@
       chapters,
       chapterOf,
       computeVisibility,
-      count: () => state.count,
       edgeKinds,
       edges,
       flagGroups,
       inAdj,
       indexById,
       lookup,
-      nextInChapter,
       nextTargets,
       nodeById,
       nodes,
@@ -155,7 +139,6 @@
       outAdj,
       passes,
       visible,
-      edgeLabel,
     };
   });
 })();

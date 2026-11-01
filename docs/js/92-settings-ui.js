@@ -558,11 +558,6 @@
 
       return {
         bind,
-        close,
-        closePicker,
-        fontItems,
-        open,
-        openPicker,
         sync,
       };
     });

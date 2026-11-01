@@ -84,13 +84,6 @@
       paint(prefs.get().measure);
     };
 
-    return {
-      available,
-      clamp,
-      commit,
-      init,
-      paint,
-      widthNow,
-    };
+    return { init };
   });
 })();

@@ -228,13 +228,7 @@
         if (isMobile() && !document.body.dataset.sheet) document.body.dataset.sheet = "half";
       };
 
-      const clearScrollMemory = () => {
-        scrollMemory.clear();
-        readingId = "";
-      };
-
       return {
-        clearScrollMemory,
         edgeLabelOf,
         focusText,
         nextTargets,
