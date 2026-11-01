@@ -330,7 +330,9 @@
           if (typeof next.font === "string") current.font = next.font;
           if (next.scale !== undefined) current.scale = clampScale(next.scale, current.scale);
           if (next.leading !== undefined) current.leading = clampLeading(next.leading, current.leading);
-          if (next.weight !== undefined) current.weight = clampWeight(next.weight, current.weight);
+          if (next.weight !== undefined) {
+            current.weight = next.weight === null ? null : clampWeight(next.weight, current.weight);
+          }
         }
       }
     }
