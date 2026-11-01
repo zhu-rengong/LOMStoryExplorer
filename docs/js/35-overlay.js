@@ -41,8 +41,6 @@
       return defs[key];
     };
 
-    const isOpen = (key) => stack.some((layer) => layer.key === key);
-
     const topKey = () => (stack.length ? stack[stack.length - 1].key : "");
 
     const fixedOrigin = (panel) => {
@@ -145,13 +143,26 @@
       for (const layer of stack) reposition(layer.key);
     });
 
+    let silence = null;
+
+    const clearSilence = () => {
+      const current = silence;
+      if (!current) return;
+      silence = null;
+      current.clear();
+    };
+
     const silenceFocusRing = (node) => {
-      node.classList.add("is-focus-silent");
+      clearSilence();
       const clear = () => {
+        if (silence && silence.clear === clear) silence = null;
         node.classList.remove("is-focus-silent");
         document.removeEventListener("keydown", clear, true);
         document.removeEventListener("pointerdown", clear, true);
+        node.removeEventListener("blur", clear);
       };
+      node.classList.add("is-focus-silent");
+      silence = { clear };
       document.addEventListener("keydown", clear, true);
       document.addEventListener("pointerdown", clear, true);
       node.addEventListener("blur", clear, { once: true });
@@ -167,7 +178,7 @@
         try {
           trigger.focus();
         } catch {
-          trigger.classList.remove("is-focus-silent");
+          clearSilence();
           return;
         }
       }
@@ -262,11 +273,6 @@
       return close(stack[stack.length - 1].key, { restoreFocus: true });
     };
 
-    const toggle = (key, options) => {
-      if (isOpen(key)) return close(key, { restoreFocus: true });
-      return open(key, options);
-    };
-
     const trapTab = (event) => {
       const def = defs[topKey()];
       if (!def || !TRAP_GROUPS[def.group || "menu"]) return;
@@ -337,7 +343,6 @@
       place,
       register,
       reposition,
-      toggle,
     };
   });
 })();
