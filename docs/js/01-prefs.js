@@ -38,9 +38,9 @@
   };
 
   const GROUPS = [
-    { id: "prose", label: { tw: "正文", cn: "正文", en: "Prose" }, font: FOLLOW_BASE },
-    { id: "choice", label: { tw: "選項與條件", cn: "选项与条件", en: "Choice" }, font: "sans" },
-    { id: "mark", label: { tw: "標記", cn: "标记", en: "Marks" }, font: FOLLOW_BASE },
+    { id: "prose", label: { tw: "正文", cn: "正文", en: "Prose" }, font: "serif", scale: 130 },
+    { id: "choice", label: { tw: "選項與條件", cn: "选项与条件", en: "Choice" }, font: "sans", scale: 130 },
+    { id: "mark", label: { tw: "標記", cn: "标记", en: "Marks" }, font: FOLLOW_BASE, scale: 130 },
     { id: "heading", label: { tw: "標題與導航", cn: "标题与导航", en: "Headings" }, font: FOLLOW_BASE },
     { id: "ui", label: { tw: "介面", cn: "界面", en: "Interface" }, font: FOLLOW_BASE },
     { id: "status", label: { tw: "狀態", cn: "状态", en: "Status" }, font: FOLLOW_BASE },
@@ -48,16 +48,16 @@
 
   const TYPES = [
     { id: "dialog", group: "prose", label: { tw: "對白", cn: "对白", en: "Dialogue" }, font: FOLLOW_GROUP, weight: null },
-    { id: "speaker", group: "prose", label: { tw: "說話人", cn: "说话人", en: "Speaker" }, font: "kai", weight: 500 },
-    { id: "narration", group: "prose", label: { tw: "旁白", cn: "旁白", en: "Narration" }, font: FOLLOW_GROUP, weight: null },
+    { id: "speaker", group: "prose", label: { tw: "說話人", cn: "说话人", en: "Speaker" }, font: "kai", weight: 500, scale: 140 },
+    { id: "narration", group: "prose", label: { tw: "旁白", cn: "旁白", en: "Narration" }, font: FOLLOW_GROUP, weight: null, scale: 160 },
     { id: "think", group: "prose", label: { tw: "心聲", cn: "心声", en: "Inner voice" }, font: FOLLOW_GROUP, weight: null },
     { id: "lore", group: "prose", label: { tw: "劇情點", cn: "剧情点", en: "Lore" }, font: "kai", weight: null },
     { id: "snippet", group: "prose", label: { tw: "摘要", cn: "摘要", en: "Snippet" }, font: FOLLOW_GROUP, weight: null },
 
     { id: "option", group: "choice", label: { tw: "選項", cn: "选项", en: "Option" }, font: FOLLOW_GROUP, weight: null },
-    { id: "index", group: "choice", label: { tw: "選項序號", cn: "选项序号", en: "Option index" }, font: "mono", weight: null, noLeading: true },
-    { id: "option-cond", group: "choice", label: { tw: "選項條件", cn: "选项条件", en: "Option condition" }, font: FOLLOW_GROUP, weight: null },
-    { id: "branch-cond", group: "choice", label: { tw: "分支條件", cn: "分支条件", en: "Branch condition" }, font: FOLLOW_GROUP, weight: null },
+    { id: "index", group: "choice", label: { tw: "選項序號", cn: "选项序号", en: "Option index" }, font: "mono", weight: null, scale: 80, noLeading: true },
+    { id: "option-cond", group: "choice", label: { tw: "選項條件", cn: "选项条件", en: "Option condition" }, font: FOLLOW_GROUP, weight: null, scale: 80 },
+    { id: "branch-cond", group: "choice", label: { tw: "分支條件", cn: "分支条件", en: "Branch condition" }, font: FOLLOW_GROUP, weight: 400 },
 
     { id: "label", group: "mark", label: { tw: "標籤", cn: "标签", en: "Label" }, font: "sans", weight: null },
     { id: "jump", group: "mark", label: { tw: "跳轉按鈕", cn: "跳转按钮", en: "Jump button" }, font: FOLLOW_GROUP, weight: null, noLeading: true },
@@ -116,10 +116,10 @@
     const out = {};
     for (const group of GROUPS) {
       out[group.id] = {
-        font: group.font,
-        scale: GROUP_DEFAULT.scale,
-        leading: GROUP_DEFAULT.leading,
-        weight: GROUP_DEFAULT.weight,
+        font: typeof group.font === "string" ? group.font : FOLLOW_BASE,
+        scale: typeof group.scale === "number" ? group.scale : GROUP_DEFAULT.scale,
+        leading: typeof group.leading === "number" ? group.leading : GROUP_DEFAULT.leading,
+        weight: typeof group.weight === "number" ? group.weight : GROUP_DEFAULT.weight,
       };
     }
     return out;
@@ -130,8 +130,8 @@
     for (const type of TYPES) {
       out[type.id] = {
         font: type.font,
-        scale: TYPE_DEFAULT.scale,
-        leading: TYPE_DEFAULT.leading,
+        scale: typeof type.scale === "number" ? type.scale : TYPE_DEFAULT.scale,
+        leading: typeof type.leading === "number" ? type.leading : TYPE_DEFAULT.leading,
         weight: type.weight,
       };
     }
