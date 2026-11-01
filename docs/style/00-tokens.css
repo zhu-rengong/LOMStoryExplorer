@@ -55,24 +55,9 @@
   --row-h: 34px;
   --row-pad: 10px;
 
-  --fs-micro: 11px;
-  --fs-xs: 12px;
-  --fs-sm: 13px;
-  --fs-base: 14px;
-  --fs-md: 15px;
-  --fs-h: 18px;
-  --fs-title: 22px;
-  --fs-display: 30px;
-
-  --font-ui: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", "STSong", Georgia, "SimSun", serif;
-  --font-display: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", "STSong", Georgia, "SimSun", serif;
+  --font-base: "Source Han Serif TC", "Noto Serif TC", "Songti TC", "Songti SC", "STSong", Georgia, "SimSun", serif;
   --font-mono: "Cascadia Mono", "Sarasa Mono TC", ui-monospace, Consolas, "Courier New", monospace;
-  --font-reading: var(--font-display);
 
-  --rd-scale: 1;
-  --rd-leading: 1.85;
-  --rd-fs: calc(16px * var(--rd-scale));
-  --rd-fs-sm: calc(14.5px * var(--rd-scale));
   --rd-gap-1: 4px;
   --rd-gap-2: 8px;
   --rd-gap-3: 18px;

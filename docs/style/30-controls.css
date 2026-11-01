@@ -9,9 +9,9 @@
   border-radius: var(--r-sm);
   background: var(--surface);
   color: var(--ink-2);
-  font-family: var(--rd-ff-ui, var(--font-ui));
-  font-size: calc(var(--fs-xs) * var(--rd-ts-ui, 1));
-  font-weight: var(--rd-fw-ui, 400);
+  font-family: var(--rd-ff-ui-compact, var(--font-base));
+  font-size: var(--rd-fs-ui-compact, 16px);
+  font-weight: var(--rd-fw-ui-compact, 400);
   line-height: 1;
   letter-spacing: .02em;
   white-space: nowrap;
@@ -61,9 +61,9 @@
   border-bottom: 1px solid transparent;
   background: none;
   color: var(--accent);
-  font-family: var(--rd-ff-ui, var(--font-ui));
-  font-size: calc(var(--fs-xs) * var(--rd-ts-ui, 1));
-  font-weight: var(--rd-fw-ui, 400);
+  font-family: var(--rd-ff-ui-compact, var(--font-base));
+  font-size: var(--rd-fs-ui-compact, 16px);
+  font-weight: var(--rd-fw-ui-compact, 400);
   letter-spacing: .02em;
   cursor: pointer;
   transition: color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
@@ -96,10 +96,10 @@
   border-radius: var(--r-sm);
   background: var(--surface-inset);
   color: var(--ink-2);
-  font-family: var(--rd-ff-badge, var(--font-ui));
-  font-size: calc(var(--fs-micro) * var(--rd-ts-badge, 1));
+  font-family: var(--rd-ff-badge, var(--font-base));
+  font-size: var(--rd-fs-badge, 16px);
   font-weight: var(--rd-fw-badge, 400);
-  line-height: calc(1 * var(--rd-lh-badge, 1));
+  line-height: 1;
   letter-spacing: .04em;
   white-space: nowrap;
 }
@@ -117,8 +117,9 @@
   padding: 0 5px;
   border-radius: var(--r-sm);
   font-family: var(--rd-ff-meta, var(--font-mono));
-  font-size: calc(var(--fs-micro) * var(--rd-ts-meta, 1));
+  font-size: var(--rd-fs-meta, 16px);
   font-weight: var(--rd-fw-meta, 400);
+  line-height: var(--rd-lh-meta, 1.6);
   font-variant-numeric: tabular-nums;
 }
 
@@ -138,14 +139,14 @@
   border-radius: var(--r-sm);
   background: var(--surface-inset);
   color: var(--ink-2);
-  font-family: var(--rd-ff-ui, var(--font-ui));
-  font-size: calc(var(--fs-xs) * var(--rd-ts-ui, 1));
-  font-weight: var(--rd-fw-ui, 400);
+  font-family: var(--rd-ff-ui-compact, var(--font-base));
+  font-size: var(--rd-fs-ui-compact, 16px);
+  font-weight: var(--rd-fw-ui-compact, 400);
   line-height: 1;
   white-space: nowrap;
 }
 
-.chip-sm { height: 22px; padding: 0 7px; font-size: calc(var(--fs-micro) * var(--rd-ts-ui, 1)); }
+.chip-sm { height: 22px; padding: 0 7px; font-size: calc(var(--rd-fs-ui-compact, 16px) * .92); }
 
 .input {
   width: 100%;
@@ -155,9 +156,9 @@
   border-radius: var(--r-sm);
   background: var(--surface-inset);
   color: var(--ink-2);
-  font-family: var(--rd-ff-ui, var(--font-ui));
-  font-size: calc(var(--fs-xs) * var(--rd-ts-ui, 1));
-  font-weight: var(--rd-fw-ui, 400);
+  font-family: var(--rd-ff-ui-compact, var(--font-base));
+  font-size: var(--rd-fs-ui-compact, 16px);
+  font-weight: var(--rd-fw-ui-compact, 400);
   transition: border-color var(--t-fast) var(--ease);
 }
 
@@ -173,7 +174,7 @@
 
 .input-mono {
   font-family: var(--rd-ff-id, var(--font-mono));
-  font-size: calc(var(--fs-xs) * var(--rd-ts-id, 1));
+  font-size: var(--rd-fs-id, 16px);
   font-weight: var(--rd-fw-id, 400);
   letter-spacing: 0;
 }
@@ -196,9 +197,9 @@
   border-radius: var(--r-sm);
   background: var(--surface);
   color: var(--ink-2);
-  font-family: var(--rd-ff-ui, var(--font-ui));
-  font-size: calc(var(--fs-xs) * var(--rd-ts-ui, 1));
-  font-weight: var(--rd-fw-ui, 400);
+  font-family: var(--rd-ff-ui-compact, var(--font-base));
+  font-size: var(--rd-fs-ui-compact, 16px);
+  font-weight: var(--rd-fw-ui-compact, 400);
   letter-spacing: .02em;
   transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
               border-color var(--t-fast) var(--ease);
@@ -240,9 +241,9 @@
   border-radius: var(--r-sm);
   background: transparent;
   color: var(--ink-2);
-  font-family: var(--rd-ff-ui, var(--font-ui));
-  font-size: calc(var(--fs-xs) * var(--rd-ts-ui, 1));
-  font-weight: var(--rd-fw-ui, 400);
+  font-family: var(--rd-ff-ui-compact, var(--font-base));
+  font-size: var(--rd-fs-ui-compact, 16px);
+  font-weight: var(--rd-fw-ui-compact, 400);
   text-align: left;
   cursor: pointer;
   transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
@@ -320,7 +321,7 @@
 
 .menu-item.is-on::after {
   content: "✓";
-  font-size: var(--fs-xs);
+  font-size: var(--rd-fs-ui-compact, 16px);
   color: var(--accent);
 }
 
@@ -338,8 +339,9 @@
   background: var(--surface);
   color: var(--ink-2);
   font-family: var(--rd-ff-caption, var(--font-mono));
-  font-size: calc(var(--fs-micro) * var(--rd-ts-caption, 1));
+  font-size: var(--rd-fs-caption, 16px);
   font-weight: var(--rd-fw-caption, 400);
+  line-height: var(--rd-lh-caption, 1.6);
   letter-spacing: .14em;
   text-transform: uppercase;
   font-variant-numeric: tabular-nums;
@@ -356,9 +358,10 @@
 .menu-note {
   padding: var(--sp-2) var(--sp-2) var(--sp-1);
   color: var(--ink-2);
-  font-size: calc(var(--fs-micro) * var(--rd-ts-ui, 1));
-  font-weight: var(--rd-fw-ui, 400);
-  line-height: calc(1.7 * var(--rd-lh-ui, 1));
+  font-family: var(--rd-ff-ui-micro, var(--font-base));
+  font-size: var(--rd-fs-ui-micro, 16px);
+  font-weight: var(--rd-fw-ui-micro, 400);
+  line-height: var(--rd-lh-ui-micro, 1.6);
   letter-spacing: .02em;
 }
 
@@ -380,8 +383,9 @@
   max-width: 62%;
   color: var(--accent-strong);
   font-family: var(--rd-ff-id, var(--font-mono));
-  font-size: calc(var(--fs-xs) * var(--rd-ts-id, 1));
+  font-size: var(--rd-fs-id, 16px);
   font-weight: var(--rd-fw-id, 400);
+  line-height: var(--rd-lh-id, 1.6);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -391,9 +395,10 @@
   flex: 1;
   min-width: 0;
   color: var(--ink-2);
-  font-family: var(--rd-ff-snippet, var(--font-display));
-  font-size: calc(var(--fs-xs) * var(--rd-ts-snippet, 1));
+  font-family: var(--rd-ff-snippet, var(--font-base));
+  font-size: var(--rd-fs-snippet, 16px);
   font-weight: var(--rd-fw-snippet, 400);
+  line-height: var(--rd-lh-snippet, 1.6);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -427,8 +432,9 @@
 
 .drop-item .did {
   font-family: var(--rd-ff-id, var(--font-mono));
-  font-size: calc(var(--fs-sm) * var(--rd-ts-id, 1));
+  font-size: var(--rd-fs-id, 16px);
   font-weight: var(--rd-fw-id, 400);
+  line-height: var(--rd-lh-id, 1.6);
   color: var(--ink);
 }
 
@@ -436,8 +442,9 @@
   margin-left: auto;
   color: var(--ink-2);
   font-family: var(--rd-ff-meta, var(--font-mono));
-  font-size: calc(var(--fs-micro) * var(--rd-ts-meta, 1));
+  font-size: var(--rd-fs-meta, 16px);
   font-weight: var(--rd-fw-meta, 400);
+  line-height: var(--rd-lh-meta, 1.6);
   white-space: nowrap;
 }
 
@@ -445,10 +452,10 @@
   flex: 1 0 100%;
   padding-top: 2px;
   color: var(--ink-2);
-  font-family: var(--rd-ff-snippet, var(--font-display));
-  font-size: calc(var(--fs-xs) * var(--rd-ts-snippet, 1));
+  font-family: var(--rd-ff-snippet, var(--font-base));
+  font-size: var(--rd-fs-snippet, 16px);
   font-weight: var(--rd-fw-snippet, 400);
-  line-height: calc(1.7 * var(--rd-lh-snippet, 1));
+  line-height: var(--rd-lh-snippet, 1.6);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -464,8 +471,9 @@
   border-bottom: 1px solid var(--line-1);
   color: var(--ink-2);
   font-family: var(--rd-ff-caption, var(--font-mono));
-  font-size: calc(var(--fs-micro) * var(--rd-ts-caption, 1));
+  font-size: var(--rd-fs-caption, 16px);
   font-weight: var(--rd-fw-caption, 400);
+  line-height: var(--rd-lh-caption, 1.6);
   letter-spacing: .08em;
 }
 
@@ -473,10 +481,10 @@
 .popover-empty {
   padding: var(--sp-4) var(--sp-3);
   color: var(--ink-2);
-  font-family: var(--rd-ff-empty, var(--font-ui));
-  font-size: calc(var(--fs-sm) * var(--rd-ts-empty, 1));
+  font-family: var(--rd-ff-empty, var(--font-base));
+  font-size: var(--rd-fs-empty, 16px);
   font-weight: var(--rd-fw-empty, 400);
-  line-height: calc(1.7 * var(--rd-lh-empty, 1));
+  line-height: var(--rd-lh-empty, 1.6);
 }
 
 .drop-more {
@@ -498,9 +506,10 @@
 .panel-title {
   flex: 1;
   min-width: 0;
-  font-family: var(--rd-ff-heading, var(--font-display));
-  font-size: calc(var(--fs-h) * var(--rd-ts-heading, 1));
-  font-weight: var(--rd-fw-heading, 600);
+  font-family: var(--rd-ff-panel, var(--font-base));
+  font-size: var(--rd-fs-panel, 16px);
+  font-weight: var(--rd-fw-panel, 600);
+  line-height: var(--rd-lh-panel, 1.6);
   letter-spacing: .08em;
   color: var(--ink);
   overflow: hidden;
@@ -514,8 +523,9 @@
   border-top: 1px solid var(--line-1);
   color: var(--ink-2);
   font-family: var(--rd-ff-caption, var(--font-mono));
-  font-size: calc(var(--fs-micro) * var(--rd-ts-caption, 1));
+  font-size: var(--rd-fs-caption, 16px);
   font-weight: var(--rd-fw-caption, 400);
+  line-height: var(--rd-lh-caption, 1.6);
   letter-spacing: .06em;
 }
 

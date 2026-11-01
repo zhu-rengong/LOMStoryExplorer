@@ -436,7 +436,7 @@
         });
         store.subscribe(["filter"], () => filterUi.sync());
         store.subscribe(["railTab", "outline"], () => rail.render());
-        store.subscribe(["settingsType"], () => settingsUi.sync());
+        store.subscribe(["settingsTarget"], () => settingsUi.sync());
         store.subscribe(["layout"], () => {
           document.body.dataset.layout = store.state.layout;
         });

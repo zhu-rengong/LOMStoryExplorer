@@ -9,44 +9,49 @@
 
       const pickerState = { target: "", items: [], visible: [], active: 0 };
 
-      let activeGroup = "prose";
-
       const lang = () => store.state.lang;
 
-      const presetLabel = (preset) => {
-        if (!preset || !preset.label) return "";
-        return settings.pickLabel(preset.label, lang());
+      const label = (value) => settings.pickLabel(value, lang());
+
+      const parseTarget = () => {
+        const value = String(store.state.settingsTarget || "");
+        if (value.indexOf("group:") === 0) return { scope: "group", id: value.slice(6) };
+        const type = settings.typeById(value.indexOf("type:") === 0 ? value.slice(5) : value);
+        if (!type) return { scope: "type", id: settings.presets.types[0].id };
+        return { scope: "type", id: type.id };
       };
 
-      const setTrigger = (id, text) => {
-        const node = $(id);
+      const groupOfTarget = (target) => {
+        if (target.scope === "group") return settings.groupById(target.id);
+        const type = settings.typeById(target.id);
+        return type ? settings.groupById(type.group) : settings.presets.groups[0];
+      };
+
+      const scopeLabel = (target) => {
+        const group = groupOfTarget(target);
+        const name = group ? label(group.label) : "";
+        const leaf = target.scope === "group" ? label(settings.labels.groupAll) : i18n.typeLabel(target.id);
+        return name ? `${name} · ${leaf}` : leaf;
+      };
+
+      const setTrigger = (text) => {
+        const node = $("typeFontTrigger");
         if (!node) return;
         const name = node.querySelector(".ft-name");
         if (name) name.textContent = text;
       };
 
-      const typesOfGroup = (groupId) => settings.presets.types.filter((type) => type.group === groupId);
-
-      const firstTypeOf = (groupId) => {
-        const list = typesOfGroup(groupId);
-        return list.length ? list[0].id : "dialog";
-      };
-
       const fontItems = (target) => {
         const items = [];
-        if (target.indexOf("type:") === 0) {
-          items.push({ value: "", name: i18n.t("fontFollowReading"), meta: "" });
-          items.push({ value: "@ui", name: i18n.t("fontFollowUi"), meta: "" });
-        } else if (target === "ui") {
-          items.push({ value: "system", name: i18n.t("fontSystemDefault"), meta: "" });
+        if (target.scope === "group") {
+          items.push({ value: "@base", name: label(settings.labels.followBase), meta: "" });
+        } else {
+          items.push({ value: "@group", name: label(settings.labels.followGroup), meta: "" });
         }
-        const presets = target === "ui" ? settings.presets.ui : settings.presets.reading;
-        presets.forEach((preset) => {
-          if (preset.id === "custom") return;
-          if (target === "ui" && preset.id === "system") return;
-          items.push({ value: preset.id, name: presetLabel(preset), meta: i18n.t("fontPresetMeta") });
+        settings.presets.fonts.forEach((font) => {
+          items.push({ value: font.id, name: label(font.label), meta: i18n.t("fontPresetMeta") });
         });
-        items.push({ value: "__custom__", name: i18n.t("fontCustomItem"), meta: "" });
+        items.push({ value: "__custom__", name: label(settings.labels.customFont), meta: "" });
         settings.families().forEach((family) => {
           items.push({ value: family, name: family, meta: i18n.t("fontSystemMeta"), family });
         });
@@ -94,10 +99,11 @@
         pickerState.target = "";
       };
 
-      const openPicker = (anchor, target) => {
+      const openPicker = (anchor) => {
         const picker = $("fontPicker");
         if (!picker || !anchor) return;
-        pickerState.target = target;
+        const target = parseTarget();
+        pickerState.target = store.state.settingsTarget;
         pickerState.items = fontItems(target);
         pickerState.active = 0;
         const search = $("fontPickerSearch");
@@ -116,55 +122,47 @@
         if (!overlay.close("fontPicker")) hidePickerRaw();
       };
 
+      const patchEntry = (patch) => {
+        const target = parseTarget();
+        if (target.scope === "group") {
+          const groups = {};
+          groups[target.id] = patch;
+          settings.set({ groups: groups });
+        } else {
+          const types = {};
+          types[target.id] = patch;
+          settings.set({ types: types });
+        }
+      };
+
       const pickFontItem = (item) => {
-        const target = pickerState.target;
         if (item.value === "__custom__") {
           closePicker();
-          if (target.indexOf("type:") === 0) {
-            const typeId = target.slice(5);
-            const patch = { types: {} };
-            patch.types[typeId] = { font: "" };
-            settings.set(patch);
-            sync();
-            const input = $("typeFontCustom");
-            if (input) {
-              input.hidden = false;
-              input.value = "";
-              input.focus();
-            }
-          } else {
-            settings.set(target === "reading" ? { reading: "custom" } : { ui: "custom" });
-            sync();
-            const custom = $(target === "reading" ? "fontReadingCustom" : "fontUiCustom");
-            if (custom) custom.focus();
+          patchEntry({ font: "" });
+          sync();
+          const input = $("typeFontCustom");
+          if (input) {
+            input.hidden = false;
+            input.value = "";
+            input.focus();
           }
           return;
         }
-
-        if (target.indexOf("type:") === 0) {
-          const patch = { types: {} };
-          patch.types[target.slice(5)] = { font: item.value };
-          settings.set(patch);
-        } else if (target === "reading") {
-          settings.set({ reading: item.value });
-        } else {
-          settings.set({ ui: item.value });
-        }
+        patchEntry({ font: item.value });
         closePicker();
         sync();
         ui.toast(i18n.t("fontPicked", { name: item.name }));
       };
 
       const specimenOf = (typeId) => {
-        const wrap = (className, text) => ui.el("div", className, text);
         switch (typeId) {
           case "dialog": {
-            const say = wrap("say");
+            const say = ui.el("div", "say");
             say.appendChild(ui.el("div", "what", i18n.t("previewText")));
             return say;
           }
           case "speaker": {
-            const say = wrap("say");
+            const say = ui.el("div", "say");
             say.appendChild(ui.el("span", "who is-link", i18n.t("previewWho")));
             return say;
           }
@@ -192,7 +190,6 @@
           }
           case "option": {
             const head = ui.el("div", "option-head row");
-            head.appendChild(ui.el("span", "option-idx", i18n.t("previewIndex")));
             const main = ui.el("span", "option-main");
             main.appendChild(ui.el("span", "option-text", i18n.t("previewOption")));
             head.appendChild(main);
@@ -218,8 +215,40 @@
             row.appendChild(ui.el("span", "scene-name", i18n.t("previewLabel")));
             return row;
           }
+          case "jump": {
+            const button = ui.el("button", "jump btn btn-sm");
+            button.type = "button";
+            button.appendChild(ui.el("span", "arrow", "→"));
+            button.appendChild(document.createTextNode(i18n.t("previewJump")));
+            return button;
+          }
           case "badge":
             return ui.el("span", "badge", i18n.t("previewBadge"));
+          case "title":
+            return ui.el("h2", "node-title", i18n.t("previewNode"));
+          case "panel":
+            return ui.el("h2", "panel-title", i18n.t("previewHeading"));
+          case "lookup":
+            return ui.el("span", "panel-title lookup-title", i18n.t("lookupSpeaker"));
+          case "brand": {
+            const box = ui.el("div", "brand-text");
+            box.appendChild(ui.el("h1", null, i18n.t("appTitle")));
+            return box;
+          }
+          case "seal":
+            return ui.el("span", "seal", i18n.t("previewSeal"));
+          case "rail":
+            return ui.el("h2", "rail-title", i18n.t("railTitle"));
+          case "stat": {
+            const card = ui.el("div", "stat-card");
+            card.appendChild(ui.el("span", "stat-value", i18n.t("previewStat")));
+            return card;
+          }
+          case "empty-title": {
+            const box = ui.el("div", "empty-state");
+            box.appendChild(ui.el("h3", null, i18n.t("noBeatsTitle")));
+            return box;
+          }
           case "crumb": {
             const crumb = ui.el("p", "crumb");
             crumb.appendChild(document.createTextNode(i18n.t("previewCrumb")));
@@ -231,15 +260,15 @@
             row.appendChild(ui.el("span", "dmeta", i18n.t("previewMeta")));
             return row;
           }
-          case "title":
-            return ui.el("h2", "node-title", i18n.t("previewNode"));
-          case "heading":
-            return ui.el("h2", "panel-title", i18n.t("previewHeading"));
-          case "ui": {
+          case "ui":
+            return ui.el("p", "help-desc", i18n.t("previewText"));
+          case "ui-compact": {
             const button = ui.el("button", "btn", i18n.t("previewUi"));
             button.type = "button";
             return button;
           }
+          case "ui-micro":
+            return ui.el("p", "menu-note", i18n.t("previewMicro"));
           case "caption":
             return ui.el("p", "sub-label", i18n.t("previewCaption"));
           case "id": {
@@ -258,51 +287,74 @@
         }
       };
 
-      const renderPreview = (type) => {
-        const box = $("settingsPreview");
-        if (!box) return;
-        box.replaceChildren();
+      const appendSpecimen = (box, typeId) => {
         const head = ui.el("div", "preview-head");
-        head.appendChild(ui.el("span", "preview-tag", i18n.typeLabel(type.id)));
+        head.appendChild(ui.el("span", "preview-tag", i18n.typeLabel(typeId)));
         box.appendChild(head);
         const specimen = ui.el("div", "preview-specimen");
-        specimen.dataset.type = type.id;
-        specimen.appendChild(specimenOf(type.id));
+        specimen.dataset.type = typeId;
+        specimen.appendChild(specimenOf(typeId));
         box.appendChild(specimen);
       };
 
-      const renderGroups = () => {
-        const box = $("typeGroups");
+      const renderPreview = (target) => {
+        const box = $("settingsPreview");
         if (!box) return;
         box.replaceChildren();
-        settings.presets.groups.forEach((group) => {
-          const button = ui.el("button", `type-group${group.id === activeGroup ? " is-on" : ""}`,
-            settings.pickLabel(group.label, lang()));
+        if (target.scope === "type") {
+          appendSpecimen(box, target.id);
+          return;
+        }
+        const types = settings.presets.types
+          .filter((type) => type.group === target.id)
+          .slice(0, 3);
+        types.forEach((type) => appendSpecimen(box, type.id));
+      };
+
+      const renderGroups = (target) => {
+        const box = $("typeGroups");
+        if (!box) return;
+        const group = groupOfTarget(target);
+        box.replaceChildren();
+        settings.presets.groups.forEach((item) => {
+          const on = !!group && item.id === group.id;
+          const button = ui.el("button", `type-group${on ? " is-on" : ""}`, label(item.label));
           button.type = "button";
-          button.dataset.group = group.id;
-          button.setAttribute("aria-pressed", String(group.id === activeGroup));
+          button.dataset.group = item.id;
+          button.setAttribute("aria-pressed", String(on));
           button.addEventListener("click", () => {
-            activeGroup = group.id;
-            store.setSettingsType(firstTypeOf(group.id));
+            store.setSettingsTarget(`group:${item.id}`);
             sync();
           });
           box.appendChild(button);
         });
       };
 
-      const renderChips = () => {
+      const renderChips = (target) => {
         const box = $("typeChips");
         if (!box) return;
+        const group = groupOfTarget(target);
         box.replaceChildren();
-        const typeId = store.state.settingsType;
-        typesOfGroup(activeGroup).forEach((type) => {
-          const button = ui.el("button", `type-tab btn btn-sm${type.id === typeId ? " is-on" : ""}`,
-            i18n.typeLabel(type.id));
+        if (!group) return;
+        const all = ui.el("button",
+          `type-tab btn btn-sm${target.scope === "group" ? " is-on" : ""}`,
+          label(settings.labels.groupAll));
+        all.type = "button";
+        all.dataset.target = `group:${group.id}`;
+        all.setAttribute("aria-pressed", String(target.scope === "group"));
+        all.addEventListener("click", () => {
+          store.setSettingsTarget(`group:${group.id}`);
+          sync();
+        });
+        box.appendChild(all);
+        settings.presets.types.filter((type) => type.group === group.id).forEach((type) => {
+          const on = target.scope === "type" && target.id === type.id;
+          const button = ui.el("button", `type-tab btn btn-sm${on ? " is-on" : ""}`, i18n.typeLabel(type.id));
           button.type = "button";
-          button.dataset.type = type.id;
-          button.setAttribute("aria-pressed", String(type.id === typeId));
+          button.dataset.target = `type:${type.id}`;
+          button.setAttribute("aria-pressed", String(on));
           button.addEventListener("click", () => {
-            store.setSettingsType(type.id);
+            store.setSettingsTarget(`type:${type.id}`);
             sync();
           });
           box.appendChild(button);
@@ -311,59 +363,58 @@
 
       const sync = () => {
         const current = settings.get();
-        setTrigger("fontReadingTrigger", settings.describe("reading", lang()));
-        setTrigger("fontUiTrigger", settings.describe("ui", lang()));
+        const target = parseTarget();
+        const group = groupOfTarget(target);
+        const entry = target.scope === "group"
+          ? current.groups[target.id]
+          : current.types[target.id];
+        if (!entry) return;
+        const computed = settings.computed(target.scope, target.id);
+        const type = target.scope === "type" ? settings.typeById(target.id) : null;
 
-        const readingCustom = $("fontReadingCustom");
-        if (readingCustom) {
-          readingCustom.hidden = current.reading !== "custom";
-          readingCustom.value = current.readingCustom || "";
+        const note = $("typeScopeNote");
+        if (note) note.textContent = scopeLabel(target);
+
+        renderGroups(target);
+        renderChips(target);
+        setTrigger(settings.describe(store.state.settingsTarget, lang()));
+
+        const scale = $("typeScale");
+        if (scale) scale.value = String(entry.scale);
+        const scaleOut = $("typeScaleOut");
+        if (scaleOut) scaleOut.textContent = `${entry.scale}% · ${computed.px.toFixed(2)}px`;
+
+        const leadingRow = $("typeLeadingRow");
+        const leadingInput = $("typeLeading");
+        const leading = $("typeLeadingOut");
+        const noLeading = !!type && !!type.noLeading;
+        if (leadingRow) leadingRow.hidden = noLeading;
+        if (leadingInput) {
+          leadingInput.hidden = noLeading;
+          leadingInput.value = String(entry.leading);
         }
-        const uiCustom = $("fontUiCustom");
-        if (uiCustom) {
-          uiCustom.hidden = current.ui !== "custom";
-          uiCustom.value = current.uiCustom || "";
-        }
+        if (leading) leading.textContent = `${entry.leading}% · ${computed.lineHeight.toFixed(2)}`;
 
-        const scale = $("fontScale");
-        if (scale) scale.value = String(current.scale);
-        const scaleOut = $("fontScaleOut");
-        if (scaleOut) scaleOut.textContent = `${current.scale}%`;
-        const leading = $("leading");
-        if (leading) leading.value = String(current.leading);
-        const leadingOut = $("leadingOut");
-        if (leadingOut) leadingOut.textContent = Number(current.leading).toFixed(2);
-
-        const type = settings.typeById(store.state.settingsType) || settings.presets.types[0];
-        activeGroup = type.group;
-        renderGroups();
-        renderChips();
-        renderPreview(type);
-
-        const item = current.types[type.id] || { font: "", scale: 100, weight: 400, leading: 100 };
-        setTrigger("typeFontTrigger", settings.describe(`type:${type.id}`, lang()));
-        const typeScale = $("typeScale");
-        if (typeScale) typeScale.value = String(item.scale);
-        const typeScaleOut = $("typeScaleOut");
-        if (typeScaleOut) typeScaleOut.textContent = `${item.scale}%`;
-        const typeLeading = $("typeLeading");
-        if (typeLeading) typeLeading.value = String(item.leading);
-        const typeLeadingOut = $("typeLeadingOut");
-        if (typeLeadingOut) typeLeadingOut.textContent = `${item.leading}%`;
         ui.$$("#weightSeg .seg-btn").forEach((button) => {
-          const on = Number(button.dataset.weight) === Number(item.weight);
+          const inherit = button.dataset.inherit === "true";
+          const on = inherit
+            ? !!type && entry.weight === null
+            : entry.weight !== null && Number(button.dataset.weight) === Number(entry.weight);
+          button.hidden = inherit && !type;
           button.classList.toggle("is-on", on);
           ui.setPressed(button, on);
         });
 
-        const isPreset = settings.presets.reading.some((preset) => preset.id === item.font);
-        const isFollow = !item.font || item.font === "@ui";
-        const isCustom = !!item.font && !isFollow && !isPreset;
+        const followValues = ["", "@base", "@group"];
+        const isPreset = settings.presets.fonts.some((font) => font.id === entry.font);
+        const isCustom = !!entry.font && followValues.indexOf(entry.font) < 0 && !isPreset;
         const typeCustom = $("typeFontCustom");
         if (typeCustom) {
           typeCustom.hidden = !isCustom;
-          if (isCustom) typeCustom.value = item.font;
+          if (isCustom) typeCustom.value = entry.font;
         }
+
+        renderPreview(target);
       };
 
       const hideRaw = () => {
@@ -384,7 +435,7 @@
         const button = $("settingsBtn");
         if (button) button.setAttribute("aria-expanded", "true");
         overlay.open("settings", { trigger: button });
-        const first = $("fontReadingTrigger");
+        const first = $("typeFontTrigger");
         if (first) first.focus();
       };
 
@@ -394,70 +445,34 @@
       };
 
       const bind = () => {
-        const readingTrigger = $("fontReadingTrigger");
-        if (readingTrigger) readingTrigger.addEventListener("click", () => openPicker(readingTrigger, "reading"));
-        const uiTrigger = $("fontUiTrigger");
-        if (uiTrigger) uiTrigger.addEventListener("click", () => openPicker(uiTrigger, "ui"));
-        const typeTrigger = $("typeFontTrigger");
-        if (typeTrigger) {
-          typeTrigger.addEventListener("click", () => openPicker(typeTrigger, `type:${store.state.settingsType}`));
-        }
+        const trigger = $("typeFontTrigger");
+        if (trigger) trigger.addEventListener("click", () => openPicker(trigger));
 
-        const readingCustom = $("fontReadingCustom");
-        if (readingCustom) {
-          readingCustom.addEventListener("input", () => settings.set({ readingCustom: readingCustom.value }));
-        }
-        const uiCustom = $("fontUiCustom");
-        if (uiCustom) {
-          uiCustom.addEventListener("input", () => settings.set({ uiCustom: uiCustom.value }));
-        }
         const typeCustom = $("typeFontCustom");
         if (typeCustom) {
           typeCustom.addEventListener("input", () => {
-            const patch = { types: {} };
-            patch.types[store.state.settingsType] = { font: typeCustom.value };
-            settings.set(patch);
+            patchEntry({ font: typeCustom.value });
+            sync();
           });
         }
 
-        const scale = $("fontScale");
+        const scale = $("typeScale");
         if (scale) {
           scale.addEventListener("input", () => {
-            settings.set({ scale: Number(scale.value) });
+            patchEntry({ scale: Number(scale.value) });
             sync();
           });
         }
-        const leading = $("leading");
+        const leading = $("typeLeading");
         if (leading) {
           leading.addEventListener("input", () => {
-            settings.set({ leading: Number(leading.value) });
-            sync();
-          });
-        }
-
-        const typeScale = $("typeScale");
-        if (typeScale) {
-          typeScale.addEventListener("input", () => {
-            const patch = { types: {} };
-            patch.types[store.state.settingsType] = { scale: Number(typeScale.value) };
-            settings.set(patch);
-            sync();
-          });
-        }
-        const typeLeading = $("typeLeading");
-        if (typeLeading) {
-          typeLeading.addEventListener("input", () => {
-            const patch = { types: {} };
-            patch.types[store.state.settingsType] = { leading: Number(typeLeading.value) };
-            settings.set(patch);
+            patchEntry({ leading: Number(leading.value) });
             sync();
           });
         }
         ui.$$("#weightSeg .seg-btn").forEach((button) => {
           button.addEventListener("click", () => {
-            const patch = { types: {} };
-            patch.types[store.state.settingsType] = { weight: Number(button.dataset.weight) };
-            settings.set(patch);
+            patchEntry({ weight: button.dataset.inherit === "true" ? null : Number(button.dataset.weight) });
             sync();
           });
         });
@@ -520,7 +535,7 @@
         settings.onFamilies(() => {
           const picker = $("fontPicker");
           if (!picker || picker.hidden || !pickerState.target) return;
-          pickerState.items = fontItems(pickerState.target);
+          pickerState.items = fontItems(parseTarget());
           pickerState.active = 0;
           renderPickerList($("fontPickerSearch") ? $("fontPickerSearch").value : "");
           paintPickerActive();

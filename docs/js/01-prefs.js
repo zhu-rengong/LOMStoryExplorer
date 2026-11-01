@@ -3,88 +3,96 @@
 
   const SR = window.SR;
 
-  const KEY = "legend-of-mortal.explorer.prefs.v1";
+  const KEY = "legend-of-mortal.explorer.prefs.v2";
+  const LEGACY_KEY = "legend-of-mortal.explorer.prefs.v1";
 
   const SERIF = '"Source Han Serif TC","Noto Serif TC","Songti TC","Songti SC","STSong",Georgia,"SimSun",serif';
   const SANS = '"PingFang TC","PingFang SC","Source Han Sans TC","Noto Sans TC","Microsoft JhengHei","Microsoft YaHei",system-ui,sans-serif';
   const KAI = `"Kaiti TC","KaiTi","STKaiti","BiauKai","DFKai-SB",${SERIF}`;
   const ROUND = '"Yuanti TC","Yuanti SC","YouYuan","PingFang TC","PingFang SC","Microsoft YaHei",sans-serif';
   const MONO = 'ui-monospace,"Sarasa Mono TC","Cascadia Mono",Consolas,"Courier New",monospace';
-  const SYSTEM = '-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei","Noto Sans TC",system-ui,sans-serif';
 
-  const READING = [
-    { id: "serif", label: { tw: "宋體（預設）", cn: "宋体（默认）", en: "Serif (default)" }, stack: SERIF },
+  const BASE_FONT = SERIF;
+  const BASE_SIZE = 16;
+  const BASE_LEADING = 1.6;
+  const BASE_WEIGHT = 400;
+
+  const FOLLOW_BASE = "@base";
+  const FOLLOW_GROUP = "@group";
+
+  const FONTS = [
+    { id: "serif", label: { tw: "宋體", cn: "宋体", en: "Serif" }, stack: SERIF },
     { id: "sans", label: { tw: "黑體", cn: "黑体", en: "Sans" }, stack: SANS },
     { id: "kai", label: { tw: "楷體", cn: "楷体", en: "Kai" }, stack: KAI },
     { id: "round", label: { tw: "圓體", cn: "圆体", en: "Rounded" }, stack: ROUND },
     { id: "mono", label: { tw: "等寬", cn: "等宽", en: "Monospace" }, stack: MONO },
-    { id: "custom", label: { tw: "自訂字體…", cn: "自定义字体…", en: "Custom font…" }, stack: SERIF },
   ];
 
-  const UI = [
-    { id: "system", label: { tw: "系統預設", cn: "系统默认", en: "System default" }, stack: SYSTEM },
-    { id: "sans", label: { tw: "黑體", cn: "黑体", en: "Sans" }, stack: SANS },
-    { id: "round", label: { tw: "圓體", cn: "圆体", en: "Rounded" }, stack: ROUND },
-    { id: "serif", label: { tw: "宋體", cn: "宋体", en: "Serif" }, stack: SERIF },
-    { id: "custom", label: { tw: "自訂字體…", cn: "自定义字体…", en: "Custom font…" }, stack: SYSTEM },
-  ];
-
-  const FOLLOW_READING = "";
-  const FOLLOW_UI = "@ui";
+  const LABELS = {
+    followBase: { tw: "跟隨基準", cn: "跟随基准", en: "Follow base" },
+    followGroup: { tw: "跟隨大類", cn: "跟随大类", en: "Follow group" },
+    groupAll: { tw: "整組", cn: "整组", en: "Whole group" },
+    weightInherit: { tw: "跟隨", cn: "跟随", en: "Inherit" },
+    customFont: { tw: "自訂字體…", cn: "自定义字体…", en: "Custom font…" },
+    systemFont: { tw: "系統字體", cn: "系统字体", en: "System font" },
+  };
 
   const GROUPS = [
-    { id: "prose", label: { tw: "正文", cn: "正文", en: "Prose" } },
-    { id: "choice", label: { tw: "選項", cn: "选项", en: "Choice" } },
-    { id: "mark", label: { tw: "標記", cn: "标记", en: "Marks" } },
-    { id: "heading", label: { tw: "標題", cn: "标题", en: "Headings" } },
-    { id: "ui", label: { tw: "介面", cn: "界面", en: "Interface" } },
-    { id: "status", label: { tw: "狀態", cn: "状态", en: "Status" } },
+    { id: "prose", label: { tw: "正文", cn: "正文", en: "Prose" }, font: FOLLOW_BASE },
+    { id: "choice", label: { tw: "選項與條件", cn: "选项与条件", en: "Choice" }, font: "sans" },
+    { id: "mark", label: { tw: "標記", cn: "标记", en: "Marks" }, font: FOLLOW_BASE },
+    { id: "heading", label: { tw: "標題與導航", cn: "标题与导航", en: "Headings" }, font: FOLLOW_BASE },
+    { id: "ui", label: { tw: "介面", cn: "界面", en: "Interface" }, font: FOLLOW_BASE },
+    { id: "status", label: { tw: "狀態", cn: "状态", en: "Status" }, font: FOLLOW_BASE },
   ];
 
   const TYPES = [
-    { id: "dialog", group: "prose", label: { tw: "對白", cn: "对白", en: "Dialogue" }, font: FOLLOW_READING, weight: 400 },
-    { id: "speaker", group: "prose", label: { tw: "說話人", cn: "说话人", en: "Speaker" }, font: "kai", weight: 500, scale: 150 },
-    { id: "narration", group: "prose", label: { tw: "旁白", cn: "旁白", en: "Narration" }, font: FOLLOW_READING, weight: 400, scale: 150 },
-    { id: "think", group: "prose", label: { tw: "心聲", cn: "心声", en: "Inner voice" }, font: FOLLOW_READING, weight: 400 },
-    { id: "lore", group: "prose", label: { tw: "劇情點", cn: "剧情点", en: "Lore" }, font: "kai", weight: 400 },
-    { id: "snippet", group: "prose", label: { tw: "摘要", cn: "摘要", en: "Snippet" }, font: "serif", weight: 400 },
-    { id: "option", group: "choice", label: { tw: "選項", cn: "选项", en: "Option" }, font: "sans", weight: 400 },
-    { id: "index", group: "choice", label: { tw: "選項序號", cn: "选项序号", en: "Option index" }, font: "mono", weight: 400 },
-    { id: "option-cond", group: "choice", label: { tw: "選項條件", cn: "选项条件", en: "Option condition" }, font: "sans", weight: 400 },
-    { id: "branch-cond", group: "choice", label: { tw: "分支條件", cn: "分支条件", en: "Branch condition" }, font: "sans", weight: 400 },
-    { id: "label", group: "mark", label: { tw: "標籤", cn: "标签", en: "Label" }, font: "sans", weight: 400 },
-    { id: "badge", group: "mark", label: { tw: "徽章", cn: "徽章", en: "Badge" }, font: FOLLOW_UI, weight: 400 },
-    { id: "crumb", group: "mark", label: { tw: "章節路徑", cn: "章节路径", en: "Breadcrumb" }, font: "mono", weight: 400 },
-    { id: "meta", group: "mark", label: { tw: "時間與計數", cn: "时间与计数", en: "Time & counts" }, font: "mono", weight: 400 },
-    { id: "title", group: "heading", label: { tw: "劇本標題", cn: "剧本标题", en: "Story title" }, font: "serif", weight: 600 },
-    { id: "heading", group: "heading", label: { tw: "區塊標題", cn: "区块标题", en: "Section heading" }, font: "serif", weight: 600 },
-    { id: "ui", group: "ui", label: { tw: "介面文字", cn: "界面文字", en: "Interface text" }, font: FOLLOW_UI, weight: 400 },
-    { id: "caption", group: "ui", label: { tw: "小標籤與說明", cn: "小标签与说明", en: "Caption" }, font: "mono", weight: 400 },
-    { id: "id", group: "ui", label: { tw: "編號與代碼", cn: "编号与代码", en: "Identifier" }, font: "mono", weight: 400 },
-    { id: "status", group: "status", label: { tw: "狀態訊息", cn: "状态消息", en: "Status message" }, font: FOLLOW_UI, weight: 400 },
-    { id: "loading", group: "status", label: { tw: "載入提示", cn: "加载提示", en: "Loading hint" }, font: "mono", weight: 400 },
-    { id: "empty", group: "status", label: { tw: "空狀態", cn: "空状态", en: "Empty state" }, font: FOLLOW_UI, weight: 400 },
+    { id: "dialog", group: "prose", label: { tw: "對白", cn: "对白", en: "Dialogue" }, font: FOLLOW_GROUP, weight: null },
+    { id: "speaker", group: "prose", label: { tw: "說話人", cn: "说话人", en: "Speaker" }, font: "kai", weight: 500 },
+    { id: "narration", group: "prose", label: { tw: "旁白", cn: "旁白", en: "Narration" }, font: FOLLOW_GROUP, weight: null },
+    { id: "think", group: "prose", label: { tw: "心聲", cn: "心声", en: "Inner voice" }, font: FOLLOW_GROUP, weight: null },
+    { id: "lore", group: "prose", label: { tw: "劇情點", cn: "剧情点", en: "Lore" }, font: "kai", weight: null },
+    { id: "snippet", group: "prose", label: { tw: "摘要", cn: "摘要", en: "Snippet" }, font: FOLLOW_GROUP, weight: null },
+
+    { id: "option", group: "choice", label: { tw: "選項", cn: "选项", en: "Option" }, font: FOLLOW_GROUP, weight: null },
+    { id: "index", group: "choice", label: { tw: "選項序號", cn: "选项序号", en: "Option index" }, font: "mono", weight: null, noLeading: true },
+    { id: "option-cond", group: "choice", label: { tw: "選項條件", cn: "选项条件", en: "Option condition" }, font: FOLLOW_GROUP, weight: null },
+    { id: "branch-cond", group: "choice", label: { tw: "分支條件", cn: "分支条件", en: "Branch condition" }, font: FOLLOW_GROUP, weight: null },
+
+    { id: "label", group: "mark", label: { tw: "標籤", cn: "标签", en: "Label" }, font: "sans", weight: null },
+    { id: "jump", group: "mark", label: { tw: "跳轉按鈕", cn: "跳转按钮", en: "Jump button" }, font: FOLLOW_GROUP, weight: null, noLeading: true },
+    { id: "badge", group: "mark", label: { tw: "徽章", cn: "徽章", en: "Badge" }, font: FOLLOW_GROUP, weight: null, noLeading: true },
+
+    { id: "title", group: "heading", label: { tw: "劇本標題", cn: "剧本标题", en: "Story title" }, font: FOLLOW_GROUP, weight: 600 },
+    { id: "panel", group: "heading", label: { tw: "面板標題", cn: "面板标题", en: "Panel title" }, font: FOLLOW_GROUP, weight: 600 },
+    { id: "lookup", group: "heading", label: { tw: "浮層標題", cn: "浮层标题", en: "Overlay title" }, font: FOLLOW_GROUP, weight: 600 },
+    { id: "brand", group: "heading", label: { tw: "品牌標題", cn: "品牌标题", en: "Brand title" }, font: FOLLOW_GROUP, weight: 600 },
+    { id: "seal", group: "heading", label: { tw: "印章字", cn: "印章字", en: "Seal glyph" }, font: FOLLOW_GROUP, weight: 600, noLeading: true },
+    { id: "rail", group: "heading", label: { tw: "側欄標題", cn: "侧栏标题", en: "Rail title" }, font: FOLLOW_GROUP, weight: 600 },
+    { id: "stat", group: "heading", label: { tw: "統計數值", cn: "统计数值", en: "Statistic value" }, font: FOLLOW_GROUP, weight: 600 },
+    { id: "empty-title", group: "heading", label: { tw: "空態標題", cn: "空态标题", en: "Empty title" }, font: FOLLOW_GROUP, weight: 600 },
+    { id: "crumb", group: "heading", label: { tw: "章節路徑", cn: "章节路径", en: "Breadcrumb" }, font: "mono", weight: null },
+    { id: "meta", group: "heading", label: { tw: "時間與計數", cn: "时间与计数", en: "Time & counts" }, font: "mono", weight: null },
+
+    { id: "ui", group: "ui", label: { tw: "介面文字", cn: "界面文字", en: "Interface text" }, font: FOLLOW_GROUP, weight: null },
+    { id: "ui-compact", group: "ui", label: { tw: "介面文字（緊湊）", cn: "界面文字（紧凑）", en: "Interface text (compact)" }, font: FOLLOW_GROUP, weight: null },
+    { id: "ui-micro", group: "ui", label: { tw: "介面文字（微字）", cn: "界面文字（微字）", en: "Interface text (micro)" }, font: FOLLOW_GROUP, weight: null },
+    { id: "caption", group: "ui", label: { tw: "小標籤與說明", cn: "小标签与说明", en: "Caption" }, font: "mono", weight: null },
+    { id: "id", group: "ui", label: { tw: "編號與代碼", cn: "编号与代码", en: "Identifier" }, font: "mono", weight: null },
+
+    { id: "status", group: "status", label: { tw: "狀態訊息", cn: "状态消息", en: "Status message" }, font: FOLLOW_GROUP, weight: null },
+    { id: "loading", group: "status", label: { tw: "載入提示", cn: "加载提示", en: "Loading hint" }, font: "mono", weight: null },
+    { id: "empty", group: "status", label: { tw: "空狀態", cn: "空状态", en: "Empty state" }, font: FOLLOW_GROUP, weight: null },
   ];
 
   const WEIGHTS = [400, 500, 600];
-
-  const DEFAULT_TYPE = { font: FOLLOW_READING, scale: 100, weight: 400, leading: 100 };
 
   const MEASURE_MIN = 520;
   const MEASURE_MAX = 1400;
   const MEASURE_DEFAULT = 860;
 
-  const DEFAULTS = {
-    reading: "serif",
-    readingCustom: "",
-    ui: "serif",
-    uiCustom: "",
-    uiV2: true,
-    scale: 130,
-    leading: 1.85,
-    measure: MEASURE_DEFAULT,
-    types: null,
-  };
+  const GROUP_DEFAULT = { scale: 100, leading: 100, weight: BASE_WEIGHT };
+  const TYPE_DEFAULT = { scale: 100, leading: 100, weight: null };
 
   let state = null;
 
@@ -94,37 +102,68 @@
     return Math.max(min, Math.min(max, number));
   };
 
-  const defaultTypes = () => {
+  const clampScale = (value, fallback) => Math.round(clampNumber(value, 25, 300, fallback) / 5) * 5;
+
+  const clampLeading = (value, fallback) => Math.round(clampNumber(value, 50, 250, fallback) / 5) * 5;
+
+  const clampWeight = (value, fallback) => {
+    if (value === null) return fallback;
+    const weight = Number(value);
+    return WEIGHTS.indexOf(weight) >= 0 ? weight : fallback;
+  };
+
+  const defaultGroups = () => {
     const out = {};
-    for (const type of TYPES) {
-      out[type.id] = {
-        font: typeof type.font === "string" ? type.font : FOLLOW_READING,
-        scale: type.scale || DEFAULT_TYPE.scale,
-        weight: type.weight || DEFAULT_TYPE.weight,
-        leading: type.leading || DEFAULT_TYPE.leading,
+    for (const group of GROUPS) {
+      out[group.id] = {
+        font: group.font,
+        scale: GROUP_DEFAULT.scale,
+        leading: GROUP_DEFAULT.leading,
+        weight: GROUP_DEFAULT.weight,
       };
     }
     return out;
   };
 
-  const normalizeTypes = (raw) => {
-    const types = defaultTypes();
-    if (!raw || typeof raw !== "object") return types;
-    const legacyCond = raw.cond && typeof raw.cond === "object" ? raw.cond : null;
+  const defaultTypes = () => {
+    const out = {};
     for (const type of TYPES) {
-      const fallback = type.id === "branch-cond" || type.id === "option-cond" ? legacyCond : null;
-      const item = raw[type.id] && typeof raw[type.id] === "object" ? raw[type.id] : fallback;
-      if (!item || typeof item !== "object") continue;
-      types[type.id].font = typeof item.font === "string" ? item.font : FOLLOW_READING;
-      types[type.id].scale = Math.round(clampNumber(item.scale, 70, 150, 100) / 5) * 5;
-      types[type.id].leading = Math.round(clampNumber(item.leading, 80, 150, 100) / 5) * 5;
-      const weight = Number(item.weight);
-      types[type.id].weight = WEIGHTS.indexOf(weight) >= 0 ? weight : 400;
+      out[type.id] = {
+        font: type.font,
+        scale: TYPE_DEFAULT.scale,
+        leading: TYPE_DEFAULT.leading,
+        weight: type.weight,
+      };
     }
-    return types;
+    return out;
+  };
+
+  const normalizeEntry = (raw, base, fallbackWeight) => {
+    const item = raw && typeof raw === "object" ? raw : {};
+    return {
+      font: typeof item.font === "string" ? item.font : base.font,
+      scale: clampScale(item.scale, base.scale),
+      leading: clampLeading(item.leading, base.leading),
+      weight: clampWeight(item.weight === undefined ? fallbackWeight : item.weight, fallbackWeight),
+    };
   };
 
   const clone = (value) => JSON.parse(JSON.stringify(value));
+
+  const groupById = (groupId) => {
+    for (const group of GROUPS) if (group.id === groupId) return group;
+    return null;
+  };
+
+  const typeById = (typeId) => {
+    for (const type of TYPES) if (type.id === typeId) return type;
+    return null;
+  };
+
+  const fontById = (fontId) => {
+    for (const font of FONTS) if (font.id === fontId) return font;
+    return null;
+  };
 
   const normalizeFamily = (name) => {
     const value = String(name || "").trim();
@@ -137,54 +176,78 @@
     }).filter(Boolean).join(",");
   };
 
-  const presetById = (kind, id) => {
-    const list = kind === "reading" ? READING : UI;
-    for (const item of list) if (item.id === id) return item;
-    return null;
+  const stackOfValue = (value) => {
+    if (!value || value === FOLLOW_BASE) return BASE_FONT;
+    const preset = fontById(value);
+    if (preset) return preset.stack;
+    const direct = normalizeFamily(value);
+    return direct ? `${direct},${BASE_FONT}` : BASE_FONT;
   };
 
-  const typeById = (typeId) => {
-    for (const type of TYPES) if (type.id === typeId) return type;
-    return null;
+  const groupStack = (groupId) => stackOfValue((state.groups[groupId] || GROUP_DEFAULT).font);
+
+  const typeStack = (typeId) => {
+    const type = typeById(typeId);
+    if (!type) return BASE_FONT;
+    const item = state.types[typeId];
+    if (!item || !item.font || item.font === FOLLOW_GROUP) return groupStack(type.group);
+    return stackOfValue(item.font);
   };
 
-  const stackFor = (kind) => {
-    const id = kind === "reading" ? state.reading : state.ui;
-    const custom = kind === "reading" ? state.readingCustom : state.uiCustom;
-    const fallback = kind === "reading" ? SERIF : SYSTEM;
-    if (id === "custom") {
-      const family = normalizeFamily(custom);
-      return family ? `${family},${fallback}` : fallback;
+  const resolveWeight = (typeId) => {
+    const type = typeById(typeId);
+    if (!type) return BASE_WEIGHT;
+    const item = state.types[typeId];
+    const group = state.groups[type.group];
+    if (item && item.weight !== null && item.weight !== undefined) return item.weight;
+    if (group && group.weight !== null && group.weight !== undefined) return group.weight;
+    return BASE_WEIGHT;
+  };
+
+  const computedOf = (scope, id) => {
+    if (scope === "group") {
+      const group = state.groups[id];
+      if (!group) return null;
+      return {
+        scope: "group",
+        id: id,
+        scale: group.scale,
+        leading: group.leading,
+        px: BASE_SIZE * (group.scale / 100),
+        lineHeight: BASE_LEADING * (group.leading / 100),
+        weight: group.weight,
+        font: group.font,
+        fontStack: groupStack(id),
+      };
     }
-    const preset = presetById(kind, id);
-    if (preset && preset.stack) return preset.stack;
-    const direct = normalizeFamily(id);
-    return direct ? `${direct},${fallback}` : fallback;
-  };
-
-  const typeFontStack = (typeId) => {
-    const item = state.types[typeId] || DEFAULT_TYPE;
-    if (!item.font) return "var(--font-reading)";
-    if (item.font === FOLLOW_UI) return "var(--font-ui)";
-    const preset = presetById("reading", item.font);
-    if (preset && item.font !== "custom") return preset.stack;
-    const direct = normalizeFamily(item.font);
-    return direct ? `${direct},var(--font-reading)` : "var(--font-reading)";
+    const type = typeById(id);
+    if (!type) return null;
+    const item = state.types[id];
+    const group = state.groups[type.group];
+    return {
+      scope: "type",
+      id: id,
+      group: type.group,
+      scale: item.scale,
+      leading: item.leading,
+      px: BASE_SIZE * (group.scale / 100) * (item.scale / 100),
+      lineHeight: BASE_LEADING * (group.leading / 100) * (item.leading / 100),
+      weight: resolveWeight(id),
+      font: item.font,
+      fontStack: typeStack(id),
+    };
   };
 
   const apply = () => {
     const root = document.documentElement;
-    root.style.setProperty("--font-reading", stackFor("reading"));
-    root.style.setProperty("--font-ui", stackFor("ui"));
-    root.style.setProperty("--rd-scale", String(state.scale / 100));
-    root.style.setProperty("--rd-leading", String(state.leading));
+    root.style.setProperty("--font-base", BASE_FONT);
     root.style.setProperty("--reader-measure", `${state.measure}px`);
     for (const type of TYPES) {
-      const item = state.types[type.id] || DEFAULT_TYPE;
-      root.style.setProperty(`--rd-ff-${type.id}`, typeFontStack(type.id));
-      root.style.setProperty(`--rd-ts-${type.id}`, String((item.scale || 100) / 100));
-      root.style.setProperty(`--rd-fw-${type.id}`, String(item.weight || 400));
-      root.style.setProperty(`--rd-lh-${type.id}`, String((item.leading || 100) / 100));
+      const item = computedOf("type", type.id);
+      root.style.setProperty(`--rd-fs-${type.id}`, `${item.px.toFixed(2)}px`);
+      root.style.setProperty(`--rd-lh-${type.id}`, item.lineHeight.toFixed(3));
+      root.style.setProperty(`--rd-fw-${type.id}`, String(item.weight));
+      root.style.setProperty(`--rd-ff-${type.id}`, item.fontStack);
     }
   };
 
@@ -196,32 +259,17 @@
     }
   };
 
-  const snapshot = () => ({
-    reading: state.reading,
-    readingCustom: state.readingCustom,
-    ui: state.ui,
-    uiCustom: state.uiCustom,
-    scale: state.scale,
-    leading: state.leading,
-    measure: state.measure,
-    types: clone(state.types),
-  });
+  const snapshot = () => clone(state);
 
-  const notify = (detail) => {
-    document.dispatchEvent(new CustomEvent("sr:prefs", { detail: detail || snapshot() }));
+  const notify = () => {
+    document.dispatchEvent(new CustomEvent("sr:prefs", { detail: snapshot() }));
   };
 
   const restoreDefaults = () => {
     state = {
-      reading: DEFAULTS.reading,
-      readingCustom: DEFAULTS.readingCustom,
-      ui: DEFAULTS.ui,
-      uiCustom: DEFAULTS.uiCustom,
-      uiV2: true,
-      scale: DEFAULTS.scale,
-      leading: DEFAULTS.leading,
-      measure: DEFAULTS.measure,
+      groups: defaultGroups(),
       types: defaultTypes(),
+      measure: MEASURE_DEFAULT,
     };
   };
 
@@ -233,49 +281,56 @@
     } catch {
       saved = null;
     }
-    const source = saved && typeof saved === "object" ? saved : {};
-    if (typeof source.reading === "string") state.reading = source.reading;
-    if (typeof source.readingCustom === "string") state.readingCustom = source.readingCustom;
-    if (typeof source.ui === "string") state.ui = source.ui;
-    if (typeof source.uiCustom === "string") state.uiCustom = source.uiCustom;
-    if (source.uiV2 !== true && state.ui === "system") state.ui = "serif";
-    state.uiV2 = true;
-    state.scale = Math.round(clampNumber(source.scale, 80, 200, DEFAULTS.scale) / 5) * 5;
-    state.leading = clampNumber(source.leading, 1.2, 2.6, DEFAULTS.leading);
+    let source = saved && typeof saved === "object" ? saved : null;
+    if (!source) {
+      try {
+        const legacy = JSON.parse(localStorage.getItem(LEGACY_KEY) || "null");
+        source = legacy && typeof legacy === "object" ? { measure: legacy.measure } : null;
+      } catch {
+        source = null;
+      }
+    }
+    if (!source) return;
     state.measure = Math.round(clampNumber(source.measure, MEASURE_MIN, MEASURE_MAX, MEASURE_DEFAULT));
-    state.types = normalizeTypes(source.types);
+    const groups = source.groups && typeof source.groups === "object" ? source.groups : null;
+    if (groups) {
+      for (const group of GROUPS) {
+        state.groups[group.id] = normalizeEntry(groups[group.id], state.groups[group.id], GROUP_DEFAULT.weight);
+      }
+    }
+    const types = source.types && typeof source.types === "object" ? source.types : null;
+    if (types) {
+      for (const type of TYPES) {
+        state.types[type.id] = normalizeEntry(types[type.id], state.types[type.id], null);
+      }
+    }
   };
 
   const set = (patch) => {
     if (patch && typeof patch === "object") {
-      if (typeof patch.reading === "string") state.reading = patch.reading;
-      if (typeof patch.readingCustom === "string") state.readingCustom = patch.readingCustom;
-      if (typeof patch.ui === "string") state.ui = patch.ui;
-      if (typeof patch.uiCustom === "string") state.uiCustom = patch.uiCustom;
-      if (patch.scale !== undefined) {
-        state.scale = Math.round(clampNumber(patch.scale, 80, 200, state.scale) / 5) * 5;
-      }
-      if (patch.leading !== undefined) {
-        state.leading = clampNumber(patch.leading, 1.2, 2.6, state.leading);
-      }
       if (patch.measure !== undefined) {
         state.measure = Math.round(clampNumber(patch.measure, MEASURE_MIN, MEASURE_MAX, state.measure));
+      }
+      if (patch.groups && typeof patch.groups === "object") {
+        for (const groupId of Object.keys(patch.groups)) {
+          if (!state.groups[groupId]) continue;
+          const next = patch.groups[groupId] || {};
+          const current = state.groups[groupId];
+          if (typeof next.font === "string") current.font = next.font;
+          if (next.scale !== undefined) current.scale = clampScale(next.scale, current.scale);
+          if (next.leading !== undefined) current.leading = clampLeading(next.leading, current.leading);
+          if (next.weight !== undefined) current.weight = clampWeight(next.weight, current.weight);
+        }
       }
       if (patch.types && typeof patch.types === "object") {
         for (const typeId of Object.keys(patch.types)) {
           if (!state.types[typeId]) continue;
           const next = patch.types[typeId] || {};
-          if (typeof next.font === "string") state.types[typeId].font = next.font;
-          if (next.scale !== undefined) {
-            state.types[typeId].scale = Math.round(clampNumber(next.scale, 70, 150, 100) / 5) * 5;
-          }
-          if (next.leading !== undefined) {
-            state.types[typeId].leading = Math.round(clampNumber(next.leading, 80, 150, 100) / 5) * 5;
-          }
-          if (next.weight !== undefined) {
-            const weight = Number(next.weight);
-            if (WEIGHTS.indexOf(weight) >= 0) state.types[typeId].weight = weight;
-          }
+          const current = state.types[typeId];
+          if (typeof next.font === "string") current.font = next.font;
+          if (next.scale !== undefined) current.scale = clampScale(next.scale, current.scale);
+          if (next.leading !== undefined) current.leading = clampLeading(next.leading, current.leading);
+          if (next.weight !== undefined) current.weight = clampWeight(next.weight, current.weight);
         }
       }
     }
@@ -285,46 +340,66 @@
     return snapshot();
   };
 
-  const labelOf = (kind, id, custom) => {
-    if (kind === "type") {
-      if (!id) return { tw: "跟隨正文", cn: "跟随正文", en: "Follow body font" };
-      if (id === FOLLOW_UI) return { tw: "跟隨介面", cn: "跟随界面", en: "Follow interface font" };
-      const preset = presetById("reading", id);
-      if (preset) return preset.label;
-      return { tw: id, cn: id };
-    }
-    const hit = presetById(kind, id);
-    if (hit) {
-      if (hit.id === "custom" && custom) return { tw: custom, cn: custom };
-      return hit.label;
-    }
-    if (id) return { tw: id, cn: id };
-    return kind === "reading" ? READING[0].label : UI[0].label;
-  };
-
   const LABEL_KEYS = { "zh-cn": "cn", en: "en" };
 
-  const pickLabel = (label, lang) => label[LABEL_KEYS[lang] || "tw"] || label.tw || "";
+  const pickLabel = (label, lang) => {
+    if (!label) return "";
+    return label[LABEL_KEYS[lang] || "tw"] || label.tw || "";
+  };
+
+  const fontLabel = (value) => {
+    if (!value || value === FOLLOW_BASE) return LABELS.followBase;
+    if (value === FOLLOW_GROUP) return LABELS.followGroup;
+    const preset = fontById(value);
+    if (preset) return preset.label;
+    return { tw: value, cn: value, en: value };
+  };
+
+  const labelOf = (kind, id) => {
+    if (kind === "group") {
+      const group = groupById(id);
+      return group ? group.label : { tw: id, cn: id, en: id };
+    }
+    const type = typeById(id);
+    return type ? type.label : { tw: id, cn: id, en: id };
+  };
+
+  const parseTarget = (target) => {
+    const value = String(target || "");
+    if (value.indexOf("group:") === 0) return { scope: "group", id: value.slice(6) };
+    if (value.indexOf("type:") === 0) return { scope: "type", id: value.slice(5) };
+    return { scope: "type", id: value };
+  };
 
   const describe = (target, lang) => {
-    let label;
-    if (target.indexOf("type:") === 0) {
-      const typeId = target.slice(5);
-      const item = state.types[typeId] || DEFAULT_TYPE;
-      label = labelOf("type", item.font);
-    } else if (target === "reading") {
-      label = labelOf("reading", state.reading, state.readingCustom);
-    } else {
-      label = labelOf("ui", state.ui, state.uiCustom);
+    const parsed = parseTarget(target);
+    if (parsed.scope === "group") {
+      const group = state.groups[parsed.id];
+      return pickLabel(fontLabel(group ? group.font : FOLLOW_BASE), lang);
     }
-    return pickLabel(label, lang);
+    const item = state.types[parsed.id];
+    return pickLabel(fontLabel(item ? item.font : FOLLOW_GROUP), lang);
   };
 
   const api = {
     KEY: KEY,
-    presets: { reading: READING, ui: UI, types: TYPES, groups: GROUPS, weights: WEIGHTS.slice() },
-    defaults: clone(DEFAULTS),
+    base: {
+      font: BASE_FONT,
+      size: BASE_SIZE,
+      leading: BASE_LEADING,
+      weight: BASE_WEIGHT,
+    },
+    labels: LABELS,
+    presets: {
+      fonts: FONTS,
+      groups: GROUPS,
+      types: TYPES,
+      weights: WEIGHTS.slice(),
+    },
     measureRange: { min: MEASURE_MIN, max: MEASURE_MAX, fallback: MEASURE_DEFAULT },
+    groupById: groupById,
+    typeById: typeById,
+    computed: computedOf,
     get: snapshot,
     set: set,
     reset: () => {
@@ -338,7 +413,6 @@
     describe: describe,
     labelOf: labelOf,
     pickLabel: pickLabel,
-    typeById: typeById,
     subscribe: (fn) => {
       const handler = (event) => fn(event.detail);
       document.addEventListener("sr:prefs", handler);

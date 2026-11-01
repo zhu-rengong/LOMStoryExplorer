@@ -18,7 +18,7 @@
       layout: "wide",
       railTab: "outline",
       outlineChapter: undefined,
-      settingsType: "dialog",
+      settingsTarget: "type:dialog",
       query: "",
     };
 
@@ -173,9 +173,9 @@
         state.railTab = tab;
         commit("railTab");
       },
-      setSettingsType: (type) => {
-        state.settingsType = type;
-        commit("settingsType");
+      setSettingsTarget: (target) => {
+        state.settingsTarget = target;
+        commit("settingsTarget");
       },
       state,
       textLang: () => {

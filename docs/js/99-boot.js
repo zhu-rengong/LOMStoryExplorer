@@ -21,7 +21,7 @@
     const body = document.body;
     body.replaceChildren();
     const panel = document.createElement("div");
-    panel.style.cssText = "max-width:640px;margin:12vh auto;padding:32px;font-family:var(--font-ui,system-ui,sans-serif);line-height:1.7;color:var(--ink,currentColor)";
+    panel.style.cssText = "max-width:640px;margin:12vh auto;padding:32px;font-family:var(--font-base,system-ui,sans-serif);line-height:1.7;color:var(--ink,currentColor)";
     const title = document.createElement("h1");
     title.style.cssText = "font-size:22px;margin:0 0 12px";
     title.textContent = dict.errorTitle || "Failed to load";

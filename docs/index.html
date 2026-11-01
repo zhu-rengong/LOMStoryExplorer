@@ -227,47 +227,9 @@
 
   <div class="drawer-body">
     <section class="field">
-      <h3 class="field-title" data-i18n="fontReading">正文字體</h3>
-      <button id="fontReadingTrigger" class="btn select font-trigger" type="button" aria-haspopup="listbox">
-        <span class="ft-name">宋體（預設）</span>
-        <svg class="caret" aria-hidden="true"><use href="#i-chevron"/></svg>
-      </button>
-      <input id="fontReadingCustom" class="input input-sm text-input" type="text" hidden
-             data-i18n-placeholder="fontCustomPlaceholder" placeholder="輸入系統字體名，如 Noto Serif TC">
-    </section>
-
-    <section class="field">
-      <h3 class="field-title" data-i18n="fontUi">介面字體</h3>
-      <button id="fontUiTrigger" class="btn select font-trigger" type="button" aria-haspopup="listbox">
-        <span class="ft-name">宋體</span>
-        <svg class="caret" aria-hidden="true"><use href="#i-chevron"/></svg>
-      </button>
-      <input id="fontUiCustom" class="input input-sm text-input" type="text" hidden
-             data-i18n-placeholder="fontCustomPlaceholder" placeholder="輸入系統字體名，如 Noto Sans TC">
-    </section>
-
-    <section class="field">
-      <div class="field-row">
-        <h3 class="field-title" data-i18n="fontSize">正文字號</h3>
-        <output id="fontScaleOut" class="field-value">100%</output>
-      </div>
-      <input id="fontScale" class="range" type="range" min="80" max="200" step="5" value="100"
-             data-i18n-label="fontSize" aria-label="正文字號">
-    </section>
-
-    <section class="field">
-      <div class="field-row">
-        <h3 class="field-title" data-i18n="lineHeight">行距</h3>
-        <output id="leadingOut" class="field-value">1.85</output>
-      </div>
-      <input id="leading" class="range" type="range" min="1.2" max="2.6" step="0.05" value="1.85"
-             data-i18n-label="lineHeight" aria-label="行距">
-    </section>
-
-    <section class="field">
       <div class="field-row">
         <h3 class="field-title" data-i18n="fontTypes">文本類型</h3>
-        <span class="field-note" data-i18n="fontTypesHint">可分別設定</span>
+        <span class="field-note" id="typeScopeNote">整組</span>
       </div>
       <div class="type-groups" id="typeGroups" role="group" data-i18n-label="fontTypes" aria-label="文本類型"></div>
       <div class="type-tabs" id="typeChips" role="group" data-i18n-label="fontTypes" aria-label="文本類型"></div>
@@ -275,7 +237,7 @@
       <div class="type-panel">
         <label class="sub-label" data-i18n="typeFont">字體</label>
         <button id="typeFontTrigger" class="btn select font-trigger" type="button" aria-haspopup="listbox">
-          <span class="ft-name">跟隨正文</span>
+          <span class="ft-name">跟隨基準</span>
           <svg class="caret" aria-hidden="true"><use href="#i-chevron"/></svg>
         </button>
         <input id="typeFontCustom" class="input input-sm text-input" type="text" hidden
@@ -283,20 +245,21 @@
 
         <div class="field-row sub-row">
           <label class="sub-label" data-i18n="typeScale">字號</label>
-          <output id="typeScaleOut" class="field-value">100%</output>
+          <output id="typeScaleOut" class="field-value">100% · 16.00px</output>
         </div>
-        <input id="typeScale" class="range" type="range" min="70" max="150" step="5" value="100"
+        <input id="typeScale" class="range" type="range" min="25" max="300" step="5" value="100"
                data-i18n-label="typeScale" aria-label="類型字號">
 
-        <div class="field-row sub-row">
+        <div class="field-row sub-row" id="typeLeadingRow">
           <label class="sub-label" data-i18n="lineHeight">行距</label>
-          <output id="typeLeadingOut" class="field-value">100%</output>
+          <output id="typeLeadingOut" class="field-value">100% · 1.60</output>
         </div>
-        <input id="typeLeading" class="range" type="range" min="80" max="150" step="5" value="100"
+        <input id="typeLeading" class="range" type="range" min="50" max="250" step="5" value="100"
                data-i18n-label="lineHeight" aria-label="類型行距">
 
         <label class="sub-label" data-i18n="typeWeight">字重</label>
         <div class="seg seg-wide tabs" id="weightSeg" role="group">
+          <button class="seg-btn tab" type="button" data-weight="inherit" data-inherit="true" data-i18n="weightInherit">跟隨</button>
           <button class="seg-btn tab" type="button" data-weight="400" data-i18n="weightRegular">常規</button>
           <button class="seg-btn tab" type="button" data-weight="500" data-i18n="weightMedium">中等</button>
           <button class="seg-btn tab" type="button" data-weight="600" data-i18n="weightBold">加粗</button>

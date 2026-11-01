@@ -133,7 +133,12 @@
 
     const typeLabel = (typeId) => {
       const hit = settings.typeById(typeId);
-      return hit ? settings.pickLabel(hit.label, state.lang) : t("typeDialog");
+      return hit ? settings.pickLabel(hit.label, state.lang) : String(typeId || "");
+    };
+
+    const groupLabel = (groupId) => {
+      const hit = settings.groupById(groupId);
+      return hit ? settings.pickLabel(hit.label, state.lang) : String(groupId || "");
     };
 
     const chapterTitle = (chapter) => {
@@ -224,6 +229,7 @@
       apply,
       chapterTitle,
       dateOf,
+      groupLabel,
       has,
       languages,
       stageNames,
