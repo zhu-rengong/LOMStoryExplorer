@@ -3,19 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
-from .wire import (
-    BEAT_BRANCH,
-    BEAT_CHOICE,
-    BEAT_JUMP,
-    BEAT_LORE,
-    BEAT_META,
-    BEAT_SAY,
-    BEAT_SCENE,
-    EDGE_JUMP,
-    FACET_LIST_FIELDS,
-    SAY_MODE_CODE,
-    SAY_MODES,
-)
+from .vocab import FACET_LIST_FIELDS
 
 
 @dataclass(frozen=True)
@@ -47,6 +35,19 @@ class Locked:
 
 
 @dataclass(frozen=True)
+class OptionCond:
+    op: str
+    value: str
+
+
+@dataclass(frozen=True)
+class CheckRef:
+    kind: str
+    key: str
+    result: int | None = None
+
+
+@dataclass(frozen=True)
 class SayBeat:
     speaker: str | None
     ref: TextRef
@@ -56,9 +57,11 @@ class SayBeat:
 @dataclass(frozen=True)
 class ChoiceOption:
     ref: TextRef
-    note: str | None
+    cond: OptionCond | None
     lock: TextRef | None
     beats: tuple[Beat, ...] = ()
+    action: str = ""
+    need: tuple[OptionCond, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -68,9 +71,10 @@ class ChoiceBeat:
 
 @dataclass(frozen=True)
 class BranchBeat:
-    label: str
+    check: CheckRef | None
+    cond: dict[str, Any] | None
+    text: str
     beats: tuple[Beat, ...]
-    kind: str = "if"
     group: int = 0
 
 
@@ -108,9 +112,19 @@ class Edge:
     target: str
     kind: str
     label: str = ""
+    data: dict[str, Any] | None = None
 
     def to_wire(self, index: int) -> dict[str, Any]:
-        return {"id": index, "from": self.source, "to": self.target, "kind": self.kind, "label": self.label}
+        payload: dict[str, Any] = {
+            "id": index,
+            "from": self.source,
+            "to": self.target,
+            "kind": self.kind,
+            "label": self.label,
+        }
+        if self.data:
+            payload["data"] = dict(self.data)
+        return payload
 
 
 @dataclass
@@ -129,12 +143,21 @@ class ScriptAnalysis:
 @dataclass(frozen=True)
 class Chapter:
     id: str
-    title: str
+    kind: str
+    number: int | None
     color: str
     count: int
 
     def to_wire(self) -> dict[str, Any]:
-        return {"id": self.id, "title": self.title, "color": self.color, "count": self.count}
+        payload: dict[str, Any] = {
+            "id": self.id,
+            "kind": self.kind,
+            "color": self.color,
+            "count": self.count,
+        }
+        if self.number is not None:
+            payload["number"] = self.number
+        return payload
 
 
 @dataclass(frozen=True)
@@ -227,115 +250,3 @@ class GameInfo:
 
     def to_wire(self) -> dict[str, str | None]:
         return {"version": self.version, "build": self.build, "updated": self.updated}
-
-
-def _ref_to_raw(ref: TextRef | None) -> list[Any] | None:
-    if ref is None:
-        return None
-    return ["k" if ref.keyed else "t", ref.value]
-
-
-def _ref_from_raw(raw: Any) -> TextRef | None:
-    if not isinstance(raw, list) or len(raw) < 2:
-        return None
-    return TextRef(str(raw[1]), raw[0] == "k")
-
-
-def beat_to_raw(beat: Beat) -> list[Any]:
-    if isinstance(beat, SayBeat):
-        return [BEAT_SAY, beat.speaker, _ref_to_raw(beat.ref), SAY_MODE_CODE.get(beat.mode, 0)]
-    if isinstance(beat, ChoiceBeat):
-        options = [
-            [_ref_to_raw(option.ref), option.note, beats_to_raw(option.beats), _ref_to_raw(option.lock)]
-            for option in beat.options
-        ]
-        return [BEAT_CHOICE, options]
-    if isinstance(beat, BranchBeat):
-        return [BEAT_BRANCH, beat.label, beats_to_raw(beat.beats), beat.kind, beat.group]
-    if isinstance(beat, JumpBeat):
-        return [BEAT_JUMP, beat.target, beat.label]
-    if isinstance(beat, MetaBeat):
-        return [BEAT_META, beat.kind, beat.key, beat.value]
-    if isinstance(beat, SceneBeat):
-        return [BEAT_SCENE, beat.name, beat.key, beat.next]
-    return [BEAT_LORE, beat.key]
-
-
-def beat_from_raw(row: Any) -> Beat:
-    tag = row[0] if isinstance(row, list) and row else ""
-    if tag == BEAT_SAY:
-        mode = SAY_MODES[row[3]] if len(row) > 3 and 0 <= row[3] < len(SAY_MODES) else SAY_MODES[0]
-        return SayBeat(row[1], _ref_from_raw(row[2]) or TextRef(""), mode)
-    if tag == BEAT_CHOICE:
-        options = []
-        for raw in row[1] or []:
-            options.append(ChoiceOption(
-                _ref_from_raw(raw[0]) or TextRef(""),
-                raw[1] if len(raw) > 1 else None,
-                _ref_from_raw(raw[3]) if len(raw) > 3 else None,
-                beats_from_raw(raw[2] if len(raw) > 2 else []),
-            ))
-        return ChoiceBeat(tuple(options))
-    if tag == BEAT_BRANCH:
-        return BranchBeat(
-            row[1] or "",
-            beats_from_raw(row[2] or []),
-            row[3] if len(row) > 3 else "if",
-            row[4] if len(row) > 4 else 0,
-        )
-    if tag == BEAT_JUMP:
-        return JumpBeat(row[1] if len(row) > 1 else None, row[2] if len(row) > 2 else "")
-    if tag == BEAT_META:
-        return MetaBeat(row[1], row[2], row[3] if len(row) > 3 else None)
-    if tag == BEAT_SCENE:
-        return SceneBeat(
-            row[1] if len(row) > 1 else "",
-            row[2] if len(row) > 2 else "",
-            row[3] if len(row) > 3 else "",
-        )
-    return LoreBeat(row[1] if len(row) > 1 else "")
-
-
-def beats_to_raw(beats: tuple[Beat, ...] | list[Beat]) -> list[list[Any]]:
-    return [beat_to_raw(beat) for beat in beats]
-
-
-def beats_from_raw(rows: Any) -> tuple[Beat, ...]:
-    if not isinstance(rows, list):
-        return ()
-    return tuple(beat_from_raw(row) for row in rows if isinstance(row, list) and row)
-
-
-def analysis_to_wire(analysis: ScriptAnalysis) -> dict[str, Any]:
-    return {
-        "id": analysis.id,
-        "beats": beats_to_raw(analysis.beats),
-        "edges": [{"target": edge.target, "kind": edge.kind, "label": edge.label} for edge in analysis.edges],
-        "reads": list(analysis.reads),
-        "dynamic": list(analysis.dynamic),
-        "say": analysis.say_count,
-        "fx": analysis.fx_count,
-        "scenes": analysis.scene_count,
-        "options": analysis.option_count,
-    }
-
-
-def analysis_from_wire(payload: dict[str, Any]) -> ScriptAnalysis:
-    script_id = str(payload.get("id") or "")
-    edges = [
-        Edge(script_id, str(item.get("target") or ""), str(item.get("kind") or EDGE_JUMP),
-             str(item.get("label") or ""))
-        for item in payload.get("edges") or []
-        if isinstance(item, dict)
-    ]
-    return ScriptAnalysis(
-        id=script_id,
-        beats=list(beats_from_raw(payload.get("beats") or [])),
-        edges=edges,
-        reads=[str(item) for item in payload.get("reads") or []],
-        dynamic=[str(item) for item in payload.get("dynamic") or []],
-        say_count=int(payload.get("say") or 0),
-        fx_count=int(payload.get("fx") or 0),
-        scene_count=int(payload.get("scenes") or 0),
-        option_count=int(payload.get("options") or 0),
-    )

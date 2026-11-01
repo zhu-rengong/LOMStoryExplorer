@@ -3,25 +3,25 @@
 
   const SR = window.SR;
 
-  SR.define("checkpoints", ["schema", "ui"], ({ schema, ui }) => {
+  SR.define("checkpoints", ["data", "ui"], ({ data, ui }) => {
     const loading = Object.create(null);
 
     const load = (index) => {
       if (index < 0) return Promise.resolve(false);
       if (!loading[index]) {
-        loading[index] = ui.loadScript(`data/checkpoints-${index}.js`).catch(() => false);
+        loading[index] = ui.loadScript(data.asset("checkpoint", { index })).catch(() => false);
       }
       return loading[index];
     };
 
     const ensure = (key) => {
-      const index = schema.checkpointShard(key);
-      if (index < 0) return Promise.resolve(false);
+      const index = data.checkpointShards[key];
+      if (typeof index !== "number" || index < 0) return Promise.resolve(false);
       return load(index);
     };
 
     const get = (key, method) => {
-      const all = window.SR_CHECKPOINTS;
+      const all = data.checkpoints();
       const model = all && key ? all[key] : null;
       if (!model) return null;
       if (!method || model.kind === method) return model;

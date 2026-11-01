@@ -3,40 +3,72 @@
 
   const SR = window.SR;
 
-  SR.define("query", [], () => {
-    const FIELDS = [
-      { id: "speaker", kind: "text", aliases: ["speaker", "say", "說話", "说话", "說話人", "说话人"] },
-      { id: "flag", kind: "text", aliases: ["flag", "flags", "標誌", "标志", "旗標", "旗标"] },
-      { id: "check", kind: "text", aliases: ["check", "checks", "檢查點", "检查点", "判定"] },
-      { id: "stat", kind: "text", aliases: ["stat", "stats", "屬性", "属性"] },
-      { id: "rel", kind: "text", aliases: ["rel", "好感"] },
-      { id: "option", kind: "number", aliases: ["option", "options", "選項", "选项"] },
-      { id: "lock", kind: "number", aliases: ["lock", "locks", "解鎖", "解锁"] },
-      { id: "dice", kind: "number", aliases: ["dice", "骰子"] },
-      { id: "out", kind: "number", node: "out", aliases: ["out", "出度"] },
-      { id: "in", kind: "number", node: "in", aliases: ["in", "入度"] },
-      { id: "saycount", kind: "number", node: "say", aliases: ["saycount", "對白數", "对白数", "对白"] },
-      { id: "id", kind: "string", aliases: ["id", "script", "劇本", "剧本"] },
-      { id: "chapter", kind: "string", aliases: ["chapter", "章節", "章节"] },
-      { id: "text", kind: "string", aliases: ["text", "正文", "關鍵詞", "关键词"] },
-      { id: "kind", kind: "enum", aliases: ["kind", "type", "類型", "类型"] },
-      { id: "via", kind: "enum", aliases: ["via", "來源", "来源", "拉起"] },
-    ];
+  const FIELD_SPECS = [
+    { id: "speaker", kind: "text", aliases: ["speaker", "say"] },
+    { id: "flag", kind: "text", aliases: ["flag", "flags"] },
+    { id: "check", kind: "text", aliases: ["check", "checks"] },
+    { id: "stat", kind: "text", aliases: ["stat", "stats"] },
+    { id: "rel", kind: "text", aliases: ["rel"] },
+    { id: "option", kind: "number", aliases: ["option", "options"] },
+    { id: "lock", kind: "number", aliases: ["lock", "locks"] },
+    { id: "dice", kind: "number", aliases: ["dice"] },
+    { id: "out", kind: "number", node: "out", aliases: ["out"] },
+    { id: "in", kind: "number", node: "in", aliases: ["in"] },
+    { id: "saycount", kind: "number", node: "say", aliases: ["saycount"] },
+    { id: "id", kind: "string", aliases: ["id", "script"] },
+    { id: "chapter", kind: "string", aliases: ["chapter"] },
+    { id: "text", kind: "string", aliases: ["text"] },
+    { id: "kind", kind: "enum", aliases: ["kind", "type"] },
+    { id: "via", kind: "enum", aliases: ["via"] },
+  ];
 
-    const BY_ID = {};
-    const BY_ALIAS = {};
-    for (const field of FIELDS) {
-      BY_ID[field.id] = field;
-      for (const alias of field.aliases) BY_ALIAS[alias.toLowerCase()] = field;
+  const ROOTS = ["AND", "OR", "NOT", "XOR"];
+
+  const buildFields = (i18n) => {
+    const fields = FIELD_SPECS.map((field) => {
+      const aliases = field.aliases.slice();
+      for (const extra of i18n.all(`q.${field.id}`)) {
+        if (aliases.indexOf(extra) < 0) aliases.push(extra);
+      }
+      return Object.assign({}, field, { aliases });
+    });
+    const byId = {};
+    const byAlias = {};
+    for (const field of fields) {
+      byId[field.id] = field;
+      for (const alias of field.aliases) byAlias[String(alias).toLowerCase()] = field;
     }
+    return { fields, byId, byAlias };
+  };
 
-    const ROOTS = ["AND", "OR", "NOT", "XOR"];
+  SR.define("query", ["i18n"], ({ i18n }) => {
+    const built = buildFields(i18n);
+    const FIELDS = built.fields;
+    const BY_ID = built.byId;
+    const BY_ALIAS = built.byAlias;
+
+    const aliasPairs = (key) => {
+      const map = new Map();
+      for (const pair of i18n.all(key)) {
+        const parts = String(pair).split("=");
+        if (parts.length === 2) map.set(parts[0].trim().toLowerCase(), parts[1].trim());
+      }
+      return map;
+    };
+
+    const LOGIC_ALIAS = aliasPairs("q.logic");
+    const KIND_ALIAS = aliasPairs("q.enum.kind");
+    const VIA_ALIAS = aliasPairs("q.enum.via");
+    const YES_WORDS = ["yes", "y", "true"].concat(i18n.all("q.yes"));
+    const NO_WORDS = ["no", "n", "false"].concat(i18n.all("q.no"));
 
     const isSpace = (ch) => ch === " " || ch === "\t" || ch === "\n" || ch === "\r";
     const isStop = (ch) => isSpace(ch) || "()!:,=\"'<>".indexOf(ch) >= 0;
 
-    const err = (message, at) => {
-      const error = new Error(message);
+    const err = (key, at, params) => {
+      const error = new Error(key);
+      error.key = key;
+      error.params = params || {};
       error.at = at || 0;
       return error;
     };
@@ -68,7 +100,7 @@
             }
             text += source[index++];
           }
-          if (index >= size) throw err("字串沒有結束的引號", start - 1);
+          if (index >= size) throw err("qErrQuote", start - 1);
           index++;
           tokens.push({ type: "string", value: text, at: start });
           continue;
@@ -141,13 +173,12 @@
         const from = index;
         while (index < size && !isStop(source[index])) index++;
         const word = source.slice(from, index);
-        if (!word) throw err(`無法辨識的字元「${ch}」`, index);
+        if (!word) throw err("qErrChar", index, { ch });
         if (/^-?\d+(\.\d+)?$/.test(word)) tokens.push({ type: "number", value: Number(word), at: from });
         else if (ROOTS.indexOf(word.toUpperCase()) >= 0) tokens.push({ type: "op", value: word.toUpperCase(), at: from });
-        else if (word === "且") tokens.push({ type: "op", value: "AND", at: from });
-        else if (word === "或") tokens.push({ type: "op", value: "OR", at: from });
-        else if (word === "非") tokens.push({ type: "op", value: "NOT", at: from });
-        else tokens.push({ type: "ident", value: word, at: from });
+        else if (LOGIC_ALIAS.has(word.toLowerCase())) {
+          tokens.push({ type: "op", value: LOGIC_ALIAS.get(word.toLowerCase()), at: from });
+        } else tokens.push({ type: "ident", value: word, at: from });
       }
       tokens.push({ type: "eof", value: "", at: size });
       return tokens;
@@ -215,7 +246,7 @@
         if (token.type === "lparen") {
           this.next();
           const inner = this.parseOr();
-          if (this.peek().type !== "rparen") throw err("缺少右括號「)」", this.peek().at);
+          if (this.peek().type !== "rparen") throw err("qErrParen", this.peek().at);
           this.next();
           return inner;
         }
@@ -224,24 +255,24 @@
 
       parseTerm() {
         const token = this.peek();
-        if (token.type !== "ident") throw err("這裡需要欄位名，例如 speaker:master", token.at);
+        if (token.type !== "ident") throw err("qErrFieldName", token.at);
         this.next();
         const field = BY_ALIAS[token.value.toLowerCase()];
-        if (!field) throw err(`未知欄位「${token.value}」`, token.at);
+        if (!field) throw err("qErrUnknownField", token.at, { field: token.value });
 
         const opToken = this.peek();
         if (opToken.type !== "op" || [":", "=", "!=", ">", ">=", "<", "<="].indexOf(opToken.value) < 0) {
-          throw err(`欄位後面要接運算子，例如 ${field.id}:值`, opToken.at);
+          throw err("qErrOperator", opToken.at, { field: field.id });
         }
         this.next();
 
         const valueToken = this.peek();
-        if (valueToken.type === "op" && valueToken.value === "NOT") throw err("這裡需要值", valueToken.at);
+        if (valueToken.type === "op" && valueToken.value === "NOT") throw err("qErrNeedValue", valueToken.at);
         let raw;
         if (valueToken.type === "string") raw = valueToken.value;
         else if (valueToken.type === "number") raw = valueToken.value;
         else if (valueToken.type === "ident") raw = valueToken.value;
-        else throw err("缺少比較值", valueToken.at);
+        else throw err("qErrCompareValue", valueToken.at);
         this.next();
 
         const op = opToken.value === ":" ? "contains" : ({
@@ -249,7 +280,7 @@
         })[opToken.value];
 
         if (field.kind !== "number" && ["gt", "ge", "lt", "le"].indexOf(op) >= 0) {
-          throw err(`欄位「${field.id}」不支援大小比較`, opToken.at);
+          throw err("qErrNoCompare", opToken.at, { field: field.id });
         }
         return { t: "term", field: field.id, op, value: raw, at: token.at };
       }
@@ -261,12 +292,19 @@
         if (parser.peek().type === "eof") return { ok: true, ast: null };
         const ast = parser.parseOr();
         const rest = parser.peek();
-        if (rest.type !== "eof") throw err(`多出來的內容「${rest.value}」`, rest.at);
+        if (rest.type !== "eof") throw err("qErrTrailing", rest.at, { value: rest.value });
         return { ok: true, ast };
       } catch (error) {
-        return { ok: false, error: { message: error.message || String(error), column: (error.at || 0) + 1 } };
+        return { ok: false, error: describeError(error) };
       }
     };
+
+    const describeError = (error) => ({
+      key: error.key || "",
+      params: error.params || {},
+      message: error.message || String(error),
+      column: (error.at || 0) + 1,
+    });
 
     const allSet = (ctx) => {
       if (!ctx._all) {
@@ -371,16 +409,16 @@
       const text = String(term.value).trim().toLowerCase();
       let op = term.op;
       let needle;
-      if (text === "yes" || text === "y" || text === "true" || text === "是") {
+      if (YES_WORDS.indexOf(text) >= 0) {
         needle = 1;
         if (op === "contains" || op === "eq") op = "ge";
-      } else if (text === "no" || text === "n" || text === "false" || text === "否") {
+      } else if (NO_WORDS.indexOf(text) >= 0) {
         needle = 0;
         if (op === "contains") op = "eq";
       } else {
         needle = Number(text);
       }
-      if (!Number.isFinite(needle)) throw err(`欄位「${field.id}」需要數字`, term.at);
+      if (!Number.isFinite(needle)) throw err("qErrNumber", term.at, { field: field.id });
 
       const out = new Set();
       for (let index = 0; index < ctx.count; index++) {
@@ -403,28 +441,21 @@
 
     const VIA_VALUES = ["combat", "free", "position"];
 
-    const VIA_ALIAS = {
-      "戰鬥": "combat", "战斗": "combat", "戰鬥事件": "combat", "战斗事件": "combat",
-      "場所腳本": "free", "场所脚本": "free", "執行腳本": "free", "执行脚本": "free",
-      "場所事件": "position", "场所事件": "position", "any": "position",
-      "系統": "position", "系统": "position",
-    };
-
     const viaCanon = (value) => {
       const text = String(value).toLowerCase();
-      return VIA_ALIAS[text] || text;
+      return VIA_ALIAS.get(text) || text;
     };
 
     const viaPass = (node, index, ctx, value) => {
       if (value === "combat") return node.entry === "combat";
       if (value === "free") return node.entry === "free";
-      return !!(ctx.edgeKinds[index] & 4) || (node.systemIn || 0) > 0;
+      return ctx.edgeGroup(index, "position") || (node.systemIn || 0) > 0;
     };
 
     const viaSet = (term, ctx) => {
       const value = viaCanon(term.value);
       if (VIA_VALUES.indexOf(value) < 0) {
-        throw err(`未知來源「${term.value}」（可用 combat/free/position）`, term.at);
+        throw err("qErrVia", term.at, { value: term.value, allowed: VIA_VALUES.join("/") });
       }
       const out = new Set();
       for (let index = 0; index < ctx.count; index++) {
@@ -435,23 +466,26 @@
 
     const enumSet = (term, ctx, field) => {
       if (field.id === "via") return viaSet(term, ctx);
-      const value = String(term.value).toLowerCase();
+      const raw = String(term.value).toLowerCase();
+      const value = KIND_ALIAS.get(raw) || raw;
       const out = new Set();
       for (let index = 0; index < ctx.count; index++) {
         const node = ctx.nodes[index];
         let pass = false;
         switch (value) {
-          case "entry": case "入口": pass = node.in === 0; break;
-          case "leaf": case "ending": case "結局": case "结局": pass = node.out === 0; break;
-          case "orphan": case "孤立": pass = node.in === 0 && node.out === 0; break;
-          case "temp": case "臨時": case "临时": pass = !!(ctx.edgeKinds[index] & 2); break;
-          case "inferred": case "推斷": case "推断": pass = !!(ctx.edgeKinds[index] & 1); break;
-          case "sys": case "系統": case "系统": case "place": case "場所": case "场所":
-            pass = !!(ctx.edgeKinds[index] & 4) || (node.systemIn || 0) > 0;
+          case "entry": pass = node.in === 0; break;
+          case "leaf": case "ending": pass = node.out === 0; break;
+          case "orphan": pass = node.in === 0 && node.out === 0; break;
+          case "temp": pass = ctx.edgeGroup(index, "temp"); break;
+          case "inferred": pass = ctx.edgeGroup(index, "inferred"); break;
+          case "sys": case "place":
+            pass = ctx.edgeGroup(index, "position") || (node.systemIn || 0) > 0;
             break;
-          case "jump": case "跳轉": case "跳转": pass = node.out > 0; break;
+          case "jump": pass = node.out > 0; break;
           default:
-            throw err(`未知類型「${term.value}」（可用 entry/leaf/orphan/temp/inferred/sys/jump）`, term.at);
+            throw err("qErrKind", term.at, {
+              value: term.value, allowed: KIND_VALUES.join("/"),
+            });
         }
         if (pass) out.add(index);
       }
@@ -467,7 +501,7 @@
           haystack = ctx.nodes[index].id.toLowerCase();
         } else if (field.id === "chapter") {
           const chapter = ctx.chapters[ctx.nodes[index].chapter] || {};
-          haystack = `${chapter.title || ""} ${chapter.id || ""}`.toLowerCase();
+          haystack = `${i18n.chapterTitle(chapter)} ${chapter.id || ""}`.toLowerCase();
         } else {
           haystack = ctx.textOf(index) || "";
         }
@@ -504,11 +538,11 @@
     };
 
     const evaluate = (ast, ctx) => {
-      try {
-        return { ok: true, set: evalNode(ast, ctx) };
-      } catch (error) {
-        return { ok: false, error: { message: error.message || String(error), column: (error.at || 0) + 1 } };
-      }
+    try {
+      return { ok: true, set: evalNode(ast, ctx) };
+    } catch (error) {
+      return { ok: false, error: describeError(error) };
+    }
     };
 
     const compile = (source, ctx) => {
@@ -531,9 +565,9 @@
           case "entry": pass = node.in === 0; break;
           case "leaf": pass = node.out === 0; break;
           case "orphan": pass = node.in === 0 && node.out === 0; break;
-          case "temp": pass = !!(ctx.edgeKinds[index] & 2); break;
-          case "inferred": pass = !!(ctx.edgeKinds[index] & 1); break;
-          case "sys": pass = !!(ctx.edgeKinds[index] & 4) || (node.systemIn || 0) > 0; break;
+          case "temp": pass = ctx.edgeGroup(index, "temp"); break;
+          case "inferred": pass = ctx.edgeGroup(index, "inferred"); break;
+          case "sys": pass = ctx.edgeGroup(index, "position") || (node.systemIn || 0) > 0; break;
           case "jump": pass = node.out > 0; break;
         }
         if (pass) count++;
@@ -559,8 +593,8 @@
       }
       if (field.id === "chapter") {
         return ctx.chapters.map((chapter) => ({
-          value: chapter.title || chapter.id,
-          label: chapter.id,
+          value: chapter.id,
+          label: i18n.chapterTitle(chapter),
           count: chapter.count || 0,
         }));
       }
@@ -575,14 +609,24 @@
           counts.set(key, (counts.get(key) || 0) + 1);
         }
       }
-      const names = ctx.names && ctx.names[field.id === "speaker" ? "speakers" : `${field.id}s`];
+      const names = (ctx.names && ctx.names[field.id]) || {};
       const out = [];
       for (const [key, count] of counts) {
-        out.push({ value: key, label: (names && names[key]) || "", count });
+        out.push({ value: key, label: names[key] || "", count });
       }
       out.sort((a, b) => b.count - a.count || (a.value < b.value ? -1 : 1));
       ctx._values[field.id] = out;
       return out;
+    };
+
+    const logicWordAt = (rest) => {
+      for (const word of ROOTS) {
+        if (new RegExp(`^${word}(?=[\\s(]|$)`, "i").test(rest)) return word;
+      }
+      for (const word of LOGIC_ALIAS.keys()) {
+        if (word && rest.toLowerCase().indexOf(word) === 0) return word;
+      }
+      return "";
     };
 
     const termStart = (source, cursor) => {
@@ -608,10 +652,9 @@
         }
         const boundary = index === 0 || /[\s()]/.test(source[index - 1]);
         if (boundary) {
-          const rest = source.slice(index, cursor);
-          const word = /^(AND|OR|NOT|XOR)(?=[\s(]|$)/i.exec(rest) || /^(且|或|非)(?=[\s(]|$)/.exec(rest);
+          const word = logicWordAt(source.slice(index, cursor));
           if (word) {
-            start = index + word[0].length;
+            start = index + word.length;
             index = start;
             continue;
           }
@@ -741,9 +784,22 @@
       };
     };
 
+    const needsText = (source) => {
+      const parsed = parse(source);
+      if (!parsed.ok || !parsed.ast) return false;
+      const walk = (node) => {
+        if (!node) return false;
+        if (node.t === "term") return node.field === "text";
+        if (node.t === "not") return walk(node.x);
+        return walk(node.l) || walk(node.r);
+      };
+      return walk(parsed.ast);
+    };
+
     return {
       compile,
       fields: () => FIELDS.slice(),
+      needsText,
       suggest,
     };
   });

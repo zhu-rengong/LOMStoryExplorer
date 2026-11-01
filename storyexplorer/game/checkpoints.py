@@ -1,22 +1,17 @@
 from __future__ import annotations
 
-import re
 import time
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from ..config import MAX_BRANCH_DEPTH
 from ..console import Reporter
-from ..wire import (
-    CHECKPOINT_METHODS,
-    COND_COMPARE,
-    COND_CONST,
-    COND_DICE,
-    COND_GROUP,
-    COND_LOGIC,
-    COND_RANDOM,
-    COND_VAR,
+from ..vocab import COMPARE_OP_SYMBOL
+from .conditions import (
+    condition_node,
+    dice_addition,
+    dice_branch_node,
+    label_of,
+    tree_of,
 )
 from .unity import Deref, asset_files, build_generator, unitypy
 
@@ -25,41 +20,6 @@ GAP_NO_TREE = "no_tree"
 GAP_PARSE_ERROR = "parse_error"
 GAP_UNMATCHED = "unmatched"
 GAP_FILE_ERROR = "file_error"
-
-STAT_CHECK = {0: "常數", 1: "角色數值", 2: "好感度", 3: "旗標", 4: "書籍", 5: "雜物",
-              6: "貴重品", 7: "隨機值", 8: "數值群組", 9: "遊戲時間", 10: "技能",
-              11: "秘笈等級", 12: "已開發項目", 13: "開發項目等級", 14: "書籍精通",
-              15: "風雲史", 16: "條件設定"}
-
-STAT_FIELD = {1: "_stat", 2: "_relationship", 3: "_flag", 4: "_book", 5: "_misc",
-              6: "_specialItem", 8: "_statGroup", 9: "_gameTime", 10: "_talentData",
-              11: "_book", 12: "_upgradeItemData", 13: "_upgradeItemData",
-              14: "_bookCollection", 15: "_libraryAchieve", 16: "_condition"}
-
-COMPARE = {0: "=", 1: "!=", 2: "<", 3: "≤", 4: ">", 5: "≥"}
-LOGIC = {0: "且", 1: "或"}
-GROUP = {1: "總和", 2: "最大", 3: "最小", 4: "相乘", 5: "全部非零", 6: "任一非零"}
-DICE_FIELD = {0: "_stat", 1: "_relationship", 2: "_talent", 3: "_flag"}
-ITEM_CHECKS = frozenset({4, 5, 6, 10, 15})
-
-CHECKPOINT_CALL = re.compile(
-    rf'checkpointmanager\.({"|".join(CHECKPOINT_METHODS)})\(\s*"([^"]{{2,60}})"')
-
-
-def collect_keys(sources: Mapping[str, str]) -> set[str]:
-    keys: set[str] = set()
-    for text in sources.values():
-        for _method, key in CHECKPOINT_CALL.findall(text):
-            keys.add(key)
-    return keys
-
-
-def collect_key_methods(sources: Mapping[str, str]) -> dict[str, set[str]]:
-    hints: dict[str, set[str]] = {}
-    for text in sources.values():
-        for method, key in CHECKPOINT_CALL.findall(text):
-            hints.setdefault(key, set()).add(method.lower())
-    return hints
 
 
 def choose_model(models: list[dict[str, Any]], hinted: set[str] | None = None) -> dict[str, Any]:
@@ -148,188 +108,18 @@ def scan(base_dir: Path, wanted: set[str], reporter: Reporter) -> dict[str, Path
     return found
 
 
-def _label(obj: Any, path_id: Any = None) -> str:
-    if obj is None:
-        return f"＃{path_id}" if path_id else "未設定"
-    try:
-        name = obj.peek_name()
-    except Exception:
-        name = None
-    return name or f"＃{getattr(obj, 'path_id', path_id)}"
-
-
-def _tree(obj: Any) -> dict[str, Any] | None:
-    if obj is None:
-        return None
-    try:
-        return obj.read_typetree()
-    except Exception:
-        return None
-
-
-def _item_id(obj: Any) -> str:
-    tree = _tree(obj) or {}
-    value = tree.get("_id")
-    if isinstance(value, bool):
-        return ""
-    if isinstance(value, str):
-        return value.strip()
-    if isinstance(value, int):
-        return str(value)
-    return ""
-
-
-def _group_text(ref: Any, deref: Deref, depth: int = 0) -> str:
-    obj, scope = deref.scope(ref)
-    tree = _tree(obj)
-    if not tree:
-        fallback = ref.get("m_PathID") if isinstance(ref, dict) else None
-        return _label(obj, fallback)
-    name = _label(obj)
-    if depth >= MAX_BRANCH_DEPTH:
-        return name
-    parts = [_value_text(entry, scope, depth + 1) for entry in tree.get("_value") or []]
-    group = GROUP.get(tree.get("_groupType"), "")
-    inner = " + ".join(parts) if parts else "空"
-    return f"{name}（{group}[{inner}]）" if group else f"{name}（{inner}）"
-
-
-def _value_text(entry: dict[str, Any], deref: Deref, depth: int = 0) -> str:
-    check = entry.get("_checkType", 0)
-    label = STAT_CHECK.get(check, f"類型{check}")
-    if check == 0:
-        detail = str(entry.get("_constant", 0))
-    elif check == 7:
-        detail = f"{entry.get('_randomMin', 0)}~{entry.get('_randomMax', 0)}"
-    elif check == 8:
-        detail = _group_text(entry.get("_statGroup"), deref, depth)
-    else:
-        field = STAT_FIELD.get(check)
-        ref = entry.get(field) if field else None
-        detail = _label(deref(ref), (ref or {}).get("m_PathID")) if ref else "未設定"
-    negative = entry.get("_negative", 0)
-    return f"{label}（{detail}）{'×-1' if negative else ''}"
-
-
-def _compare_text(item: dict[str, Any], deref: Deref) -> str:
-    op = COMPARE.get(item.get("_compareOp", 0), "?")
-    left = _group_text(item.get("_value1"), deref)
-    right = _group_text(item.get("_value2"), deref)
-    return f"{left} {op} {right}"
-
-
-def _condition_text(item: dict[str, Any], deref: Deref) -> str:
-    conds = [_compare_text(sub, deref) for sub in item.get("_items") or []]
-    if not conds:
-        return "（未設定條件）"
-    joiner = f" {LOGIC.get(item.get('_logicOp', 0), '且')} "
-    return joiner.join(conds)
-
-
-def _const_node(value: Any) -> dict[str, Any]:
-    return {"tag": COND_CONST, "value": value}
-
-
-def _random_node(lo: Any, hi: Any) -> dict[str, Any]:
-    return {"tag": COND_RANDOM, "min": lo, "max": hi}
-
-
-def _dice_node() -> dict[str, Any]:
-    return {"tag": COND_DICE}
-
-
-def _var_node(check: int, name: str, negative: bool, ident: str = "") -> dict[str, Any]:
-    node: dict[str, Any] = {"tag": COND_VAR, "type": check, "name": name, "negative": negative}
-    if ident:
-        node["id"] = ident
-    return node
-
-
-def _compare_node(op: int, left: dict[str, Any], right: dict[str, Any]) -> dict[str, Any]:
-    return {"tag": COND_COMPARE, "op": op, "left": left, "right": right}
-
-
-def _logic_node(op: int, items: list[dict[str, Any]]) -> dict[str, Any]:
-    return {"tag": COND_LOGIC, "op": op, "items": items}
-
-
-def _group_node(ref: Any, deref: Deref, depth: int = 0) -> dict[str, Any] | None:
-    obj, scope = deref.scope(ref)
-    tree = _tree(obj)
-    if not tree:
-        return None
-    name = _label(obj)
-    if depth >= MAX_BRANCH_DEPTH:
-        return {"tag": COND_GROUP, "group": tree.get("_groupType", 0), "name": name, "items": []}
-    items = [_value_node(entry, scope, depth + 1) for entry in tree.get("_value") or []]
-    if any(node is None for node in items):
-        return None
-    return {"tag": COND_GROUP, "group": tree.get("_groupType", 0), "name": name, "items": items}
-
-
-def _value_node(entry: dict[str, Any], deref: Deref, depth: int = 0) -> dict[str, Any] | None:
-    check = entry.get("_checkType", 0)
-    negative = bool(entry.get("_negative", 0))
-    if check == 0:
-        return _const_node(entry.get("_constant", 0))
-    if check == 7:
-        return _random_node(entry.get("_randomMin", 0), entry.get("_randomMax", 0))
-    if check == 8:
-        node = _group_node(entry.get("_statGroup"), deref, depth)
-        if node is None:
-            return None
-        node["negative"] = negative
-        return node
-    field = STAT_FIELD.get(check)
-    ref = entry.get(field) if field else None
-    if not ref:
-        return None
-    target = deref(ref)
-    if target is None:
-        return None
-    ident = _item_id(target) if check in ITEM_CHECKS else ""
-    return _var_node(check, _label(target), negative, ident)
-
-
-def _compare_node_of(item: dict[str, Any], deref: Deref) -> dict[str, Any] | None:
-    left = _group_node(item.get("_value1"), deref)
-    right = _group_node(item.get("_value2"), deref)
-    if left is None or right is None:
-        return None
-    return _compare_node(item.get("_compareOp", 0), left, right)
-
-
-def _condition_node(item: dict[str, Any], deref: Deref) -> dict[str, Any] | None:
-    subs = item.get("_items") or []
-    nodes = [_compare_node_of(sub, deref) for sub in subs]
-    if not nodes or any(node is None for node in nodes):
-        return None
-    if len(nodes) == 1:
-        return nodes[0]
-    return _logic_node(item.get("_logicOp", 0), [node for node in nodes if node is not None])
-
-
-def _dice_branch_node(item: dict[str, Any]) -> dict[str, Any] | None:
-    nodes = [
-        _compare_node(sub.get("_compareOp", 0), _dice_node(), _const_node(sub.get("_value", 0)))
-        for sub in item.get("_items") or []
-    ]
-    if not nodes:
-        return None
-    return nodes[0] if len(nodes) == 1 else _logic_node(0, nodes)
-
-
-def _branch(result: int, text: str, expr: dict[str, Any] | None) -> dict[str, Any]:
-    branch: dict[str, Any] = {"result": result, "text": text}
+def _branch(result: int, expr: dict[str, Any] | None) -> dict[str, Any]:
+    branch: dict[str, Any] = {"result": result}
     if expr:
         branch["expr"] = expr
     return branch
 
 
 def _parse_switch(tree: dict[str, Any], deref: Deref) -> dict[str, Any]:
-    branches = []
-    for index, item in enumerate(tree.get("_items") or []):
-        branches.append(_branch(index + 1, _condition_text(item, deref), _condition_node(item, deref)))
+    branches = [
+        _branch(index + 1, condition_node(item, deref))
+        for index, item in enumerate(tree.get("_items") or [])
+    ]
     count_items = tree.get("_countItems") or []
     return {
         "kind": "switch",
@@ -338,17 +128,15 @@ def _parse_switch(tree: dict[str, Any], deref: Deref) -> dict[str, Any]:
         "branches": branches,
         "fallback": len(branches) + 1,
         "countItems": [
-            {"op": COMPARE.get(item.get("_compareOp", 0), "?"), "value": item.get("_value"),
-             "result": index + 1}
+            {"op": COMPARE_OP_SYMBOL.get(item.get("_compareOp", 0), "?"),
+             "value": item.get("_value"), "result": index + 1}
             for index, item in enumerate(count_items)
         ],
     }
 
 
 def _parse_condition(tree: dict[str, Any], deref: Deref) -> dict[str, Any]:
-    branches = []
-    for item in tree.get("_items") or []:
-        branches.append(_branch(1, _condition_text(item, deref), _condition_node(item, deref)))
+    branches = [_branch(1, condition_node(item, deref)) for item in tree.get("_items") or []]
     return {
         "kind": "condition",
         "note": (tree.get("_devNote") or "").strip(),
@@ -356,39 +144,12 @@ def _parse_condition(tree: dict[str, Any], deref: Deref) -> dict[str, Any]:
     }
 
 
-def _dice_addition(item: dict[str, Any], deref: Deref) -> dict[str, Any]:
-    ptype = item.get("_type", 0)
-    field = DICE_FIELD.get(ptype)
-    ref = item.get(field) if field else None
-    target = deref(ref) if ref else None
-    name = _label(target, (ref or {}).get("m_PathID")) if ref else ""
-    ident = ""
-    if ptype == 2 and target is not None:
-        ident = str((_tree(target) or {}).get("_id") or "")
-    try:
-        rate = float(item.get("_rate", 1))
-    except (TypeError, ValueError):
-        rate = 1.0
-    return {
-        "type": ptype,
-        "name": name,
-        "id": ident,
-        "rate": rate,
-        "negative": bool(item.get("_negative", 0)),
-        "hide": bool(item.get("_autoHide", 0)),
-    }
-
-
 def _parse_dice(tree: dict[str, Any], deref: Deref) -> dict[str, Any]:
-    additions = [_dice_addition(item, deref) for item in tree.get("_propertyItems") or []]
-    branches = []
-    for index, item in enumerate(tree.get("_resultItems") or []):
-        conds = []
-        for sub in item.get("_items") or []:
-            op = COMPARE.get(sub.get("_compareOp", 0), "?")
-            conds.append(f"骰值 {op} {sub.get('_value')}")
-        branches.append(_branch(index + 1, " 且 ".join(conds) if conds else "（未設定）",
-                                _dice_branch_node(item)))
+    additions = [dice_addition(item, deref) for item in tree.get("_propertyItems") or []]
+    branches = [
+        _branch(index + 1, dice_branch_node(item))
+        for index, item in enumerate(tree.get("_resultItems") or [])
+    ]
     return {
         "kind": "dice",
         "note": (tree.get("_devNote") or "").strip(),
@@ -404,7 +165,7 @@ def _parse_position(tree: dict[str, Any], deref: Deref) -> dict[str, Any]:
         ref = item.get("_config")
         target = deref(ref)
         candidates.append({
-            "name": _label(target, (ref or {}).get("m_PathID")),
+            "name": label_of(target, (ref or {}).get("m_PathID")),
             "rate": item.get("_defaultRate", 0),
             "note": (item.get("_devNote") or "").strip(),
         })
@@ -485,7 +246,7 @@ def extract(assets_dir: Path, found: dict[str, Path], reporter: Reporter,
             parsed_models: list[dict[str, Any]] = []
             reasons: list[str] = []
             for candidate in candidates:
-                tree = _tree(candidate)
+                tree = tree_of(candidate)
                 if not tree:
                     reasons.append(GAP_NO_TREE)
                     continue

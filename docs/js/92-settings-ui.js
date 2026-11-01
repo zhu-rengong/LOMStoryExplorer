@@ -9,9 +9,7 @@
 
       const pickerState = { target: "", items: [], visible: [], active: 0 };
 
-      const lang = () => store.state.lang;
-
-      const label = (value) => settings.pickLabel(value, lang());
+      const label = (value) => i18n.t(value);
 
       const parseTarget = () => {
         const value = String(store.state.settingsTarget || "");
@@ -371,7 +369,7 @@
 
         renderGroups(target);
         renderChips(target);
-        setTrigger(settings.describe(store.state.settingsTarget, lang()));
+        setTrigger(i18n.t(settings.describe(store.state.settingsTarget)));
 
         const scale = $("typeScale");
         if (scale) scale.value = String(entry.scale);

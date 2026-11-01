@@ -4,74 +4,21 @@
   const SR = window.SR;
 
   SR.define("panels",
-    ["store", "graph", "i18n", "beats", "condexpr", "checkpoints", "overlay", "ui", "text", "convert"],
-    ({ store, graph, i18n, beats, condexpr, checkpoints, overlay, ui, text, convert }) => {
+    ["store", "graph", "i18n", "beats", "condexpr", "checkpoints", "names", "overlay", "ui", "text", "convert"],
+    ({ store, graph, i18n, beats, condexpr, checkpoints, names, overlay, ui, text, convert }) => {
       const $ = ui.$;
       const HOVER_OK = !(window.matchMedia && window.matchMedia("(hover: none)").matches);
 
-      const NAME_GROUP = { check: "checks", flag: "flags", rel: "rels", stat: "stats" };
-
       const lookup = { open: false, seq: 0 };
 
-      let facetSets = null;
-      let nameCache = { lang: "", index: null };
       let preview = null;
 
-      const ensureFacetSets = () => {
-        if (facetSets) return facetSets;
-        const flags = new Set();
-        const checks = new Set();
-        for (const node of graph.nodes) {
-          for (const key of node.facets.flags) flags.add(key);
-          for (const key of node.facets.checks) checks.add(key);
-        }
-        facetSets = { flags, checks };
-        return facetSets;
-      };
-
-      const resetNameIndex = () => {
-        nameCache = { lang: "", index: null };
-      };
-
-      const ensureNameIndex = () => {
-        if (nameCache.lang === store.textLang() && nameCache.index) return nameCache.index;
-        const names = text.names(store.textLang());
-        const index = { flags: {}, checks: {}, stats: {}, rels: {} };
-        for (const group of ["flags", "checks", "stats", "rels"]) {
-          const table = names[group] || {};
-          for (const key of Object.keys(table)) index[group][table[key]] = key;
-        }
-        nameCache = { lang: store.textLang(), index };
-        return index;
-      };
-
-      const lookupTargetOf = (value) => {
-        if (!value) return null;
-        const sets = ensureFacetSets();
-        const raw = String(value).trim();
-        let key = raw;
-        let kind = sets.flags.has(key) ? "flag" : sets.checks.has(key) ? "check" : "";
-        if (!kind) {
-          const index = ensureNameIndex();
-          const plain = raw.replace(/\s*[+-]\d+\s*$/, "").trim();
-          const relName = plain.replace(/\s*(?:好感度|好感)$/, "").trim();
-          const relKey = index.rels[plain] || index.rels[relName];
-          if (index.flags[plain]) {
-            kind = "flag";
-            key = index.flags[plain];
-          } else if (index.checks[plain]) {
-            kind = "check";
-            key = index.checks[plain];
-          } else if (index.stats[plain]) {
-            kind = "stat";
-            key = index.stats[plain];
-          } else if (relKey) {
-            kind = "rel";
-            key = relKey;
-          }
-        }
-        return kind ? { kind, key } : null;
-      };
+      const lookupTitleKey = (kind) => (
+        kind === "speaker" ? "lookupSpeaker"
+          : kind === "flag" ? "lookupFlag"
+            : kind === "check" ? "lookupCheck"
+              : kind === "rel" ? "lookupRel" : "lookupStat"
+      );
 
       const lookupItems = (kind, key) => {
         if (kind === "flag") {
@@ -106,20 +53,12 @@
         const panel = $("lookupPanel");
         if (!panel) return;
         const data = lookupItems(kind, key);
-        const titleKey = kind === "speaker" ? "lookupSpeaker"
-          : kind === "flag" ? "lookupFlag"
-            : kind === "check" ? "lookupCheck"
-              : kind === "rel" ? "lookupRel" : "lookupStat";
-        let name = kind === "speaker" ? beats.speakerName(key) : key;
-        if (kind !== "speaker") {
-          const table = (text.names(store.textLang()) || {})[NAME_GROUP[kind] || "stats"];
-          if (table && table[key]) name = table[key];
-        }
+        const name = kind === "speaker" ? beats.speakerName(key) : names.label(kind, key);
 
         const title = $("lookupTitle");
         if (title) title.textContent = i18n.t("lookupTitle", { name, n: data.items.length });
         const sub = $("lookupSub");
-        if (sub) sub.textContent = i18n.t(titleKey);
+        if (sub) sub.textContent = i18n.t(lookupTitleKey(kind));
 
         const list = $("lookupList");
         list.replaceChildren();
@@ -179,7 +118,7 @@
           .filter(Boolean);
         const chip = ui.el("span", "cx-fallback", i18n.t("lookupCondFallback"));
         const hint = [i18n.t("cxFallbackHint", { n: branches.length })];
-        if (excluded.length) hint.push(excluded.join("；"));
+        if (excluded.length) hint.push(excluded.join(i18n.t("listJoin")));
         chip.title = hint.join("\n");
         chip.setAttribute("aria-label", chip.title);
         condRow(parent, chip, result);
@@ -192,10 +131,8 @@
           condRow(parent, box, result);
           return;
         }
-        condRow(parent, (branch && branch.text) || i18n.t("lookupCondEmpty"), result);
+        condRow(parent, i18n.t("lookupCondEmpty"), result);
       };
-
-      const ADDITION_TYPES = ["diceAddStat", "diceAddRel", "diceAddTalent", "diceAddFlag"];
 
       const additionRow = (item) => {
         if (!item || typeof item !== "object") {
@@ -203,9 +140,10 @@
         }
         const row = ui.el("p", `lc-row lc-add${item.negative ? " is-neg" : ""}`);
         const main = ui.el("span", "lc-add-main");
-        const typeKey = ADDITION_TYPES[Number(item.type)] || "";
-        if (typeKey) main.appendChild(ui.el("span", "lc-add-type", i18n.t(typeKey)));
-        main.appendChild(ui.el("span", "lc-add-name", condexpr.localizedName(item) || item.name || "—"));
+        const typeKey = item.kind ? `diceAdd.${item.kind}` : "";
+        const typeLabel = typeKey ? i18n.t(typeKey, { defaultValue: "" }) : "";
+        if (typeLabel) main.appendChild(ui.el("span", "lc-add-type", typeLabel));
+        main.appendChild(ui.el("span", "lc-add-name", condexpr.localizedName(item) || item.key || "—"));
         row.appendChild(main);
         const rate = Number(item.rate);
         const factor = Number.isFinite(rate) && rate !== 1 ? i18n.t("diceAddRate", { n: rate }) : "";
@@ -249,8 +187,9 @@
             i18n.t("lookupCondPrefix", { prefix: model.prefix || "—" })));
           (model.candidates || []).slice(0, 12).forEach((item) => {
             const note = item.note ? convert.string(store.textLang(), item.note) : "";
-            const label = note ? `${item.name}（${note}）` : item.name;
-            condRow(body, label, i18n.t("lookupCondWeight", { n: item.rate }));
+            const label = item.name || i18n.t("lookupUnset");
+            condRow(body, note ? i18n.t("labelNote", { label, note }) : label,
+              i18n.t("lookupCondWeight", { n: item.rate }));
           });
         } else if (kind === "flag") {
           body.appendChild(ui.el("p", "lc-row lc-plain", i18n.t("lookupCondFlag", { n: model.default })));
@@ -364,11 +303,9 @@
         bindBranchPreview,
         closeLookup,
         hideBranchPreview,
-        lookupTargetOf,
         openLookup,
         reset: () => {
-          resetNameIndex();
-          facetSets = null;
+          preview = null;
         },
       };
     });

@@ -32,8 +32,12 @@
 
     return {
       bookmarks,
+      get: (key) => LOCAL.get(key),
+      getJson: (key) => LOCAL.getJson(key),
       positionOf,
       rememberPosition,
+      set: (key, value) => LOCAL.set(key, value),
+      setJson: (key, value) => LOCAL.setJson(key, value),
       toggleBookmark: (id) => {
         if (!id) return false;
         if (bookmarks.has(id)) bookmarks.delete(id);

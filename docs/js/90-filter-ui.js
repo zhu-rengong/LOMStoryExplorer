@@ -21,15 +21,13 @@
     { key: "exEntry", expr: "in = 0" },
     { key: "exSystem", expr: "kind:sys" },
     { key: "exVia", expr: "via:free" },
-    { key: "exChapter", expr: "chapter:第1章" },
+    { key: "exChapter", expr: "chapter:ch1" },
     { key: "exCombo", expr: "speaker:master AND (dice:yes OR lock:yes)" },
   ];
 
-  const TEXT_RE = /\btext\s*[:=!<>]|正文|關鍵詞|关键词/i;
-
   SR.define("filterUi",
-    ["store", "graph", "schema", "i18n", "query", "text", "overlay", "ui"],
-    ({ store, graph, schema, i18n, query, text, overlay, ui }) => {
+    ["store", "graph", "beat", "i18n", "query", "text", "overlay", "ui"],
+    ({ store, graph, beat, i18n, query, text, overlay, ui }) => {
       const $ = ui.$;
 
       let suggest = { open: false, items: [], active: 0, from: 0, to: 0, mode: "field" };
@@ -48,7 +46,7 @@
         if (textCache.map.has(index)) return textCache.map.get(index);
         const node = graph.nodes[index];
         const rows = pack && pack.stories ? pack.stories[node.id] : null;
-        const value = rows ? schema.textOf(rows).toLowerCase() : "";
+        const value = rows ? beat.textOf(rows).toLowerCase() : "";
         textCache.map.set(index, value);
         return value;
       };
@@ -69,13 +67,13 @@
           })),
           chapters: graph.chapters,
           facets: graph.nodes.map((node) => node.facets),
-          edgeKinds: graph.edgeKinds,
+          edgeGroup: graph.hasEdgeGroup,
           names: {
-            speakers: text.characters(store.textLang()),
-            flags: names.flags || {},
-            checks: names.checks || {},
-            stats: names.stats || {},
-            rels: names.rels || {},
+            speaker: text.characters(store.textLang()),
+            flag: names.flag || {},
+            check: names.check || {},
+            stat: names.stat || {},
+            rel: names.rel || {},
           },
           textOf: nodeText,
         };
@@ -214,19 +212,24 @@
         renderResults();
       };
 
+      const queryError = (error) => i18n.t("filterSyntax", {
+        column: error.column,
+        message: error.key ? i18n.t(error.key, error.params) : error.message,
+      });
+
       const apply = (source) => {
         const value = source || "";
         if (!value.trim()) {
           store.applyFilter({ source: "", set: null, error: "", loading: false });
           return { ok: true, count: null };
         }
-        const loading = TEXT_RE.test(value) && !text.progress(store.textLang()).done;
+        const loading = query.needsText(value) && !text.progress(store.textLang()).done;
         const result = query.compile(value, buildContext());
         if (!result.ok) {
           store.applyFilter({
             source: value,
             set: null,
-            error: i18n.t("filterSyntax", { column: result.error.column, message: result.error.message }),
+            error: queryError(result.error),
             loading: false,
           });
           return { ok: false, count: 0 };
@@ -239,9 +242,7 @@
             const later = query.compile(value, buildContext());
             store.applyFilter({
               set: later.ok ? later.set : null,
-              error: later.ok ? "" : i18n.t("filterSyntax", {
-                column: later.error.column, message: later.error.message,
-              }),
+              error: later.ok ? "" : queryError(later.error),
               loading: false,
             });
           });

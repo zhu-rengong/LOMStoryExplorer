@@ -1,16 +1,13 @@
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, replace
 from typing import Any
 
-from ..config import MAX_EDGE_LABEL
+from ..game.profile import HARDCODED_ENTRIES
 from ..model import Edge, Facets, NodeFlags, NodeRecord, ScriptAnalysis
-from ..wire import EDGE_INFERRED, EDGE_POSITION, HARDCODED_ENTRIES
-
-_LITERAL = re.compile(r'"([A-Za-z][A-Za-z0-9_]{2,60})"')
-_POSITION_RE = re.compile(r'Position\(\s*"([^"]+)"\s*\)')
+from ..versions import MAX_EDGE_LABEL
+from ..vocab import EDGE_INFERRED, EDGE_POSITION
 
 
 @dataclass(frozen=True)
@@ -24,7 +21,7 @@ class CollectedEdges:
 
 
 def collect_edges(models: Mapping[str, ScriptAnalysis],
-                  sources: Mapping[str, str]) -> CollectedEdges:
+                  literals: Mapping[str, Sequence[str]]) -> CollectedEdges:
     ids = set(models)
     seen: dict[tuple[str, str, str], int] = {}
     edges: list[Edge] = []
@@ -53,9 +50,9 @@ def collect_edges(models: Mapping[str, ScriptAnalysis],
             in_degree[edge.target] += 1
 
     inferred = 0
-    for sid, source in sources.items():
+    for sid, candidates in literals.items():
         existing = adjacency.setdefault(sid, set())
-        for literal in sorted(set(_LITERAL.findall(source))):
+        for literal in candidates:
             if literal == sid or literal not in ids or literal in existing:
                 continue
             existing.add(literal)
@@ -68,15 +65,6 @@ def collect_edges(models: Mapping[str, ScriptAnalysis],
             dynamic.append(f"{sid} contains dynamic jumps: {item}")
 
     return CollectedEdges(edges, dynamic, inferred, adjacency, out_degree, in_degree)
-
-
-def find_positions(sources: Mapping[str, str]) -> dict[str, list[str]]:
-    found: dict[str, list[str]] = {}
-    for sid in sorted(sources):
-        names = sorted(set(_POSITION_RE.findall(sources[sid] or "")))
-        if names:
-            found[sid] = names
-    return found
 
 
 def _prefix_targets(name: str, ids: Sequence[str]) -> list[str]:
@@ -113,7 +101,8 @@ def expand_positions(positions: Mapping[str, list[str]], ids: Sequence[str],
                 if dst in existing:
                     continue
                 existing.add(dst)
-                edges.append(Edge(src, dst, EDGE_POSITION, f"場所事件「{name}」"))
+                edges.append(Edge(src, dst, EDGE_POSITION, name,
+                                  {"kind": EDGE_POSITION, "name": name}))
     stats = {
         "names": len({name for names in positions.values() for name in names}),
         "resolved_names": len(resolved),

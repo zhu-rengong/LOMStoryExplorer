@@ -3,7 +3,7 @@
 
   const SR = window.SR;
 
-  SR.define("search", ["schema", "graph", "store", "text", "ui"], ({ schema, graph, store, text, ui }) => {
+  SR.define("search", ["beat", "graph", "store", "text", "ui"], ({ beat, graph, store, text, ui }) => {
     const empty = () => ({ lang: "", seen: new Set(), entries: [], sorted: true });
 
     let index = empty();
@@ -28,7 +28,7 @@
           id,
           order: nodeIndex === undefined ? -1 : nodeIndex,
           chapter: node ? graph.chapterOf(node) : null,
-          text: schema.textOf(stories[id]).toLowerCase(),
+          text: beat.textOf(stories[id]).toLowerCase(),
         });
       }
       if (added) index.sorted = false;

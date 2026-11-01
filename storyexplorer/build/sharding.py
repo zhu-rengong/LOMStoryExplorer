@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from ..config import MAX_STORY_SHARD_BYTES, MAX_STORY_SHARDS
+from ..versions import MAX_STORY_SHARD_BYTES, MAX_STORY_SHARDS
 
 
 def shard_key(index: int) -> str:

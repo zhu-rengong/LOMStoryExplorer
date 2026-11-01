@@ -6,10 +6,8 @@ from datetime import datetime
 from pathlib import Path
 
 from ..model import GameInfo
+from .profile import BUNDLE_MARKER, BUNDLE_STRING_LIMIT, BUNDLE_VERSION_PATTERN
 
-_VERSION_RE = re.compile(r"^release_(\d+(?:\.\d+)+)$")
-_MAX_STRING_BYTES = 64
-_NEEDLE = b"release_"
 _ACF_QUOTE = r'"{field}"\s+"([^"]*)"'
 
 
@@ -25,20 +23,20 @@ def read_bundle_version(managers_path: Path) -> str | None:
         return None
     start = 0
     while True:
-        index = data.find(_NEEDLE, start)
+        index = data.find(BUNDLE_MARKER, start)
         if index < 0:
             return None
         start = index + 1
         if index < 4:
             continue
         length = struct.unpack("<i", data[index - 4:index])[0]
-        if not 0 < length <= _MAX_STRING_BYTES:
+        if not 0 < length <= BUNDLE_STRING_LIMIT:
             continue
         try:
             text = data[index:index + length].decode("utf-8")
         except UnicodeDecodeError:
             continue
-        match = _VERSION_RE.match(text)
+        match = BUNDLE_VERSION_PATTERN.match(text)
         if match:
             return match.group(1)
 

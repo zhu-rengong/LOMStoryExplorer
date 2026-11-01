@@ -6,10 +6,10 @@
   const BREAKS = [[1440, "wide"], [1200, "mid"], [1024, "narrow"], [768, "compact"]];
 
   SR.define("app",
-    ["schema", "graph", "store", "i18n", "text", "search", "searchUi",
+    ["schema", "beat", "graph", "store", "i18n", "text", "search", "searchUi",
       "filterUi", "settingsUi", "rail", "reader", "panels", "stats", "shortcuts",
       "grip", "overlay", "ui"],
-    ({ schema, graph, store, i18n, text, search, searchUi, filterUi, settingsUi,
+    ({ schema, beat, graph, store, i18n, text, search, searchUi, filterUi, settingsUi,
       rail, reader, panels, stats, shortcuts, grip, overlay, ui }) => {
       const $ = ui.$;
 
@@ -206,7 +206,7 @@
 
       const beatsLabel = (edge) => {
         const label = reader.edgeLabelOf(edge);
-        return schema.stripRich(label) || "";
+        return beat.stripRich(label) || "";
       };
 
       const toggleNav = () => {

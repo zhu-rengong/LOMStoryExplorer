@@ -3,62 +3,23 @@
 
   const SR = window.SR;
 
-  const TYPE_KEYS = [
-    "cxTypeConst", "cxTypeStat", "cxTypeRel", "cxTypeFlag", "cxTypeBook", "cxTypeMisc",
-    "cxTypeSpecial", "cxTypeRandom", "cxTypeGroup", "cxTypeTime", "cxTypeTalent",
-    "cxTypeBookLevel", "cxTypeUpgrade", "cxTypeUpgradeLevel", "cxTypeBookMaster",
-    "cxTypeChronicle", "cxTypeCondition",
-  ];
+  const LOOKUP_KINDS = { stat: true, rel: true, flag: true, check: true };
 
-  const GROUP_KEYS = ["", "cxGroupSum", "cxGroupMax", "cxGroupMin", "cxGroupProduct",
-    "cxGroupAll", "cxGroupAny"];
+  SR.define("condexpr", ["checkpoints", "i18n", "ui", "graph", "names"],
+    ({ checkpoints, i18n, ui, graph, names }) => {
+      const typeText = (kind) => i18n.t(`vk.${kind}`, { defaultValue: kind || "" });
 
-  const OP_TEXT = ["=", "≠", "<", "≤", ">", "≥"];
+      const checkText = (kind) => i18n.t(`ck.${kind}`, { defaultValue: kind || "" });
 
-  const LOOKUP_KIND = { 1: "stat", 2: "rel", 3: "flag", 16: "check" };
-
-  const NAME_GROUP = { check: "checks", flag: "flags", rel: "rels", stat: "stats" };
-
-  SR.define("condexpr", ["checkpoints", "i18n", "text", "ui", "graph", "store", "convert"],
-    ({ checkpoints, i18n, text, ui, graph, store, convert }) => {
-
-      const typeText = (check) => {
-        const key = TYPE_KEYS[check];
-        return key ? i18n.t(key) : String(check);
-      };
-
-      const lookupKeyOf = (kind, id) => {
-        const raw = String(id || "");
-        if (kind === "stat") {
-          const stat = /^Player_(.+)$/.exec(raw);
-          return stat ? stat[1].toLowerCase() : raw;
-        }
-        if (kind === "rel") {
-          const rel = /^Relationship_([A-Za-z0-9]+)/.exec(raw);
-          return rel ? rel[1].toLowerCase() : raw;
-        }
-        return raw;
-      };
-
-      const displayName = (kind, key, fallbackText) => {
-        if (kind) {
-          const table = (text.names(store.textLang()) || {})[NAME_GROUP[kind]] || {};
-          if (table[key]) return table[key];
-        }
-        return fallbackText || key;
-      };
-
-      const localizedName = (node) => {
-        const label = node && node.label;
-        if (typeof label !== "string" || !label) return "";
-        return convert.string(store.textLang(), label);
-      };
+      const displayName = (kind, key) => names.label(kind, key);
 
       const countOf = (kind, key) => {
+        if (!key) return 0;
         if (kind === "flag") {
           const groups = graph.flagGroups(key);
           return groups.writes.length + groups.reads.length;
         }
+        if (kind === "check") return graph.lookup("check", key).length;
         return graph.lookup(kind, key).length;
       };
 
@@ -90,28 +51,30 @@
         if (!node) return ui.el("span", "cx-empty", i18n.t("lookupCondEmpty"));
         if (node.tag === "const") return ui.el("span", "cx-const", String(node.value));
         if (node.tag === "random") {
-          return ui.el("span", "cx-const cx-rand", i18n.t("cxRandom", { min: node.min, max: node.max }));
+          return ui.el("span", "cx-const cx-rand", i18n.t("cRandom", { min: node.min, max: node.max }));
         }
-        if (node.tag === "dice") return ui.el("span", "cx-dice", i18n.t("cxDice"));
+        if (node.tag === "dice") return ui.el("span", "cx-dice", i18n.t("cDice"));
         if (node.tag === "var") return chipOf(node, opts);
+        if (node.tag === "check") return chipOf(node, opts);
         if (node.tag === "group") return groupOf(node, opts);
         return ui.el("span", "cx-const", String(node.value === undefined ? "" : node.value));
       };
 
       const chipOf = (node, opts) => {
-        const type = node.type;
-        const raw = node.name;
-        const kind = LOOKUP_KIND[type] || "";
-        const key = lookupKeyOf(kind, raw);
-        const label = localizedName(node) || displayName(kind, key, raw);
+        const isCheck = node.tag === "check";
+        const kind = isCheck ? "check" : node.kind;
+        const key = node.key;
+        const label = displayName(kind, key);
         const chip = ui.el("span", "cx-var");
-        chip.appendChild(ui.el("span", "cx-type", typeText(type)));
+        chip.appendChild(ui.el("span", "cx-type", isCheck ? checkText(kind) : typeText(kind)));
         chip.appendChild(ui.el("span", "cx-name", label));
-        if ((kind === "flag" || kind === "check") && raw && raw !== label) {
-          chip.appendChild(ui.el("span", "cx-id", raw));
+        if ((kind === "flag" || kind === "check") && key && key !== label) {
+          chip.appendChild(ui.el("span", "cx-id", key));
         }
         if (node.negative) chip.appendChild(ui.el("span", "cx-neg", "×-1"));
-        if (kind) bindVar(chip, { kind, key, type: typeText(type), label }, opts);
+        if (LOOKUP_KINDS[kind]) {
+          bindVar(chip, { kind, key, type: isCheck ? checkText(kind) : typeText(kind), label }, opts);
+        }
         return chip;
       };
 
@@ -119,7 +82,7 @@
         const children = node.items || [];
         if (children.length !== 1) return null;
         if (node.negative) return null;
-        if (node.group && node.group !== 1) return null;
+        if (node.op && node.op !== "sum") return null;
         return children[0];
       };
 
@@ -131,7 +94,7 @@
           return leaf;
         }
         const box = ui.el("span", "cx-group");
-        const groupKey = GROUP_KEYS[node.group];
+        const groupKey = node.op ? `grp.${node.op}` : "";
         if (groupKey) box.appendChild(ui.el("span", "cx-gtag", i18n.t(groupKey)));
         const items = ui.el("span", "cx-gitems");
         items.appendChild(ui.el("span", "cx-bracket", "["));
@@ -153,13 +116,13 @@
         if (node.tag === "compare") {
           const cmp = ui.el("span", "cx-cmp");
           cmp.appendChild(inlineOf(node.left, opts));
-          cmp.appendChild(ui.el("span", "cx-op", OP_TEXT[node.op] || "?"));
+          cmp.appendChild(ui.el("span", "cx-op", node.op || "?"));
           cmp.appendChild(inlineOf(node.right, opts));
           return cmp;
         }
         if (node.tag === "logic") {
           const box = ui.el("span", "cx-cmp");
-          const joiner = node.op === 1 ? i18n.t("cxOr") : i18n.t("cxAnd");
+          const joiner = node.op === "or" ? i18n.t("cxOr") : i18n.t("cxAnd");
           (node.items || []).forEach((child, index) => {
             if (index) box.appendChild(ui.el("span", "cx-op", joiner));
             box.appendChild(inlineOf(child, opts));
@@ -174,7 +137,7 @@
         if (!expr) return box;
         const options = opts || {};
         let joiner = "";
-        if (expr.tag === "logic") joiner = expr.op === 1 ? i18n.t("cxOr") : i18n.t("cxAnd");
+        if (expr.tag === "logic") joiner = expr.op === "or" ? i18n.t("cxOr") : i18n.t("cxAnd");
         const lines = expr.tag === "logic"
           ? (expr.items || []).map((child, index) => ({ lead: index ? joiner : "", node: child }))
           : [{ lead: "", node: expr }];
@@ -190,20 +153,24 @@
       const valueLabel = (node) => {
         if (!node) return "";
         if (node.tag === "const") return String(node.value);
-        if (node.tag === "random") return i18n.t("cxRandom", { min: node.min, max: node.max });
-        if (node.tag === "dice") return i18n.t("cxDice");
-        if (node.tag === "var") {
-          const kind = LOOKUP_KIND[node.type] || "";
-          const key = lookupKeyOf(kind, node.name);
-          const name = localizedName(node) || displayName(kind, key, node.name);
-          return `${typeText(node.type)}（${name}）${node.negative ? "×-1" : ""}`;
+        if (node.tag === "random") return i18n.t("cRandom", { min: node.min, max: node.max });
+        if (node.tag === "dice") return i18n.t("cDice");
+        if (node.tag === "var" || node.tag === "check") {
+          const kind = node.tag === "check" ? "check" : node.kind;
+          const type = node.tag === "check" ? checkText(kind) : typeText(kind);
+          const name = displayName(kind, node.key);
+          return i18n.t("cxValue", { type, name }) + (node.negative ? "×-1" : "");
         }
         if (node.tag === "group") {
           const child = singleChild(node);
           if (child) return valueLabel(child);
-          const groupKey = GROUP_KEYS[node.group];
+          const groupKey = node.op ? `grp.${node.op}` : "";
           const inner = (node.items || []).map(valueLabel).join(" + ");
-          return `${node.name || (groupKey ? i18n.t(groupKey) : "")}（${groupKey ? i18n.t(groupKey) : ""}[${inner}]）${node.negative ? "×-1" : ""}`;
+          return i18n.t("cGroup", {
+            name: node.name || (groupKey ? i18n.t(groupKey) : ""),
+            group: groupKey ? i18n.t(groupKey) : "",
+            items: inner,
+          }) + (node.negative ? "×-1" : "");
         }
         return "";
       };
@@ -211,46 +178,50 @@
       const label = (expr) => {
         if (!expr) return "";
         if (expr.tag === "compare") {
-          return `${label(expr.left)} ${OP_TEXT[expr.op] || "?"} ${label(expr.right)}`;
+          return `${label(expr.left)} ${expr.op || "?"} ${label(expr.right)}`;
         }
         if (expr.tag === "logic") {
-          const joiner = ` ${expr.op === 1 ? i18n.t("cxOr") : i18n.t("cxAnd")} `;
+          const joiner = ` ${expr.op === "or" ? i18n.t("cxOr") : i18n.t("cxAnd")} `;
           return (expr.items || []).map(label).join(joiner);
         }
         return valueLabel(expr);
       };
 
-      const pick = (kind, key, result) => {
-        const model = checkpoints.get(key, kind);
+      const pick = (check, result) => {
+        if (!check || !check.key) return null;
+        const model = checkpoints.get(check.key, check.kind);
         if (!model) return null;
         const branches = model.branches || [];
         if (!branches.length) return null;
-        const type = model.kind || kind;
+        const type = model.kind || check.kind;
+        const wanted = result === undefined ? check.result : result;
         if (type === "condition") return branches[0].expr || null;
         if (type !== "switch" && type !== "dice") return null;
-        if (result === null || result === undefined) return null;
+        if (wanted === null || wanted === undefined) return null;
         for (const branch of branches) {
-          if (branch.result === result) return branch.expr || null;
+          if (branch.result === wanted) return branch.expr || null;
         }
         return null;
       };
 
-      const fallback = (kind, key, result) => {
-        const model = checkpoints.get(key, kind);
+      const fallback = (check, result) => {
+        if (!check || !check.key) return null;
+        const model = checkpoints.get(check.key, check.kind);
         if (!model) return null;
-        const type = model.kind || kind;
+        const type = model.kind || check.kind;
         if (type !== "switch" && type !== "dice") return null;
-        if (result === null || result === undefined) return null;
-        if (model.fallback === undefined || result !== model.fallback) return null;
+        const wanted = result === undefined ? check.result : result;
+        if (wanted === null || wanted === undefined) return null;
+        if (model.fallback === undefined || wanted !== model.fallback) return null;
         const branches = model.branches || [];
         const excluded = [];
         for (const branch of branches) if (branch && branch.expr) excluded.push(branch.expr);
         return { n: branches.length, excluded };
       };
 
-      const resultOf = (source) => {
-        const found = /==\s*(-?\d+)\s*$/.exec(String(source || ""));
-        return found ? Number(found[1]) : null;
+      const localizedName = (node) => {
+        if (!node || !node.kind) return "";
+        return displayName(node.kind, node.key);
       };
 
       return {
@@ -259,7 +230,6 @@
         localizedName,
         pick,
         render,
-        resultOf,
       };
     });
 })();

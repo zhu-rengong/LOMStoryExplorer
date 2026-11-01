@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterator
 from pathlib import Path
 from typing import Any
 
-from ..config import UNITY_VERSION
+from .profile import UNITY_VERSION
 
 
 def unitypy() -> Any:

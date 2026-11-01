@@ -5,15 +5,30 @@ from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
 
-from .cache import atomic_write_text, dump_json
-from .config import CHECKPOINT_SHARDS, SCHEMA_VERSION
-from .wire import (
+from .jsonio import atomic_write_text, dump_json
+from .versions import CHECKPOINT_SHARDS, SCHEMA_VERSION
+from .vocab import (
     GLOBAL_CHECKPOINTS,
     GLOBAL_GRAPH,
     GLOBAL_TEXT,
     GLOBAL_WORDCOUNT,
     TEXT_MODE_FULL,
 )
+
+ASSET_TEMPLATES: dict[str, str] = {
+    "graph": "data/graph.js",
+    "wordcount": "data/wordcount.js",
+    "textFull": "data/text-{lang}.js",
+    "textHead": "data/text-{lang}-head.js",
+    "textShard": "data/text-{lang}-{key}.js",
+    "checkpoint": "data/checkpoints-{index}.js",
+}
+
+ARTIFACT_PATTERNS = ("graph.js", "wordcount.js", "text-*.js", "checkpoints-*.js")
+
+
+def assets_payload() -> dict[str, str]:
+    return dict(ASSET_TEMPLATES)
 
 
 def graph_script(payload: Any) -> str:
@@ -44,15 +59,16 @@ def wordcount_script(payload: Any) -> str:
     return f"window.{GLOBAL_WORDCOUNT}={dump_json(payload)};\n"
 
 
-def text_payload(lang: str, characters: Mapping[str, str], names: Mapping[str, Any],
-                 edge_labels: Mapping[str, str], stories: Mapping[str, Any],
-                 shard_keys: Sequence[str], missing: int, missing_keys: Sequence[str],
-                 mode: str) -> dict[str, Any]:
+def text_payload(lang: str, characters: Mapping[str, str], titles: Mapping[str, str],
+                 names: Mapping[str, Any], edge_labels: Mapping[str, str],
+                 stories: Mapping[str, Any], shard_keys: Sequence[str],
+                 missing: int, missing_keys: Sequence[str], mode: str) -> dict[str, Any]:
     return {
         "schema": SCHEMA_VERSION,
         "lang": lang,
         "characters": dict(characters),
-        "names": {key: dict(value) for key, value in names.items()},
+        "titles": dict(titles),
+        "names": {kind: dict(table) for kind, table in names.items()},
         "edgeLabels": dict(edge_labels),
         "missing": missing,
         "missingKeys": list(missing_keys),
@@ -93,3 +109,17 @@ def write_checkpoint_shards(dir_path: Path, items: Mapping[str, Any],
         size = atomic_write_text(path, checkpoint_script(bucket))
         written.append({"index": index, "name": path.name, "keys": len(bucket), "bytes": size})
     return written
+
+
+def prune(dir_path: Path, keep: set[str]) -> int:
+    base = Path(dir_path)
+    if not base.is_dir():
+        return 0
+    removed = 0
+    for path in sorted(base.glob("*.js")):
+        if path.name in keep:
+            continue
+        if any(path.match(pattern) for pattern in ARTIFACT_PATTERNS):
+            path.unlink()
+            removed += 1
+    return removed

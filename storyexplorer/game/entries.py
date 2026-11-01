@@ -4,19 +4,10 @@ import time
 from pathlib import Path
 from typing import Any
 
-from ..config import ENTRY_VERSION
 from ..console import Reporter
+from ..versions import ENTRY_VERSION
+from .profile import ENTRY_FIELDS, ENTRY_SOURCE_ORDER, POSITION_CLASS
 from .unity import Session, available, build_generator, fingerprint
-
-POSITION_CLASS = "PositionResultData"
-
-ENTRY_FIELDS: dict[str, tuple[str, str]] = {
-    "FreePositionData": ("_defaultScript", "free"),
-    "PositionController": ("_scriptName", "free"),
-    "CombatEventActionSetStoryScript": ("_name", "combat"),
-}
-
-SOURCE_ORDER = {"combat": 0, "free": 1}
 
 PROGRESS_EVERY = 200
 
@@ -97,7 +88,7 @@ def probe(assets_dir: Path, ids: set[str], reporter: Reporter) -> dict[str, Any]
                     unmatched.append(f"{cls}.{field}={value.strip()}")
                 continue
             current = entries.get(target)
-            if current is None or SOURCE_ORDER[source] < SOURCE_ORDER[current]:
+            if current is None or ENTRY_SOURCE_ORDER[source] < ENTRY_SOURCE_ORDER[current]:
                 entries[target] = source
     finally:
         stats["warnings"] = session.warnings

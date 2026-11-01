@@ -21,68 +21,68 @@
   const FOLLOW_GROUP = "@group";
 
   const FONTS = [
-    { id: "serif", label: { tw: "宋體", cn: "宋体", en: "Serif" }, stack: SERIF },
-    { id: "sans", label: { tw: "黑體", cn: "黑体", en: "Sans" }, stack: SANS },
-    { id: "kai", label: { tw: "楷體", cn: "楷体", en: "Kai" }, stack: KAI },
-    { id: "round", label: { tw: "圓體", cn: "圆体", en: "Rounded" }, stack: ROUND },
-    { id: "mono", label: { tw: "等寬", cn: "等宽", en: "Monospace" }, stack: MONO },
+    { id: "serif", label: "pref.font.serif", stack: SERIF },
+    { id: "sans", label: "pref.font.sans", stack: SANS },
+    { id: "kai", label: "pref.font.kai", stack: KAI },
+    { id: "round", label: "pref.font.round", stack: ROUND },
+    { id: "mono", label: "pref.font.mono", stack: MONO },
   ];
 
   const LABELS = {
-    followBase: { tw: "跟隨基準", cn: "跟随基准", en: "Follow base" },
-    followGroup: { tw: "跟隨大類", cn: "跟随大类", en: "Follow group" },
-    groupAll: { tw: "整組", cn: "整组", en: "Whole group" },
-    weightInherit: { tw: "跟隨", cn: "跟随", en: "Inherit" },
-    customFont: { tw: "自訂字體…", cn: "自定义字体…", en: "Custom font…" },
-    systemFont: { tw: "系統字體", cn: "系统字体", en: "System font" },
+    followBase: "pref.followBase",
+    followGroup: "pref.followGroup",
+    groupAll: "pref.groupAll",
+    weightInherit: "pref.weightInherit",
+    customFont: "pref.customFont",
+    systemFont: "pref.systemFont",
   };
 
   const GROUPS = [
-    { id: "prose", label: { tw: "正文", cn: "正文", en: "Prose" }, font: "serif", scale: 130 },
-    { id: "choice", label: { tw: "選項與條件", cn: "选项与条件", en: "Choice" }, font: "sans", scale: 130 },
-    { id: "mark", label: { tw: "標記", cn: "标记", en: "Marks" }, font: FOLLOW_BASE, scale: 130 },
-    { id: "heading", label: { tw: "標題與導航", cn: "标题与导航", en: "Headings" }, font: FOLLOW_BASE },
-    { id: "ui", label: { tw: "介面", cn: "界面", en: "Interface" }, font: FOLLOW_BASE },
-    { id: "status", label: { tw: "狀態", cn: "状态", en: "Status" }, font: FOLLOW_BASE },
+    { id: "prose", label: "pref.group.prose", font: "serif", scale: 130 },
+    { id: "choice", label: "pref.group.choice", font: "sans", scale: 130 },
+    { id: "mark", label: "pref.group.mark", font: FOLLOW_BASE, scale: 130 },
+    { id: "heading", label: "pref.group.heading", font: FOLLOW_BASE },
+    { id: "ui", label: "pref.group.ui", font: FOLLOW_BASE },
+    { id: "status", label: "pref.group.status", font: FOLLOW_BASE },
   ];
 
   const TYPES = [
-    { id: "dialog", group: "prose", label: { tw: "對白", cn: "对白", en: "Dialogue" }, font: FOLLOW_GROUP, weight: null },
-    { id: "speaker", group: "prose", label: { tw: "說話人", cn: "说话人", en: "Speaker" }, font: "kai", weight: 500, scale: 140 },
-    { id: "narration", group: "prose", label: { tw: "旁白", cn: "旁白", en: "Narration" }, font: FOLLOW_GROUP, weight: null, scale: 160 },
-    { id: "think", group: "prose", label: { tw: "心聲", cn: "心声", en: "Inner voice" }, font: FOLLOW_GROUP, weight: null },
-    { id: "lore", group: "prose", label: { tw: "劇情點", cn: "剧情点", en: "Lore" }, font: "kai", weight: null },
-    { id: "snippet", group: "prose", label: { tw: "摘要", cn: "摘要", en: "Snippet" }, font: FOLLOW_GROUP, weight: null },
+    { id: "dialog", group: "prose", label: "pref.type.dialog", font: FOLLOW_GROUP, weight: null },
+    { id: "speaker", group: "prose", label: "pref.type.speaker", font: "kai", weight: 500, scale: 140 },
+    { id: "narration", group: "prose", label: "pref.type.narration", font: FOLLOW_GROUP, weight: null, scale: 160 },
+    { id: "think", group: "prose", label: "pref.type.think", font: FOLLOW_GROUP, weight: null },
+    { id: "lore", group: "prose", label: "pref.type.lore", font: "kai", weight: null },
+    { id: "snippet", group: "prose", label: "pref.type.snippet", font: FOLLOW_GROUP, weight: null },
 
-    { id: "option", group: "choice", label: { tw: "選項", cn: "选项", en: "Option" }, font: FOLLOW_GROUP, weight: null },
-    { id: "index", group: "choice", label: { tw: "選項序號", cn: "选项序号", en: "Option index" }, font: "mono", weight: null, scale: 80, noLeading: true },
-    { id: "option-cond", group: "choice", label: { tw: "選項條件", cn: "选项条件", en: "Option condition" }, font: FOLLOW_GROUP, weight: null, scale: 80 },
-    { id: "branch-cond", group: "choice", label: { tw: "分支條件", cn: "分支条件", en: "Branch condition" }, font: FOLLOW_GROUP, weight: 400 },
+    { id: "option", group: "choice", label: "pref.type.option", font: FOLLOW_GROUP, weight: null },
+    { id: "index", group: "choice", label: "pref.type.index", font: "mono", weight: null, scale: 80, noLeading: true },
+    { id: "option-cond", group: "choice", label: "pref.type.option-cond", font: FOLLOW_GROUP, weight: null, scale: 80 },
+    { id: "branch-cond", group: "choice", label: "pref.type.branch-cond", font: FOLLOW_GROUP, weight: 400 },
 
-    { id: "label", group: "mark", label: { tw: "標籤", cn: "标签", en: "Label" }, font: "sans", weight: null },
-    { id: "jump", group: "mark", label: { tw: "跳轉按鈕", cn: "跳转按钮", en: "Jump button" }, font: FOLLOW_GROUP, weight: null, noLeading: true },
-    { id: "badge", group: "mark", label: { tw: "徽章", cn: "徽章", en: "Badge" }, font: FOLLOW_GROUP, weight: null, noLeading: true },
+    { id: "label", group: "mark", label: "pref.type.label", font: "sans", weight: null },
+    { id: "jump", group: "mark", label: "pref.type.jump", font: FOLLOW_GROUP, weight: null, noLeading: true },
+    { id: "badge", group: "mark", label: "pref.type.badge", font: FOLLOW_GROUP, weight: null, noLeading: true },
 
-    { id: "title", group: "heading", label: { tw: "劇本標題", cn: "剧本标题", en: "Story title" }, font: FOLLOW_GROUP, weight: 600 },
-    { id: "panel", group: "heading", label: { tw: "面板標題", cn: "面板标题", en: "Panel title" }, font: FOLLOW_GROUP, weight: 600 },
-    { id: "lookup", group: "heading", label: { tw: "浮層標題", cn: "浮层标题", en: "Overlay title" }, font: FOLLOW_GROUP, weight: 600 },
-    { id: "brand", group: "heading", label: { tw: "品牌標題", cn: "品牌标题", en: "Brand title" }, font: FOLLOW_GROUP, weight: 600 },
-    { id: "seal", group: "heading", label: { tw: "印章字", cn: "印章字", en: "Seal glyph" }, font: FOLLOW_GROUP, weight: 600, noLeading: true },
-    { id: "rail", group: "heading", label: { tw: "側欄標題", cn: "侧栏标题", en: "Rail title" }, font: FOLLOW_GROUP, weight: 600 },
-    { id: "stat", group: "heading", label: { tw: "統計數值", cn: "统计数值", en: "Statistic value" }, font: FOLLOW_GROUP, weight: 600 },
-    { id: "empty-title", group: "heading", label: { tw: "空態標題", cn: "空态标题", en: "Empty title" }, font: FOLLOW_GROUP, weight: 600 },
-    { id: "crumb", group: "heading", label: { tw: "章節路徑", cn: "章节路径", en: "Breadcrumb" }, font: "mono", weight: null },
-    { id: "meta", group: "heading", label: { tw: "時間與計數", cn: "时间与计数", en: "Time & counts" }, font: "mono", weight: null },
+    { id: "title", group: "heading", label: "pref.type.title", font: FOLLOW_GROUP, weight: 600 },
+    { id: "panel", group: "heading", label: "pref.type.panel", font: FOLLOW_GROUP, weight: 600 },
+    { id: "lookup", group: "heading", label: "pref.type.lookup", font: FOLLOW_GROUP, weight: 600 },
+    { id: "brand", group: "heading", label: "pref.type.brand", font: FOLLOW_GROUP, weight: 600 },
+    { id: "seal", group: "heading", label: "pref.type.seal", font: FOLLOW_GROUP, weight: 600, noLeading: true },
+    { id: "rail", group: "heading", label: "pref.type.rail", font: FOLLOW_GROUP, weight: 600 },
+    { id: "stat", group: "heading", label: "pref.type.stat", font: FOLLOW_GROUP, weight: 600 },
+    { id: "empty-title", group: "heading", label: "pref.type.empty-title", font: FOLLOW_GROUP, weight: 600 },
+    { id: "crumb", group: "heading", label: "pref.type.crumb", font: "mono", weight: null },
+    { id: "meta", group: "heading", label: "pref.type.meta", font: "mono", weight: null },
 
-    { id: "ui", group: "ui", label: { tw: "介面文字", cn: "界面文字", en: "Interface text" }, font: FOLLOW_GROUP, weight: null },
-    { id: "ui-compact", group: "ui", label: { tw: "介面文字（緊湊）", cn: "界面文字（紧凑）", en: "Interface text (compact)" }, font: FOLLOW_GROUP, weight: null },
-    { id: "ui-micro", group: "ui", label: { tw: "介面文字（微字）", cn: "界面文字（微字）", en: "Interface text (micro)" }, font: FOLLOW_GROUP, weight: null },
-    { id: "caption", group: "ui", label: { tw: "小標籤與說明", cn: "小标签与说明", en: "Caption" }, font: "mono", weight: null },
-    { id: "id", group: "ui", label: { tw: "編號與代碼", cn: "编号与代码", en: "Identifier" }, font: "mono", weight: null },
+    { id: "ui", group: "ui", label: "pref.type.ui", font: FOLLOW_GROUP, weight: null },
+    { id: "ui-compact", group: "ui", label: "pref.type.ui-compact", font: FOLLOW_GROUP, weight: null },
+    { id: "ui-micro", group: "ui", label: "pref.type.ui-micro", font: FOLLOW_GROUP, weight: null },
+    { id: "caption", group: "ui", label: "pref.type.caption", font: "mono", weight: null },
+    { id: "id", group: "ui", label: "pref.type.id", font: "mono", weight: null },
 
-    { id: "status", group: "status", label: { tw: "狀態訊息", cn: "状态消息", en: "Status message" }, font: FOLLOW_GROUP, weight: null },
-    { id: "loading", group: "status", label: { tw: "載入提示", cn: "加载提示", en: "Loading hint" }, font: "mono", weight: null },
-    { id: "empty", group: "status", label: { tw: "空狀態", cn: "空状态", en: "Empty state" }, font: FOLLOW_GROUP, weight: null },
+    { id: "status", group: "status", label: "pref.type.status", font: FOLLOW_GROUP, weight: null },
+    { id: "loading", group: "status", label: "pref.type.loading", font: "mono", weight: null },
+    { id: "empty", group: "status", label: "pref.type.empty", font: FOLLOW_GROUP, weight: null },
   ];
 
   const WEIGHTS = [400, 500, 600];
@@ -334,19 +334,12 @@
     return snapshot();
   };
 
-  const LABEL_KEYS = { "zh-cn": "cn", en: "en" };
-
-  const pickLabel = (label, lang) => {
-    if (!label) return "";
-    return label[LABEL_KEYS[lang] || "tw"] || label.tw || "";
-  };
-
   const fontLabel = (value) => {
     if (!value || value === FOLLOW_BASE) return LABELS.followBase;
     if (value === FOLLOW_GROUP) return LABELS.followGroup;
     const preset = fontById(value);
     if (preset) return preset.label;
-    return { tw: value, cn: value, en: value };
+    return String(value);
   };
 
   const parseTarget = (target) => {
@@ -356,14 +349,14 @@
     return { scope: "type", id: value };
   };
 
-  const describe = (target, lang) => {
+  const describe = (target) => {
     const parsed = parseTarget(target);
     if (parsed.scope === "group") {
       const group = state.groups[parsed.id];
-      return pickLabel(fontLabel(group ? group.font : FOLLOW_BASE), lang);
+      return fontLabel(group ? group.font : FOLLOW_BASE);
     }
     const item = state.types[parsed.id];
-    return pickLabel(fontLabel(item ? item.font : FOLLOW_GROUP), lang);
+    return fontLabel(item ? item.font : FOLLOW_GROUP);
   };
 
   const api = {
@@ -392,7 +385,6 @@
       return snapshot();
     },
     describe: describe,
-    pickLabel: pickLabel,
   };
 
   restore();

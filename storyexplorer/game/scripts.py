@@ -5,8 +5,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from ..config import FALLBACK_PREFIX, PRIMARY_PREFIX, SCRIPT_PREFIX, resources_path
 from ..console import Reporter
+from .profile import FALLBACK_PREFIX, PRIMARY_PREFIX, SCRIPT_PREFIX, resources_path
 from .resources import resource_map
 from .unity import unitypy
 

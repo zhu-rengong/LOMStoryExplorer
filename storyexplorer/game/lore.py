@@ -1,25 +1,14 @@
 from __future__ import annotations
 
-import re
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
 from ..console import Reporter
 from .unity import asset_files, build_generator, unitypy
 
-_STORY_CALL = re.compile(r"""statmodifymanager\.AddStory\(\s*["']([^"']+)["']\s*\)""")
-
 GAP_NOT_FOUND = "not_found"
 GAP_EMPTY_TEXT = "empty_text"
 GAP_PARSE_ERROR = "parse_error"
-
-
-def collect_story_keys(sources: Mapping[str, str]) -> set[str]:
-    keys: set[str] = set()
-    for source in sources.values():
-        keys.update(_STORY_CALL.findall(source))
-    return keys
 
 
 def _clean(text: Any) -> str:
@@ -28,11 +17,12 @@ def _clean(text: Any) -> str:
     return text.replace("\r\n", "\n").replace("\r", "\n").strip()
 
 
-def probe(assets_dir: Path, wanted: set[str], reporter: Reporter) -> tuple[dict[str, str], list[dict[str, str]]]:
+def probe(assets_dir: Path, wanted: set[str],
+          reporter: Reporter) -> tuple[dict[str, str], list[dict[str, str]]]:
     if not wanted:
         return {}, []
     base = Path(assets_dir)
-    generator, adapter = build_generator(base / "Managed")
+    _generator, adapter = build_generator(base / "Managed")
     files = [path for path in asset_files(base) if path.suffix == ".assets"]
     items: dict[str, str] = {}
     seen: set[str] = set()

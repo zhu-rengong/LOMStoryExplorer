@@ -4,20 +4,20 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .. import lua as L
-from ..model import CharRef, Mark, TextRef
+from ..model import CharRef, Mark, OptionCond, TextRef
 
 
 @dataclass(frozen=True)
 class OptionDraft:
     ref: TextRef
-    note: str | None = None
+    cond: OptionCond | None = None
     lock: TextRef | None = None
 
 
 @dataclass
 class EvalState:
     speaker: str | None = None
-    dialog: str = "character"
+    dialog: str = ""
     think: bool = False
     env: dict[str, Any] = field(default_factory=dict)
     menu_options: list[OptionDraft] = field(default_factory=list)

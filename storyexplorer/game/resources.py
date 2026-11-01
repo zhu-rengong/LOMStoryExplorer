@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from pathlib import Path
 
-from ..config import MANAGERS_ASSET, MANAGERS_SUBDIR
+from .profile import MANAGERS_ASSET, MANAGERS_SUBDIR
 from ..console import Reporter
 from .unity import unitypy
 

@@ -29,7 +29,7 @@
     "DejaVu Sans Mono", "Liberation Mono", "Noto Sans Mono", "Inconsolata",
   ])];
 
-  const PROBE_TEXT = "mmmmmmmmmmlli WWW 中文測試";
+  const PROBE_TEXT = "mmmmmmmmmmlli WWW \u4e2d\u6587\u6e2c\u8a66";
   const BASELINES = ["monospace", "serif", "sans-serif"];
   const NOISE = /Wingdings|Webdings|Marlett|Symbol|Segoe MDL2|Segoe Fluent|Segoe UI Emoji|Segoe UI Symbol|Bookshelf Symbol|MS Reference|MT Extra|MS Outlook/i;
   const CJK_HINT = /[\u3400-\u9fff]|YaHei|JhengHei|SimSun|SimHei|KaiTi|FangSong|DengXian|YouYuan|LiSu|MingLiU|Songti|Yuanti|Heiti|PingFang|Hiragino|Noto|Source Han|Sarasa|LXGW|STKaiti|STSong|STXihei|STZhongsong|DFKai|BiauKai|Yu Gothic|Yu Mincho|Meiryo|MS Gothic|MS Mincho|Malgun|Nanum/i;

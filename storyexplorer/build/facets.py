@@ -1,11 +1,28 @@
 from __future__ import annotations
 
-import re
 from collections.abc import Iterable, Sequence
+from typing import Any
 
 from ..model import BranchBeat, ChoiceBeat, Facets, MetaBeat, SayBeat
+from ..vocab import COND_CHECK, COND_COMPARE, COND_GROUP, COND_LOGIC
 
-CHECK_RE = re.compile(r"(?:條件|分支判定|骰子判定|場所事件)「([^」]+)」")
+_CHECK_TAGS = (COND_CHECK, COND_COMPARE, COND_LOGIC, COND_GROUP)
+
+
+def _walk_checks(node: Any, out: set[str]) -> None:
+    if not isinstance(node, dict):
+        return
+    if node.get("tag") == COND_CHECK:
+        key = str(node.get("key") or "")
+        if key:
+            out.add(key)
+        return
+    if node.get("tag") not in _CHECK_TAGS:
+        return
+    for item in (node.get("left"), node.get("right")):
+        _walk_checks(item, out)
+    for item in node.get("items") or []:
+        _walk_checks(item, out)
 
 
 def collect_facets(beats: Sequence[object], reads: Iterable[str] | None = None) -> Facets:
@@ -37,12 +54,14 @@ def collect_facets(beats: Sequence[object], reads: Iterable[str] | None = None) 
                     checks.add(beat.key)
                     dice += 1
             elif isinstance(beat, BranchBeat):
-                checks.update(CHECK_RE.findall(beat.label or ""))
+                if beat.check:
+                    checks.add(beat.check.key)
+                _walk_checks(beat.cond, checks)
                 walk(beat.beats)
             elif isinstance(beat, ChoiceBeat):
                 options += len(beat.options)
                 for option in beat.options:
-                    if option.note:
+                    if option.cond:
                         dice += 1
                     if option.lock:
                         locks += 1

@@ -5,46 +5,47 @@ from typing import Any
 
 from .. import lua as L
 from ..model import BranchBeat, ScriptAnalysis
-from .calls import CallHandler
+from .calls import CallHandler, check_ref_of
 from .context import AnalysisContext
 from .expressions import ExpressionEvaluator
+from .semantics import Semantics
 from .state import EvalState, as_text
 
 _INDEX_KINDS = ("dot_index_expression", "bracket_index_expression")
 
 
 class Analyzer:
-    def __init__(self, script_id: str) -> None:
+    def __init__(self, script_id: str, semantics: Semantics) -> None:
+        self.semantics = semantics
         self.ctx = AnalysisContext(script_id)
         self.expressions = ExpressionEvaluator(self)
         self.calls = CallHandler(self)
 
     def analyze(self, source: str) -> ScriptAnalysis:
         script = L.parse(source)
-        self.block(script.statements, EvalState(), self.ctx.beats, "")
+        self.block(script.statements, EvalState(), self.ctx.beats)
         return self.ctx.snapshot()
 
-    def block(self, stmts: Sequence[L.Node], state: EvalState, beats: list[Any],
-              label: str) -> None:
+    def block(self, stmts: Sequence[L.Node], state: EvalState, beats: list[Any]) -> None:
         index = 0
         pending: dict[str, Any] | None = None
         while index < len(stmts):
             stmt = stmts[index]
-            if stmt.type == "if_statement" and pending is not None and self.calls.if_uses_choice(stmt, pending["var"]):
-                self.calls.fill_choice(pending, stmt, state, label, beats)
+            if stmt.type == "if_statement" and pending is not None \
+                    and self.calls.if_uses_choice(stmt, pending["var"]):
+                self.calls.fill_choice(pending, stmt, state, beats)
                 pending = None
                 index += 1
                 continue
             if stmt.type == "if_statement":
-                self.emit_if(stmt, state, beats, label)
+                self.emit_if(stmt, state, beats)
                 index += 1
                 continue
             if stmt.type == "do_statement":
-                self.block(L.statements(stmt.child_by_field_name("body")),
-                           state.clone(), beats, label)
+                self.block(L.statements(stmt.child_by_field_name("body")), state.clone(), beats)
                 index += 1
                 continue
-            produced = self.statement(stmt, state, beats, label)
+            produced = self.statement(stmt, state, beats)
             if produced is not None:
                 if pending is not None:
                     self.calls.close_incomplete(pending, beats)
@@ -53,15 +54,14 @@ class Analyzer:
         if pending is not None:
             self.calls.close_incomplete(pending, beats)
 
-    def statement(self, stmt: L.Node, state: EvalState, beats: list[Any],
-                  label: str) -> dict[str, Any] | None:
+    def statement(self, stmt: L.Node, state: EvalState, beats: list[Any]) -> dict[str, Any] | None:
         kind = stmt.type
         if kind == "variable_declaration":
             targets, values = L.local_declaration(stmt)
             names = [L.text(target) for target in targets]
             pending: dict[str, Any] | None = None
             for name, expr in zip(names, values):
-                value, produced = self.expressions.eval_stmt_value(expr, state, beats, label)
+                value, produced = self.expressions.eval_stmt_value(expr, state, beats)
                 state.env[name] = value
                 if produced is not None:
                     pending = produced
@@ -72,15 +72,14 @@ class Analyzer:
         if kind == "assignment_statement":
             targets, values = L.assignment(stmt)
             for target, expr in zip(targets, values):
-                self.assign(target, expr, state, beats, label)
+                self.assign(target, expr, state, beats)
             return None
         if kind == "function_call":
-            return self.calls.handle_call(stmt, state, beats, label)
+            return self.calls.handle_call(stmt, state, beats)
         return None
 
-    def assign(self, target: L.Node, expr: L.Node, state: EvalState,
-               beats: list[Any], label: str) -> None:
-        value, _ = self.expressions.eval_stmt_value(expr, state, beats, label)
+    def assign(self, target: L.Node, expr: L.Node, state: EvalState, beats: list[Any]) -> None:
+        value, _ = self.expressions.eval_stmt_value(expr, state, beats)
         if target.type == "identifier":
             state.env[L.text(target)] = value
             return
@@ -98,17 +97,17 @@ class Analyzer:
         else:
             state.env[name] = {key: value}
 
-    def emit_if(self, stmt: L.Node, state: EvalState, beats: list[Any], label: str) -> None:
+    def emit_if(self, stmt: L.Node, state: EvalState, beats: list[Any]) -> None:
         group = self.ctx.branch_seq
         self.ctx.branch_seq += 1
         for cond, body in L.clauses(stmt):
-            cond_label = "其他情況" if cond is None else self.expressions.cond_label(cond, state)
-            kind = "if" if cond is None else self.expressions.cond_kind(cond, state)
+            node = self.expressions.cond_node(cond, state) if cond is not None else None
+            check = check_ref_of(node)
             sub: list[Any] = []
-            child = f"{label} › {cond_label}" if label else cond_label
-            self.block(body, state.clone(), sub, child)
-            beats.append(BranchBeat(cond_label, tuple(sub), kind, group))
+            self.block(body, state.clone(), sub)
+            beats.append(BranchBeat(check, node, L.text(cond) if cond is not None else "",
+                                    tuple(sub), group))
 
 
-def analyze(script_id: str, source: str) -> ScriptAnalysis:
-    return Analyzer(script_id).analyze(source)
+def analyze(script_id: str, source: str, semantics: Semantics) -> ScriptAnalysis:
+    return Analyzer(script_id, semantics).analyze(source)

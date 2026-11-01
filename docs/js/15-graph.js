@@ -3,14 +3,20 @@
 
   const SR = window.SR;
 
-  const EDGE_INFERRED = 1;
-  const EDGE_TEMP = 2;
-  const EDGE_POSITION = 4;
+  const GROUP_BITS = { inferred: 1, temp: 2, position: 4 };
+  const FACET_FIELDS = {
+    speaker: "speakers",
+    flag: "flags",
+    check: "checks",
+    stat: "stats",
+    rel: "rels",
+  };
 
-  SR.define("graph", ["schema"], ({ schema }) => {
+  SR.define("graph", ["schema", "data"], ({ schema, data }) => {
     const nodes = schema.nodes;
     const edges = schema.edges;
     const chapters = schema.chapters;
+    const groups = data.vocab.edgeGroups || {};
 
     const nodeById = new Map();
     const indexById = new Map();
@@ -28,20 +34,21 @@
       if (from === undefined || to === undefined) continue;
       outAdj[from].push(edge);
       inAdj[to].push(edge);
-      if (edge.kind === "inferred") edgeKinds[from] |= EDGE_INFERRED;
-      else if (edge.kind === "temp" || edge.kind === "travel") edgeKinds[from] |= EDGE_TEMP;
-      else if (edge.kind === "position") edgeKinds[from] |= EDGE_POSITION;
+      const bit = GROUP_BITS[groups[edge.kind]];
+      if (bit) edgeKinds[from] |= bit;
     }
     for (const node of nodes) {
       if (node.systemIn > 0) {
         const index = indexById.get(node.id);
-        edgeKinds[index] |= EDGE_POSITION;
+        edgeKinds[index] |= GROUP_BITS.position;
       }
     }
 
     const visible = new Uint8Array(nodes.length);
 
-    const chapterOf = (node) => chapters[node.chapter] || { id: "", title: "", color: "#8A8578", count: 0 };
+    const chapterOf = (node) => chapters[node.chapter] || {
+      id: "", kind: "other", number: null, color: "#8A8578", count: 0,
+    };
 
     const passes = (index, filterSet) => {
       if (filterSet && !filterSet.has(index)) return false;
@@ -58,6 +65,11 @@
         if (show) count++;
       }
       return count;
+    };
+
+    const hasEdgeGroup = (index, group) => {
+      const bit = GROUP_BITS[group] || 0;
+      return bit > 0 && (edgeKinds[index] & bit) !== 0;
     };
 
     let byChapter = null;
@@ -86,13 +98,10 @@
 
     const facetMatches = (node, kind, key) => {
       if (!key) return false;
-      const table = node.facets;
-      if (kind === "speaker") return table.speakers.indexOf(key) >= 0;
-      if (kind === "flag") return table.flags.indexOf(key) >= 0;
-      if (kind === "check") return table.checks.indexOf(key) >= 0;
-      if (kind === "stat") return table.stats.indexOf(key) >= 0;
-      if (kind === "rel") return table.rels.indexOf(key) >= 0;
-      return false;
+      const field = FACET_FIELDS[kind];
+      if (!field) return false;
+      const values = node.facets[field];
+      return Array.isArray(values) && values.indexOf(key) >= 0;
     };
 
     const lookup = (kind, key) => {
@@ -120,15 +129,13 @@
     };
 
     return {
-      EDGE_INFERRED,
-      EDGE_POSITION,
-      EDGE_TEMP,
       chapters,
       chapterOf,
       computeVisibility,
       edgeKinds,
       edges,
       flagGroups,
+      hasEdgeGroup,
       inAdj,
       indexById,
       lookup,

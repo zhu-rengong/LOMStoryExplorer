@@ -4,11 +4,25 @@ from typing import Any
 
 from .. import lua as L
 from ..model import Locked, Mark, MetaBeat, TextRef, Unknown
-from ..wire import CHECKPOINT_MARKS, MARK_KINDS
+from ..vocab import (
+    COND_CHECK,
+    COND_COMPARE,
+    COND_CONST,
+    COND_LOGIC,
+    COND_RAW,
+    COND_VAR,
+)
 from .calls import callee
 from .state import EvalState, as_text, num_text, short
 
-_COND_KIND_BY_MARK = {"switch": "分支判定", "dice": "骰子判定", "condition": "條件", "position": "場所事件"}
+_COMPARE_SYMBOL = {
+    "==": "=",
+    "~=": "≠",
+    "<": "<",
+    "<=": "≤",
+    ">": ">",
+    ">=": "≥",
+}
 
 _INDEX_KINDS = ("dot_index_expression", "bracket_index_expression")
 
@@ -16,6 +30,10 @@ _INDEX_KINDS = ("dot_index_expression", "bracket_index_expression")
 class ExpressionEvaluator:
     def __init__(self, flow: Any) -> None:
         self.flow = flow
+
+    @property
+    def sem(self) -> Any:
+        return self.flow.semantics
 
     def eval(self, expr: L.Node, state: EvalState) -> Any:
         kind = expr.type
@@ -102,22 +120,23 @@ class ExpressionEvaluator:
             return self.eval(right_node, state)
         return Unknown(L.text(expr))
 
-    def eval_stmt_value(self, expr: L.Node, state: EvalState, beats: list[Any],
-                        label: str) -> tuple[Any, dict[str, Any] | None]:
+    def eval_stmt_value(self, expr: L.Node, state: EvalState, beats: list[Any]) -> tuple[Any, dict[str, Any] | None]:
         if expr.type == "dot_index_expression":
             table = expr.child_by_field_name("table")
             if table is not None and table.type == "identifier" \
-                    and L.text(table) == "dicemenudialog" and L.index_key(expr) == "ResultSelection":
+                    and L.text(table) == self.sem.dice_object \
+                    and L.index_key(expr) == self.sem.dice_result_field:
                 beats.append(None)
-                return Unknown(L.text(expr)), {"index": len(beats) - 1, "var": "", "options": list(state.menu_options)}
+                return Unknown(L.text(expr)), {"index": len(beats) - 1, "var": "",
+                                               "options": list(state.menu_options)}
         if expr.type == "function_call":
             obj, method = callee(expr)
             args = L.arguments(expr)
-            if not obj and method == "choose" and args:
+            if not obj and method == self.sem.choice_method and args:
                 options = self.flow.calls.option_list(self.eval(args[0], state))
                 beats.append(None)
                 return Unknown(L.text(expr)), {"index": len(beats) - 1, "var": "", "options": options}
-            if obj == "checkpointmanager" and method in ("Switch", "Dice", "Condition", "Position"):
+            if obj == self.sem.check_object and method in self.sem.check_methods:
                 value = self.eval(expr, state)
                 if isinstance(value, Mark) and method == "Dice":
                     beats.append(MetaBeat("dice", value.key))
@@ -126,81 +145,52 @@ class ExpressionEvaluator:
             return self.eval(expr, state), None
         return self.eval(expr, state), None
 
-    def cond_kind(self, cond: L.Node, state: EvalState) -> str:
-        kind = cond.type
-        if kind == "function_call":
-            obj, method = callee(cond)
-            if obj == "checkpointmanager":
-                return CHECKPOINT_MARKS.get(method, "if")
-            return "if"
-        if kind == "identifier":
-            value = state.env.get(L.text(cond))
-            if isinstance(value, Mark) and value.kind in MARK_KINDS:
-                return value.kind
-            return "if"
-        if kind == "binary_expression":
-            left = self.cond_kind(cond.child_by_field_name("left"), state)
-            right = self.cond_kind(cond.child_by_field_name("right"), state)
-            if L.operator(cond) in ("and", "or"):
-                return left if left == right else "if"
-            if left == "if":
-                return right
-            if right == "if":
-                return left
-            return left if left == right else "if"
-        return "if"
-
-    def cond_label(self, cond: L.Node, state: EvalState) -> str:
+    def cond_node(self, cond: L.Node, state: EvalState) -> dict[str, Any]:
         kind = cond.type
         if kind == "function_call":
             obj, method = callee(cond)
             args = L.arguments(cond)
-            if obj == "checkpointmanager" and args:
-                key = as_text(self.eval(args[0], state)) or ""
+            if obj == self.sem.check_object and method in self.sem.check_methods:
+                key = as_text(self.eval(args[0], state)) if args else ""
                 if key:
                     self.flow.ctx.reads.add(key)
-                mark = CHECKPOINT_MARKS.get(method)
-                name = _COND_KIND_BY_MARK.get(mark, method) if mark else method
-                return f"{name}「{key}」"
-            if obj == "statmodifymanager" and method.startswith("Get"):
-                key = as_text(self.eval(args[0], state)) if args else ""
-                if not key and args:
-                    key = L.text(args[0]).strip("\"'")
-                return f"屬性「{key}」"
-            return short(cond)
+                    return {"tag": COND_CHECK, "kind": self.sem.check_methods[method], "key": key}
+            if obj == self.sem.stat_object and method.startswith(self.sem.stat_getter_prefix) and args:
+                key = as_text(self.eval(args[0], state)) or L.text(args[0]).strip("\"'")
+                return {"tag": COND_VAR, "kind": "stat", "key": key}
+            return {"tag": COND_RAW, "text": short(cond)}
         if kind == "binary_expression":
             op = L.operator(cond)
             left_node = cond.child_by_field_name("left")
             right_node = cond.child_by_field_name("right")
             if op in ("and", "or"):
-                joiner = " 且 " if op == "and" else " 或 "
-                return self.cond_label(left_node, state) + joiner + self.cond_label(right_node, state)
-            left = self.cond_label(left_node, state)
-            right = self.cond_label(right_node, state)
-            return f"{left} {op} {right}"
+                return {
+                    "tag": COND_LOGIC,
+                    "op": op,
+                    "items": [self.cond_node(left_node, state), self.cond_node(right_node, state)],
+                }
+            return {
+                "tag": COND_COMPARE,
+                "op": _COMPARE_SYMBOL.get(op, op),
+                "left": self.cond_node(left_node, state),
+                "right": self.cond_node(right_node, state),
+            }
         if kind == "identifier":
             value = state.env.get(L.text(cond))
             if isinstance(value, Mark):
-                name = _COND_KIND_BY_MARK.get(value.kind, "判定")
-                return f"{name}「{value.key}」"
-            return L.text(cond)
+                return {"tag": COND_CHECK, "kind": value.kind, "key": value.key}
+            if isinstance(value, (str, int)) and not isinstance(value, bool):
+                return {"tag": COND_CONST, "value": value}
+            return {"tag": COND_RAW, "text": L.text(cond)}
         if kind == "string":
-            return L.string_value(cond)
+            return {"tag": COND_CONST, "value": L.string_value(cond)}
         if kind == "number":
-            return num_text(L.number_value(cond))
-        if kind == "unary_expression":
-            if L.operator(cond) == "-":
-                operand = cond.child_by_field_name("operand")
-                value = self.eval(operand, state)
-                if isinstance(value, int) and not isinstance(value, bool):
-                    return str(-value)
-                if operand is not None and operand.type == "number":
-                    return num_text(-L.number_value(operand))
-            return short(cond)
+            return {"tag": COND_CONST, "value": num_text(L.number_value(cond))}
+        if kind == "unary_expression" and L.operator(cond) == "-":
+            operand = cond.child_by_field_name("operand")
+            if operand is not None and operand.type == "number":
+                return {"tag": COND_CONST, "value": num_text(-L.number_value(operand))}
+            return {"tag": COND_RAW, "text": short(cond)}
         if kind in _INDEX_KINDS:
-            key = L.index_key(cond)
-            if key is not None:
-                base = self.cond_label(cond.child_by_field_name("table"), state)
-                return f"{base}.{key}"
-            return short(cond)
-        return short(cond)
+            return {"tag": COND_RAW, "text": short(cond)}
+        return {"tag": COND_RAW, "text": short(cond)}

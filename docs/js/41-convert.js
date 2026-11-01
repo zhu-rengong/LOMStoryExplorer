@@ -3,12 +3,16 @@
 
   const SR = window.SR;
 
-  SR.define("convert", ["ui"], ({ ui }) => {
-    const RUNTIME = "vendor/opencc-t2cn.js";
-    const CONFIG = { from: "tw", to: "cn" };
-    const VARIANTS = "妳 你|姪 侄|吶 呐|揹 背|拚 拼|薰 熏|搧 扇|炁 气|砲 炮";
+  const RUNTIME = "vendor/opencc-t2cn.js";
+
+  SR.define("convert", ["data", "ui"], ({ data, ui }) => {
     const converters = Object.create(null);
     let runtime = null;
+
+    const configOf = (lang) => {
+      const entry = data.languageMeta()[lang];
+      return entry && entry.opencc ? entry.opencc : null;
+    };
 
     const load = () => {
       if (window.OpenCC) return Promise.resolve(window.OpenCC);
@@ -23,16 +27,21 @@
       return runtime;
     };
 
-    const build = (OpenCC) => {
-      const base = OpenCC.Converter(CONFIG);
-      const variants = VARIANTS ? OpenCC.CustomConverter(VARIANTS) : null;
+    const build = (OpenCC, config) => {
+      const base = OpenCC.Converter({ from: config.from, to: config.to });
+      const variants = config.variants ? OpenCC.CustomConverter(config.variants) : null;
       return variants ? (text) => variants(base(text)) : base;
     };
 
     const ensure = (lang) => {
       if (converters[lang]) return Promise.resolve(true);
+      const config = configOf(lang);
+      if (!config) {
+        converters[lang] = (text) => text;
+        return Promise.resolve(true);
+      }
       return load().then((OpenCC) => {
-        converters[lang] = build(OpenCC);
+        converters[lang] = build(OpenCC, config);
         return true;
       }, () => false);
     };
@@ -47,14 +56,15 @@
 
     const convertRow = (lang, value) => {
       if (typeof value === "string") return string(lang, value);
-      if (!Array.isArray(value)) return value;
-      const out = new Array(value.length);
-      for (let index = 0; index < value.length; index++) {
-        const item = value[index];
-        if (Array.isArray(item)) out[index] = convertRow(lang, item);
-        else out[index] = typeof item === "string" ? string(lang, item) : item;
+      if (Array.isArray(value)) {
+        const out = new Array(value.length);
+        for (let index = 0; index < value.length; index++) {
+          out[index] = convertRow(lang, value[index]);
+        }
+        return out;
       }
-      return out;
+      if (value && typeof value === "object") return convertGroup(lang, value);
+      return value;
     };
 
     const rows = (lang, beats) => {

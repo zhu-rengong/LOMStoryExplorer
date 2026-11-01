@@ -5,17 +5,18 @@ import time
 from pathlib import Path
 from typing import Any
 
-from ..config import SUPPORTED_LANGS
 from ..console import Reporter
+from ..languages import SUPPORTED_LANGS
+from .profile import (
+    HAN_RANGE,
+    HANGUL_RANGE,
+    LOCALE_MIN_MATCHES,
+    SIMPLIFIED_MARKERS,
+    TRADITIONAL_MARKERS,
+)
 from .resources import iter_text_assets
 
 _LOCALE_LINE = re.compile(r"^([A-Za-z][A-Za-z0-9_]*)/([^\r\n=]{1,160}?) = (.*)$")
-
-_TRAD = "這幾個們說為與後裡臺灣點麼樣還過對發現實當經開關無麼"
-_SIMP = "这几个们说为与后里台湾点么样还过对发现实当经开关无么"
-
-_HANGUL_LO, _HANGUL_HI = "\uac00", "\ud7a3"
-_CJK_LO, _CJK_HI = "\u4e00", "\u9fff"
 
 
 def _count_range(text: str, lo: str, hi: str) -> int:
@@ -29,7 +30,7 @@ def _count_chars(text: str, charset: str) -> int:
 def _looks_like_locale(text: str) -> bool:
     head = text[:4000]
     hits = sum(1 for line in head.splitlines() if _LOCALE_LINE.match(line))
-    return hits >= 8
+    return hits >= LOCALE_MIN_MATCHES
 
 
 def detect_language(text: str, hint: str = "") -> str | None:
@@ -38,17 +39,17 @@ def detect_language(text: str, hint: str = "") -> str | None:
         if hint.endswith(lang.replace("-", "_")) or hint.endswith(lang):
             if _looks_like_locale(text):
                 return lang
-    hangul = _count_range(text, _HANGUL_LO, _HANGUL_HI)
-    han = _count_range(text, _CJK_LO, _CJK_HI)
+    hangul = _count_range(text, *HANGUL_RANGE)
+    han = _count_range(text, *HAN_RANGE)
     if hangul > 0 and hangul >= han * 0.2:
         return "kr"
     if han == 0:
         return None
-    trad = _count_chars(text, _TRAD)
-    simp = _count_chars(text, _SIMP)
-    if trad > simp:
+    traditional = _count_chars(text, TRADITIONAL_MARKERS)
+    simplified = _count_chars(text, SIMPLIFIED_MARKERS)
+    if traditional > simplified:
         return "zh-tw"
-    if simp > trad:
+    if simplified > traditional:
         return "zh-cn"
     return None
 
@@ -88,7 +89,8 @@ def merge_tables(target: dict[str, dict[str, str]],
     return added
 
 
-def extract_locales(asset_path: Path, langs: tuple[str, ...], reporter: Reporter) -> tuple[dict[str, dict[str, dict[str, str]]], dict[str, Any]]:
+def extract_locales(asset_path: Path, langs: tuple[str, ...],
+                    reporter: Reporter) -> tuple[dict[str, dict[str, dict[str, str]]], dict[str, Any]]:
     reporter.stage(4, 4, f"locale tables: {', '.join(langs)} ({Path(asset_path).name})")
     started = time.time()
     tables: dict[str, dict[str, dict[str, str]]] = {lang: {} for lang in langs}
@@ -98,7 +100,7 @@ def extract_locales(asset_path: Path, langs: tuple[str, ...], reporter: Reporter
             stats["skipped"] += 1
             continue
         table, matched, continued = parse_locale_text(text)
-        if matched < 8:
+        if matched < LOCALE_MIN_MATCHES:
             stats["skipped"] += 1
             continue
         stats["shards"] += 1

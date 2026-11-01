@@ -3,17 +3,19 @@ from __future__ import annotations
 from collections.abc import Sequence
 from typing import Any
 
+from ..game.profile import TITLE_PLACEHOLDERS
 from ..model import (
     BranchBeat,
     ChoiceBeat,
     JumpBeat,
     LoreBeat,
     MetaBeat,
+    OptionCond,
     SayBeat,
     SceneBeat,
     TextRef,
 )
-from ..wire import (
+from ..vocab import (
     BEAT_BRANCH,
     BEAT_CHOICE,
     BEAT_JUMP,
@@ -23,49 +25,33 @@ from ..wire import (
     BEAT_SCENE,
     SAY_MODE_CODE,
 )
+from ..wire import check_to_wire
+from . import labels
 from .metrics import KINDS, WordCounter
+from .options import OptionView, decode
 
-_MENU_LABEL = {
-    "talk": "交談", "exit": "離開", "battle": "戰鬥", "combat": "交手",
-    "move": "移動", "shop": "購物", "work": "勞作", "alchemy": "煉丹",
-    "craft": "打造", "forge": "打造", "rest": "休息", "meet": "會面",
-    "train": "練功", "eat": "用膳", "event": "事件", "special": "特殊",
-    "gift": "送禮", "visit": "拜訪", "patrol": "巡邏", "watch": "觀察",
-    "help": "幫忙", "leave": "離開", "buy": "購買", "sell": "出售",
-    "cook": "烹飪", "study": "研讀", "practice": "練習", "fight": "交手",
-    "ask": "詢問", "give": "給予", "voyeur": "窺視", "pickwood": "拾柴",
-    "change": "更換", "default": "行動",
-}
-
-_DICE_SYMBOL = {"<": "＜", "<=": "≤", ">": "＞", ">=": "≥"}
-
-_TITLE_PLACEHOLDERS = {"(title)", "{title}", "title", "（title）"}
-
-_DICE_PREFIX = "骰子 "
-
-_NEED_PREFIX = "需要 "
+RICH_MARKER = "{size"
+MISSING_SAMPLE_LIMIT = 400
+LORE_SAMPLE_LIMIT = 120
 
 
-def _strip_prefix(table: dict[str, str], prefix: str) -> dict[str, str]:
-    return {key[len(prefix):]: value for key, value in table.items() if key.startswith(prefix)}
+def _cond_wire(cond: OptionCond | None) -> dict[str, Any] | None:
+    if cond is None:
+        return None
+    return {"op": cond.op, "value": cond.value}
 
 
 class Renderer:
     def __init__(self, locale: dict[str, dict[str, str]],
-                 lore_fallback: dict[str, str] | None = None) -> None:
+                 lore_fallback: dict[str, str] | None = None,
+                 used: labels.NameTables | None = None) -> None:
         self.counter = WordCounter()
+        self.locale = locale
+        self.used = used if used is not None else {}
         self.lore_fallback = lore_fallback or {}
         self.story = locale.get("Story", {})
         self.chars = locale.get("Character", {})
         self.titles = locale.get("CharacterTitle", {})
-        self.stats = locale.get("PlayerStat", {})
-        self.flags = locale.get("Flag", {})
-        self.dice = locale.get("DiceHeader", {})
-        self.books = _strip_prefix(locale.get("Book", {}), "Name/")
-        self.miscs = _strip_prefix(locale.get("Misc", {}), "Name/")
-        self.specials = _strip_prefix(locale.get("Special", {}), "Name/")
-        self.talents = _strip_prefix(locale.get("PlayerTalent", {}), "Name/")
-        self.library = _strip_prefix(locale.get("Library", {}), "Title/")
         self.legend = locale.get("LegendInfo", {})
         self.missing: list[str] = []
         self.missing_count = 0
@@ -84,71 +70,25 @@ class Renderer:
         text = self.story.get(key)
         if text is None:
             self.missing_count += 1
-            if len(self.missing) < 400:
+            if len(self.missing) < MISSING_SAMPLE_LIMIT:
                 self.missing.append(key)
         return text
-
-    def _menu_label(self, name: str) -> str:
-        return _MENU_LABEL.get(name.lower(), name)
 
     def _ref(self, ref: TextRef | None) -> str:
         if ref is None:
             return ""
         if ref.keyed:
             text = self._story_text(ref.value)
-            return text if text is not None else f"⚠{ref.value}"
+            return text if text is not None else ref.value
         text = self.story.get(ref.value)
         if text is not None:
             return text
         return ref.value
 
-    def _option(self, ref: TextRef) -> tuple[str, str]:
+    def _option(self, ref: TextRef) -> OptionView:
         if ref.keyed:
-            return self._ref(ref), ""
-        value = ref.value
-        text = self.story.get(value)
-        if text is not None:
-            return text, ""
-        if "+" in value and len(value) <= 120:
-            return self._composite_option(value)
-        if "|" in value:
-            head, tail = value.split("|", 1)
-            hit = self.story.get(head)
-            return (hit or head) + f"（{tail}）", ""
-        return value, ""
-
-    def _composite_option(self, value: str) -> tuple[str, str]:
-        parts = value.split("+")
-        label = self._menu_label(parts[0])
-        title = ""
-        for part in parts[1:]:
-            hit = self.story.get(part)
-            if hit:
-                title = hit
-                break
-        if not title:
-            title = "｜".join(parts[1:])
-        shown = f"{label}｜{title}" if title else label
-        need: list[str] = []
-        if len(parts) >= 4:
-            try:
-                action, contribution = int(parts[2]), int(parts[3])
-            except ValueError:
-                action = contribution = 0
-            if action > 0:
-                need.append("行動次數" + f" ≥ {action}")
-            if contribution > 0:
-                need.append("貢獻度" + f" ≥ {contribution}")
-        return shown, (_NEED_PREFIX + " · ".join(need)) if need else ""
-
-    def _dice_note(self, cond: str) -> str:
-        cond = (cond or "").strip()
-        if not cond:
-            return ""
-        for token in ("<=", ">=", "<", ">"):
-            if cond.startswith(token):
-                return _DICE_PREFIX + _DICE_SYMBOL[token] + " " + cond[len(token):].strip()
-        return _DICE_PREFIX + cond
+            return OptionView(self._ref(ref))
+        return decode(ref.value, self.story)
 
     def _lock_text(self, ref: TextRef | None) -> str:
         if ref is None:
@@ -162,17 +102,6 @@ class Renderer:
         self.locked_count += 1
         return text
 
-    def char_name(self, char_id: str) -> str:
-        if not char_id:
-            return ""
-        name = self.chars.get(char_id)
-        title = self.titles.get(char_id)
-        if title and title.strip().lower() in _TITLE_PLACEHOLDERS:
-            title = None
-        if name and title:
-            return f"{name}（{title}）"
-        return name or char_id
-
     def render(self, beats: Sequence[object]) -> list[list[Any]]:
         out: list[list[Any]] = []
         for beat in beats:
@@ -181,22 +110,26 @@ class Renderer:
             elif isinstance(beat, ChoiceBeat):
                 out.append(self._choice(beat))
             elif isinstance(beat, BranchBeat):
-                row: list[Any] = [BEAT_BRANCH, beat.label, self.render(beat.beats), beat.kind]
-                if beat.group:
-                    row.append(beat.group)
-                out.append(row)
+                out.append([
+                    BEAT_BRANCH,
+                    check_to_wire(beat.check),
+                    beat.cond,
+                    beat.text,
+                    self.render(beat.beats),
+                    beat.group,
+                ])
             elif isinstance(beat, JumpBeat):
                 out.append([BEAT_JUMP, beat.target or "", beat.label or ""])
             elif isinstance(beat, MetaBeat):
                 if beat.kind == "story":
                     self._lore(beat.key, out)
                     continue
-                label = self._meta(beat)
-                if label:
-                    if beat.kind == "dice":
-                        out.append([BEAT_META, label, "dice", beat.key])
-                    else:
-                        out.append([BEAT_META, label])
+                if beat.kind == "dice":
+                    labels.resolve_check(beat.key, self.locale, self.used)
+                elif beat.kind != "mission":
+                    labels.resolve(labels.META_NAME_KINDS.get(beat.kind, beat.kind),
+                                   beat.key, "", self.locale, self.used)
+                out.append([BEAT_META, beat.kind, beat.key, beat.value])
             elif isinstance(beat, LoreBeat):
                 self._lore(beat.key, out)
             elif isinstance(beat, SceneBeat):
@@ -208,10 +141,10 @@ class Renderer:
         if speaker:
             self.character_ids.add(speaker)
         text = self._ref(beat.ref)
-        if "{size" in text:
+        if RICH_MARKER in text:
             self.rich_count += 1
         code = SAY_MODE_CODE.get(beat.mode, 0)
-        if code == 2:
+        if code == SAY_MODE_CODE["think"]:
             self.think_count += 1
             if speaker:
                 self.think_named_count += 1
@@ -221,13 +154,22 @@ class Renderer:
     def _choice(self, beat: ChoiceBeat) -> list[Any]:
         branches: list[list[Any]] = []
         for option in beat.options:
-            text, need = self._option(option.ref)
-            if "{size" in text:
+            view = self._option(option.ref)
+            text = view.text
+            if RICH_MARKER in text:
                 self.rich_count += 1
-            notes = [note for note in (self._dice_note(option.note or ""), need) if note]
             self.option_count += 1
             self.counter.add("option", text)
-            branches.append([text, " · ".join(notes), self.render(option.beats), self._lock_text(option.lock)])
+            detail = None
+            if view.action or view.need:
+                detail = {"action": view.action, "need": [dict(item) for item in view.need]}
+            branches.append([
+                text,
+                _cond_wire(view.cond or option.cond),
+                self.render(option.beats),
+                self._lock_text(option.lock),
+                detail,
+            ])
         return [BEAT_CHOICE, branches]
 
     def _lore(self, key: str, out: list[list[Any]]) -> None:
@@ -239,54 +181,12 @@ class Renderer:
                 self.lore_fallback_count += 1
             else:
                 self.lore_missing_count += 1
-                if len(self.lore_missing) < 120:
+                if len(self.lore_missing) < LORE_SAMPLE_LIMIT:
                     self.lore_missing.append(key)
                 return
         self.counter.add("lore", text)
         self.lore_count += 1
         out.append([BEAT_LORE, text])
-
-    def _meta(self, beat: MetaBeat) -> str | None:
-        kind = beat.kind
-        key = beat.key
-        value = beat.value
-        if kind == "stat":
-            name = self.stats.get(key, key)
-            return f"{name} {value:+d}" if isinstance(value, int) and value else name
-        if kind == "rel":
-            name = self.chars.get(key, key)
-            word = "好感"
-            return f"{name} {word} {value:+d}" if isinstance(value, int) and value else f"{name} {word}"
-        if kind == "flag":
-            name = self.flags.get(key, key)
-            return f"旗標「{name}」= {value}"
-        if kind == "setstat":
-            return f"{self.stats.get(key, key)} = {value}"
-        if kind == "setrel":
-            return f"{self.chars.get(key, key)} 好感 = {value}"
-        if kind == "book":
-            return self._gain(f"《{self.books.get(key, key)}》", value)
-        if kind == "misc":
-            return self._gain(f"「{self.miscs.get(key, key)}」", value)
-        if kind == "special":
-            return self._gain(f"「{self.specials.get(key, key)}」", value)
-        if kind == "talent":
-            name = self.talents.get(key, key)
-            return f"習得天賦「{name}」Lv.{value}"
-        if kind == "library":
-            return f"解鎖圖鑑「{self.library.get(key, key)}」"
-        if kind == "mission":
-            return f"觸發任務「{key}」"
-        if kind == "dice":
-            return f"骰子判定「{self.dice.get(key, key)}」"
-        return None
-
-    def _gain(self, label: str, count: Any) -> str:
-        if isinstance(count, int) and count < 0:
-            return f"失去{label}"
-        if isinstance(count, int) and count > 1:
-            return f"獲得{label}×{count}"
-        return f"獲得{label}"
 
     def edge_label(self, raw: str) -> str:
         if not raw:
@@ -299,4 +199,15 @@ class Renderer:
         return " / ".join(out)
 
     def character_table(self) -> dict[str, str]:
-        return {cid: self.char_name(cid) for cid in sorted(self.character_ids)}
+        return {cid: self.chars.get(cid, cid) for cid in sorted(self.character_ids)}
+
+    def title_table(self) -> dict[str, str]:
+        out: dict[str, str] = {}
+        for cid in sorted(self.character_ids):
+            title = self.titles.get(cid)
+            if not title:
+                continue
+            if title.strip().lower() in TITLE_PLACEHOLDERS:
+                continue
+            out[cid] = title
+        return out

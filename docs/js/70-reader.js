@@ -135,7 +135,7 @@
       };
 
       const buildContext = () => ({
-        lookup: { open: panels.openLookup, targetOf: panels.lookupTargetOf },
+        lookup: { open: panels.openLookup },
         preview: { bind: panels.bindBranchPreview, hide: panels.hideBranchPreview },
         navigate: (id) => store.select(id, { history: true }),
       });
@@ -196,7 +196,7 @@
 
         if (!rows || rows.length === 0) {
           const empty = ui.el("div", "empty-state");
-          empty.appendChild(ui.el("span", "brush", "空"));
+          empty.appendChild(ui.el("span", "brush", i18n.t("brushGlyph")));
           empty.appendChild(ui.el("h3", null, i18n.t("noBeatsTitle")));
           empty.appendChild(ui.el("p", null, node.flags.empty ? i18n.t("noBeatsEmpty") : i18n.t("noBeatsOther")));
           content.appendChild(empty);

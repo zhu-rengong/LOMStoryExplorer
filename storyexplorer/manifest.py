@@ -1,33 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-from .cache import read_json, write_json
-
-
-@dataclass(frozen=True)
-class ExtractManifest:
-    schema: int
-    generated_at: str
-    game: str
-    langs: list[str]
-    assets: dict[str, dict[str, Any]]
-    script_count: int
-    script_stats: dict[str, Any]
-    anomalies: dict[str, Any]
-    locale_keys: dict[str, int]
-    locale_stats: dict[str, Any]
-    checkpoint_stats: dict[str, Any]
-    entry_stats: dict[str, Any]
-    lore_stats: dict[str, Any]
-    checkpoint_version: int
-    entry_version: int
-    lore_version: int
-
-    def to_json(self) -> dict[str, Any]:
-        return asdict(self)
+from .jsonio import read_json, write_json
 
 
 def load_manifest(path: Path) -> dict[str, Any]:
@@ -35,8 +11,8 @@ def load_manifest(path: Path) -> dict[str, Any]:
     return payload if isinstance(payload, dict) else {}
 
 
-def save_manifest(path: Path, manifest: ExtractManifest) -> None:
-    write_json(path, manifest.to_json(), indent=2)
+def save_manifest(path: Path, manifest: dict[str, Any]) -> None:
+    write_json(path, manifest, indent=2)
 
 
 def manifest_matches(manifest: dict[str, Any], assets: dict[str, dict[str, Any]],

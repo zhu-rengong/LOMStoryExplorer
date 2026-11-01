@@ -13,8 +13,8 @@
     lore: "typeLore",
   };
 
-  SR.define("stats", ["store", "graph", "i18n", "overlay", "ui"],
-    ({ store, graph, i18n, overlay, ui }) => {
+  SR.define("stats", ["data", "store", "graph", "i18n", "overlay", "ui"],
+    ({ data, store, graph, i18n, overlay, ui }) => {
       const $ = ui.$;
 
       let dataPromise = null;
@@ -24,16 +24,17 @@
       let lastFocus = null;
 
       const ensureData = () => {
-        if (window.SR_WORDCOUNT) return Promise.resolve(window.SR_WORDCOUNT);
+        const current = data.wordcount();
+        if (Object.keys(current).length) return Promise.resolve(current);
         if (dataPromise) return dataPromise;
-        dataPromise = ui.loadScript("data/wordcount.js")
-          .then(() => window.SR_WORDCOUNT || null)
+        dataPromise = ui.loadScript(data.asset("wordcount"))
+          .then(() => data.wordcount())
           .catch(() => null);
         return dataPromise;
       };
 
       const pack = () => {
-        const all = window.SR_WORDCOUNT;
+        const all = data.wordcount();
         if (!all || !all.langs) return null;
         return all.langs[store.textLang()] || all.langs[Object.keys(all.langs)[0]] || null;
       };

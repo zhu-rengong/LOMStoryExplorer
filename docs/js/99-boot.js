@@ -1,9 +1,13 @@
 (() => {
   "use strict";
 
-  const META = window.SR_I18N_META || {};
+  const SR = window.SR;
 
-  const DICT = window.SR_I18N || {};
+  const globals = SR.require("globals");
+
+  const META = globals.languageMeta();
+
+  const DICT = globals.dictionary();
 
   const langOf = () => {
     const html = String(document.documentElement.lang || "").toLowerCase();

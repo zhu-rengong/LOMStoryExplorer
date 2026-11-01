@@ -3,9 +3,9 @@ from __future__ import annotations
 import argparse
 
 from ..build.pipeline import run_build
-from ..config import DEFAULT_LANG, DEFAULT_LANGS
 from ..console import Reporter
-from ..wire import TEXT_MODE_FULL, TEXT_MODE_SHARDS
+from ..languages import DEFAULT_LANG, DEFAULT_LANGS
+from ..vocab import TEXT_MODE_FULL, TEXT_MODE_SHARDS
 from .common import EXIT_DATA, EXIT_OK, EXIT_USAGE, split_langs
 
 

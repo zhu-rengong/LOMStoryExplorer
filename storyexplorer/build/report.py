@@ -3,8 +3,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from ..cache import write_json
-from ..config import SCHEMA_VERSION
+from ..jsonio import write_json
+from ..versions import SCHEMA_VERSION
 
 
 def compose(*, generated: str, scripts: int, edge_counts: dict[str, int],

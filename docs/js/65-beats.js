@@ -8,10 +8,14 @@
   const RICH_MAX = 1.9;
   const RICH_TAG = /\{([^{}]*)\}/g;
   const SAY_CLASS = ["", "narration", "think"];
-  const ENTRY_KEYS = { combat: "entryCombat", free: "entryFree" };
+  const PREVIEW_LINES = 6;
+  const PREVIEW_CHARS = 220;
+  const PREVIEW_BRANCH_LINES = 3;
+  const PREVIEW_TOTAL_LINES = 6;
 
-  SR.define("beats", ["schema", "graph", "store", "i18n", "ui", "text", "condexpr", "checkpoints"],
-    ({ schema, graph, store, i18n, ui, text, condexpr, checkpoints }) => {
+  SR.define("beats",
+    ["beat", "graph", "store", "i18n", "ui", "text", "condexpr", "condtext", "checkpoints", "names"],
+    ({ beat, graph, store, i18n, ui, text, condexpr, condtext, checkpoints, names }) => {
       const clampScale = (value) => {
         if (!Number.isFinite(value) || value <= 0) return 1;
         return ui.clamp(value, RICH_MIN, RICH_MAX);
@@ -52,17 +56,16 @@
         return parent;
       };
 
-      const stripRich = schema.stripRich;
-
       const speakerName = (id) => {
         if (!id) return "";
-        return text.characters(store.textLang())[id] || id;
+        const name = names.speaker(id);
+        const title = names.title(id);
+        return title ? i18n.t("nameWithTitle", { name, title }) : name;
       };
 
       const entryLabel = (node) => {
         if (!node || !node.entry) return "";
-        const key = ENTRY_KEYS[node.entry];
-        return key ? i18n.t(key) : "";
+        return i18n.t(`entry.${node.entry}`, { defaultValue: "" });
       };
 
       const entryBadge = (node) => {
@@ -73,11 +76,6 @@
           label);
         badge.title = i18n.t("entrySourceTitle", { name: label });
         return badge;
-      };
-
-      const extractKey = (value) => {
-        const match = /「([^」]{2,})」/.exec(value || "");
-        return match ? match[1] : "";
       };
 
       const loreBlock = (value) => {
@@ -91,15 +89,13 @@
         return box;
       };
 
-      const upgradeBranchCond = (cond, label, kind, ctx) => {
-        if (!cond || !label) return;
-        if (kind !== "switch" && kind !== "condition" && kind !== "dice") return;
-        const key = extractKey(label);
-        if (!key) return;
-        const result = condexpr.resultOf(label);
+      const upgradeBranchCond = (cond, data, ctx) => {
+        if (!data.check || !data.check.key) return;
+        const kind = data.check.kind;
+        const key = data.check.key;
         checkpoints.ensure(key).then(() => {
           if (!cond.isConnected) return;
-          const expr = condexpr.pick(kind, key, result);
+          const expr = condexpr.pick(data.check);
           if (expr) {
             cond.classList.add("is-expr");
             cond.replaceChildren(condexpr.render(expr, {
@@ -109,20 +105,20 @@
             cond.title = condexpr.label(expr);
             return;
           }
-          const missed = condexpr.fallback(kind, key, result);
+          const missed = condexpr.fallback(data.check);
           if (!missed) return;
           cond.classList.add("is-expr", "is-fallback");
           cond.replaceChildren(ui.el("span", "cx-fallback", i18n.t("lookupCondFallback")));
           const excluded = missed.excluded.map(condexpr.label).filter(Boolean);
-          const hint = [label, i18n.t("cxFallbackHint", { n: missed.n })];
-          if (excluded.length) hint.push(excluded.join("；"));
+          const hint = [cond.title, i18n.t("cxFallbackHint", { n: missed.n })];
+          if (excluded.length) hint.push(excluded.join(i18n.t("listJoin")));
           cond.title = hint.join("\n");
         });
       };
 
-      const renderChoice = (beat, ctx) => {
+      const renderChoice = (row, ctx) => {
         const box = ui.el("div", "choice");
-        schema.choices(beat).forEach((option, index) => {
+        beat.choice(row).forEach((option, index) => {
           const wrapper = ui.el("div", "option");
           const button = ui.el("button", "option-head row");
           button.type = "button";
@@ -131,13 +127,18 @@
 
           const main = ui.el("span", "option-main");
           const textEl = ui.el("span", "option-text");
-          appendRich(textEl, option.text);
+          appendRich(textEl, condtext.optionHead(option.text, option.detail));
           main.appendChild(textEl);
 
-          if (option.lock || option.note) {
+          const condText = condtext.optionCond(option.cond);
+          const needText = condtext.needText(option.detail);
+          if (option.lock || condText || needText) {
             const badges = ui.el("span", "option-badges");
-            if (option.lock) badges.appendChild(ui.el("span", "badge badge-danger", `🔒 ${option.lock}`));
-            if (option.note) badges.appendChild(ui.el("span", "badge", option.note));
+            if (option.lock) {
+              badges.appendChild(ui.el("span", "badge badge-danger", `🔒 ${option.lock}`));
+            }
+            if (condText) badges.appendChild(ui.el("span", "badge", condText));
+            if (needText) badges.appendChild(ui.el("span", "badge", needText));
             main.appendChild(badges);
           }
           button.appendChild(main);
@@ -155,19 +156,25 @@
         return box;
       };
 
-      const renderBranch = (beat, ctx) => {
-        const data = schema.branch(beat);
+      const branchLabel = (data) => {
+        const fromCond = condtext.cond(data.cond);
+        return fromCond || data.text || "";
+      };
+
+      const renderBranch = (row, ctx) => {
+        const data = beat.branch(row);
         const box = ui.el("div", "branch");
         const body = ui.el("div", "branch-body");
         body.appendChild(renderBeats(data.beats, ctx));
         const empty = !body.childNodes.length;
         if (empty) box.classList.add("is-empty");
 
+        const label = branchLabel(data);
         const head = ui.el("div", empty ? "branch-head" : "branch-head row row-sm");
-        const cond = ui.el("span", "cond", data.label);
-        if (data.label) cond.title = data.label;
+        const cond = ui.el("span", "cond", label);
+        if (label) cond.title = label;
         head.appendChild(cond);
-        upgradeBranchCond(cond, data.label, data.kind, empty ? { lookup: null } : ctx);
+        upgradeBranchCond(cond, data, empty ? { lookup: null } : ctx);
 
         if (empty) {
           const hint = i18n.t("previewEmpty");
@@ -183,10 +190,8 @@
         head.tabIndex = 0;
         ui.setExpanded(head, false);
 
-        const target = ctx.lookup && ctx.lookup.targetOf
-          ? ctx.lookup.targetOf(extractKey(data.label) || data.label)
-          : null;
-        if (target) {
+        const target = data.check ? { kind: "check", key: data.check.key } : null;
+        if (target && ctx.lookup) {
           const lookupBtn = ui.el("button", "cond-lookup btn btn-icon");
           lookupBtn.type = "button";
           lookupBtn.title = i18n.t("condLookup");
@@ -194,9 +199,7 @@
           lookupBtn.appendChild(ui.svg("i-search"));
           lookupBtn.addEventListener("click", (event) => {
             event.stopPropagation();
-            const method = ["switch", "dice", "condition", "position"].indexOf(data.kind) >= 0
-              ? data.kind : "";
-            ctx.lookup.open(target.kind, target.key, lookupBtn, method);
+            ctx.lookup.open(target.kind, target.key, lookupBtn, data.check.kind);
           });
           head.appendChild(lookupBtn);
         }
@@ -214,7 +217,7 @@
           }
         });
         if (ctx.preview) {
-          ctx.preview.bind(head, box, () => ({ title: data.label, beats: data.beats }));
+          ctx.preview.bind(head, box, () => ({ title: label, beats: data.beats }));
         }
 
         box.appendChild(head);
@@ -222,26 +225,27 @@
         return box;
       };
 
-      const renderScene = (beat) => {
-        const data = schema.scene(beat);
-        const row = ui.el("div", "scene-switch");
-        row.appendChild(ui.el("span", "scene-label", i18n.t("sceneSwitch")));
-        if (data.name) row.appendChild(ui.el("span", "scene-name", data.name));
-        if (data.key) row.appendChild(ui.el("span", "scene-key", data.key));
+      const renderScene = (row) => {
+        const data = beat.scene(row);
+        const line = ui.el("div", "scene-switch");
+        line.appendChild(ui.el("span", "scene-label", i18n.t("sceneSwitch")));
+        if (data.name) line.appendChild(ui.el("span", "scene-name", data.name));
+        if (data.key) line.appendChild(ui.el("span", "scene-key", data.key));
         if (data.next) {
-          row.appendChild(ui.el("span", "scene-arrow", "→"));
-          row.appendChild(ui.el("span", "scene-next", data.next));
+          line.appendChild(ui.el("span", "scene-arrow", "→"));
+          line.appendChild(ui.el("span", "scene-next", data.next));
         }
-        return row;
+        return line;
       };
 
-      const renderJump = (beat, ctx) => {
-        const data = schema.jump(beat);
+      const renderJump = (row, ctx) => {
+        const data = beat.jump(row);
         if (!data.target) {
           return ui.el("span", "jump dynamic", `▷ ${data.label || i18n.t("jumpDynamic")}`);
         }
         if (!graph.nodeById.has(data.target)) {
-          return ui.el("span", "jump dynamic", `▷ ${data.target}（${i18n.t("jumpMissing")}）`);
+          const suffix = i18n.t("wrap", { text: i18n.t("jumpMissing") });
+          return ui.el("span", "jump dynamic", `▷ ${data.target}${suffix}`);
         }
         const button = ui.el("button", "jump btn btn-sm");
         button.type = "button";
@@ -267,15 +271,11 @@
           const group = ui.el("div", "meta-group");
           const chips = ui.el("div", "meta-chips");
           metaBuffer.forEach((meta) => {
-            const value = meta.text;
-            let target = null;
-            if (ctx.lookup) {
-              if (meta.method === "dice" && meta.key) {
-                target = { kind: "check", key: meta.key };
-              } else if (ctx.lookup.targetOf) {
-                target = ctx.lookup.targetOf(extractKey(value) || value);
-              }
-            }
+            const value = condtext.meta(meta.kind, meta.key, meta.value);
+            if (!value) return;
+            const target = meta.kind === "dice"
+              ? (meta.key ? { kind: "check", key: meta.key } : null)
+              : condtext.metaTarget(meta.kind, meta.key);
             const chip = ui.el(target ? "button" : "span",
               target ? "btn btn-sm meta-action" : "chip-stat chip chip-sm", value);
             if (target) {
@@ -283,14 +283,14 @@
               chip.setAttribute("aria-haspopup", "dialog");
             }
             if (value.length > 24) chip.title = value;
-            if (target) {
+            if (target && ctx.lookup) {
               const open = (event) => {
                 event.stopPropagation();
-                ctx.lookup.open(target.kind, target.key, chip, meta.method);
+                ctx.lookup.open(target.kind, target.key, chip, meta.kind);
               };
               chip.addEventListener("click", open);
             }
-            if (target && meta.method === "dice") diceButtons.push(chip);
+            if (target && meta.kind === "dice") diceButtons.push(chip);
             else chips.appendChild(chip);
           });
           metaBuffer = [];
@@ -322,31 +322,28 @@
           frag.appendChild(group);
         };
 
-        for (const beat of rows || []) {
-          if (!Array.isArray(beat) || !beat.length) continue;
-          const tag = beat[0];
+        for (const row of rows || []) {
+          if (!Array.isArray(row) || !row.length) continue;
 
-          if (tag === "br") {
+          if (beat.is(row, "branch")) {
             flushMeta();
-            const group = typeof beat[4] === "number" ? beat[4] : 0;
+            const group = beat.branch(row).group;
             if (branchBuffer.length && group !== branchGroup) flushBranches();
             branchGroup = group;
-            branchBuffer.push(renderBranch(beat, ctx));
+            branchBuffer.push(renderBranch(row, ctx));
             continue;
           }
 
           flushBranches();
 
-          if (tag === "m") {
-            const meta = schema.metaBeat(beat);
-            meta.text = stripRich(meta.text);
-            metaBuffer.push(meta);
+          if (beat.is(row, "meta")) {
+            metaBuffer.push(beat.meta(row));
             continue;
           }
           flushMeta();
 
-          if (tag === "c") {
-            const choice = renderChoice(beat, ctx);
+          if (beat.is(row, "choice")) {
+            const choice = renderChoice(row, ctx);
             if (diceButtons.length) {
               const dice = document.createDocumentFragment();
               diceButtons.forEach((chip) => dice.appendChild(chip));
@@ -358,18 +355,18 @@
           }
           flushDice();
 
-          if (tag === "lore") {
-            frag.appendChild(loreBlock(stripRich(beat[1])));
+          if (beat.is(row, "lore")) {
+            frag.appendChild(loreBlock(beat.stripRich(beat.lore(row))));
             continue;
           }
 
-          if (tag === "sc") {
-            frag.appendChild(renderScene(beat));
+          if (beat.is(row, "scene")) {
+            frag.appendChild(renderScene(row));
             continue;
           }
 
-          if (tag === "s") {
-            const data = schema.say(beat);
+          if (beat.is(row, "say")) {
+            const data = beat.say(row);
             const wrap = ui.el("div", `say${data.mode !== "dialog" ? ` ${SAY_CLASS[data.mode === "think" ? 2 : 1]}` : ""}`);
             if (data.speaker) {
               const who = ui.el("span", "who", speakerName(data.speaker));
@@ -385,8 +382,8 @@
             appendRich(what, data.text);
             wrap.appendChild(what);
             frag.appendChild(wrap);
-          } else if (tag === "j") {
-            frag.appendChild(renderJump(beat, ctx));
+          } else if (beat.is(row, "jump")) {
+            frag.appendChild(renderJump(row, ctx));
           }
         }
         flushMeta();
@@ -396,13 +393,13 @@
       };
 
       const beatsPreview = (rows, budget) => {
-        const limits = budget || { lines: 6, chars: 220 };
+        const limits = budget || { lines: PREVIEW_LINES, chars: PREVIEW_CHARS };
         const out = { lines: [], more: 0 };
         let used = 0;
         let stop = false;
 
         const push = (kind, value, who) => {
-          const clean = stripRich(String(value == null ? "" : value)).replace(/\s+/g, " ").trim();
+          const clean = beat.stripRich(String(value == null ? "" : value)).replace(/\s+/g, " ").trim();
           if (!clean) return;
           if (stop || out.lines.length >= limits.lines || used + clean.length > limits.chars) {
             out.more++;
@@ -414,25 +411,27 @@
         };
 
         const walk = (list) => {
-          for (const beat of list || []) {
-            if (!Array.isArray(beat)) continue;
-            if (beat[0] === "s") {
-              const data = schema.say(beat);
+          for (const row of list || []) {
+            if (!Array.isArray(row)) continue;
+            if (beat.is(row, "say")) {
+              const data = beat.say(row);
               push(data.mode === "narration" ? "narration" : data.mode === "think" ? "think" : "say",
                 data.text, data.mode === "dialog" && data.speaker ? speakerName(data.speaker) : "");
-            } else if (beat[0] === "m") {
-              push("meta", beat[1]);
-            } else if (beat[0] === "j") {
-              push("jump", `→ ${beat[1] || ""}`);
-            } else if (beat[0] === "sc") {
-              const data = schema.scene(beat);
+            } else if (beat.is(row, "meta")) {
+              const data = beat.meta(row);
+              push("meta", condtext.meta(data.kind, data.key, data.value));
+            } else if (beat.is(row, "jump")) {
+              push("jump", `→ ${beat.jump(row).target || ""}`);
+            } else if (beat.is(row, "scene")) {
+              const data = beat.scene(row);
               push("jump", `↩ ${data.name}${data.next ? ` → ${data.next}` : ""}`);
-            } else if (beat[0] === "c") {
-              const options = schema.choices(beat);
-              const first = options[0] && options[0].text ? `：${options[0].text}` : "";
+            } else if (beat.is(row, "choice")) {
+              const options = beat.choice(row);
+              const first = options[0] && options[0].text
+                ? i18n.t("colonPrefix", { text: options[0].text }) : "";
               push("choice", i18n.t("previewChoice", { n: options.length }) + first);
-            } else if (beat[0] === "br") {
-              walk(schema.branch(beat).beats);
+            } else if (beat.is(row, "branch")) {
+              walk(beat.branch(row).beats);
             }
           }
         };
@@ -444,17 +443,17 @@
       const previewOfBranches = (list) => {
         let lines = [];
         let hidden = 0;
-        (list || []).slice(0, 3).forEach((beat) => {
-          const data = schema.branch(beat);
-          const label = stripRich(data.label).trim();
+        (list || []).slice(0, PREVIEW_BRANCH_LINES).forEach((row) => {
+          const data = beat.branch(row);
+          const label = branchLabel(data).trim();
           if (label) lines.push({ kind: "cond", text: label });
           const sub = beatsPreview(data.beats, { lines: 1, chars: 60 });
           sub.lines.forEach((line) => lines.push(line));
         });
-        if ((list || []).length > 3) hidden = list.length - 3;
-        if (lines.length > 6) {
-          hidden += lines.length - 6;
-          lines = lines.slice(0, 6);
+        if ((list || []).length > PREVIEW_BRANCH_LINES) hidden = list.length - PREVIEW_BRANCH_LINES;
+        if (lines.length > PREVIEW_TOTAL_LINES) {
+          hidden += lines.length - PREVIEW_TOTAL_LINES;
+          lines = lines.slice(0, PREVIEW_TOTAL_LINES);
         }
         return { lines, more: hidden };
       };
@@ -463,7 +462,10 @@
         if (!node) return "";
         const rows = text.story(store.textLang(), node.id);
         if (!rows) return "";
-        return schema.firstLine(rows, speakerName);
+        const first = beat.firstSay(rows);
+        if (!first) return "";
+        if (!first.speaker) return first.text;
+        return i18n.t("lineSpeaker", { name: speakerName(first.speaker), text: first.text });
       };
 
       return {

@@ -1,0 +1,8 @@
+from __future__ import annotations
+
+TEXT_SOURCE_LANG = "zh-tw"
+DERIVED_LANGS = ("zh-cn",)
+LOCALE_LANGS = (TEXT_SOURCE_LANG, *DERIVED_LANGS)
+DEFAULT_LANGS = (TEXT_SOURCE_LANG,)
+DEFAULT_LANG = TEXT_SOURCE_LANG
+SUPPORTED_LANGS = ("zh-tw", "zh-cn", "kr")
