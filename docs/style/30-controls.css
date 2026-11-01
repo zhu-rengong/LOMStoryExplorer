@@ -490,6 +490,8 @@
   text-align: left;
 }
 
+#searchResults .drop-empty { padding: var(--sp-2) var(--sp-3); }
+
 .panel-head {
   display: flex;
   align-items: center;

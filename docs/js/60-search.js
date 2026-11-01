@@ -4,60 +4,73 @@
   const SR = window.SR;
 
   SR.define("search", ["schema", "graph", "store", "text", "ui"], ({ schema, graph, store, text, ui }) => {
-    const TOTAL_LIMIT = 24;
+    const empty = () => ({ lang: "", seen: new Set(), entries: [], sorted: true });
 
-    let index = { lang: "", count: 0, entries: [] };
+    let index = empty();
 
     const passes = (nodeIndex) => graph.passes(nodeIndex, store.state.filterSet);
 
     const buildIndex = () => {
       const lang = store.textLang();
+      if (index.lang !== lang) index = empty();
+      index.lang = lang;
       const pack = text.pack(lang);
       const stories = (pack && pack.stories) || {};
       const ids = Object.keys(stories);
-      if (index.lang === lang && index.count === ids.length) return index;
-      const entries = ids.map((id) => ({ id, text: schema.textOf(stories[id]).toLowerCase() }));
-      index = { lang, count: ids.length, entries };
+      let added = false;
+      for (const id of ids) {
+        if (index.seen.has(id)) continue;
+        index.seen.add(id);
+        added = true;
+        const nodeIndex = graph.indexById.get(id);
+        const node = nodeIndex === undefined ? null : graph.nodes[nodeIndex];
+        index.entries.push({
+          id,
+          order: nodeIndex === undefined ? -1 : nodeIndex,
+          chapter: node ? graph.chapterOf(node) : null,
+          text: schema.textOf(stories[id]).toLowerCase(),
+        });
+      }
+      if (added) index.sorted = false;
+      if (!index.sorted) {
+        index.entries.sort((a, b) => a.order - b.order);
+        index.sorted = true;
+      }
       return index;
     };
 
     const invalidate = () => {
-      index = { lang: "", count: 0, entries: [] };
+      index = empty();
     };
 
     const search = (query) => {
       const lower = ui.normalizeQuery(query);
-      if (lower.length < 2) return [];
-      const hits = [];
+      const result = { hits: [], total: 0, outside: 0 };
+      if (lower.length < 2) return result;
       const data = buildIndex();
+      const hits = result.hits;
+      let outside = 0;
       for (const entry of data.entries) {
-        if (hits.length >= TOTAL_LIMIT) break;
         const position = entry.text.indexOf(lower);
         if (position < 0) continue;
-        const nodeIndex = graph.indexById.get(entry.id);
-        if (nodeIndex === undefined || !passes(nodeIndex)) continue;
+        if (entry.order < 0) continue;
+        if (!passes(entry.order)) {
+          outside++;
+          continue;
+        }
         hits.push({
           id: entry.id,
-          chapter: graph.chapterOf(graph.nodes[nodeIndex]),
+          index: entry.order,
+          chapter: entry.chapter,
           snippet: entry.text.slice(Math.max(0, position - 16), position + 46),
         });
       }
-      return hits;
-    };
-
-    const countOutside = (query) => {
-      const lower = ui.normalizeQuery(query);
-      if (!lower) return 0;
-      const data = buildIndex();
-      let count = 0;
-      for (const entry of data.entries) {
-        if (entry.text.indexOf(lower) >= 0) count++;
-      }
-      return count;
+      result.total = hits.length + outside;
+      result.outside = outside;
+      return result;
     };
 
     return {
-      countOutside,
       invalidate,
       search,
     };
