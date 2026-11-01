@@ -3,8 +3,8 @@
 
   const SR = window.SR;
 
-  SR.define("settingsUi", ["store", "i18n", "settings", "overlay", "ui"],
-    ({ store, i18n, settings, overlay, ui }) => {
+  SR.define("settingsUi", ["store", "i18n", "settings", "condexpr", "overlay", "ui"],
+    ({ store, i18n, settings, condexpr, overlay, ui }) => {
       const $ = ui.$;
 
       const pickerState = { target: "", items: [], visible: [], active: 0 };
@@ -197,11 +197,20 @@
             return head;
           }
           case "option-cond":
-            return ui.el("span", "option-cond", i18n.t("previewOptionCond"));
+            return ui.el("span", "option-cond", i18n.t("oCond", { op: "≥", value: "30" }));
           case "branch-cond": {
             const branch = ui.el("div", "branch");
             const head = ui.el("div", "branch-head row");
-            head.appendChild(ui.el("span", "cond", i18n.t("previewBranchCond")));
+            const expr = {
+              tag: "compare",
+              op: "=",
+              left: { tag: "check", kind: "switch", key: "Ch_1_1_001" },
+              right: { tag: "const", value: "1" },
+            };
+            const cond = ui.el("span", "cond");
+            cond.appendChild(condexpr.render(expr, {}));
+            cond.title = condexpr.label(expr);
+            head.appendChild(cond);
             branch.appendChild(head);
             return branch;
           }
