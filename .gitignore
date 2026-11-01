@@ -7,6 +7,7 @@ data/report.json
 data/checkpoints.json
 data/entries.json
 data/lore.json
+data/stats.json
 
 # 前端生成数据：build.py 输出的 graph.js / text-*.js / checkpoints-*.js / wordcount.js
 docs/data/

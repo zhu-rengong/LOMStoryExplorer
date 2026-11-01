@@ -123,6 +123,13 @@ NAME_SPECS: dict[str, NameSpec] = {
 
 DICE_NAME_KINDS: dict[int, str] = {0: VALUE_STAT, 1: VALUE_REL, 2: VALUE_TALENT, 3: VALUE_FLAG}
 
+STAT_GROUP_PREFIX = "數值_"
+
+STAT_ALIASES: dict[str, str] = {
+    "ActionCount": "action",
+    "Faction_Level": "faction",
+}
+
 STAT_FIELD_BY_KIND: dict[str, str] = {
     VALUE_STAT: "_stat",
     VALUE_REL: "_relationship",

@@ -41,9 +41,10 @@ from ..paths import (
     LUA_DIR,
     MANIFEST_PATH,
     REPORT_PATH,
+    STATS_PATH,
     WEB_DATA_DIR,
 )
-from ..versions import CHECKPOINT_SHARDS, LORE_VERSION, SCHEMA_VERSION
+from ..versions import CHECKPOINT_SHARDS, LORE_VERSION, SCHEMA_VERSION, STAT_VERSION
 from ..vocab import TEXT_MODE_FULL, TEXT_MODE_SHARDS
 from . import checkpoints as checkpoint_models
 from . import labels, load_sources
@@ -125,12 +126,38 @@ def _load_lore(reporter: Reporter) -> dict[str, str]:
     }
 
 
+def _load_stats(reporter: Reporter) -> dict[str, str]:
+    payload = read_json(STATS_PATH)
+    if not isinstance(payload, dict):
+        reporter.warn("data/stats.json missing; stat names fall back to the locale table")
+        return {}
+    if payload.get("version") != STAT_VERSION:
+        reporter.warn(
+            f"data/stats.json version {payload.get('version')} does not match {STAT_VERSION};"
+            " rerun extract.py"
+        )
+        return {}
+    items = payload.get("items")
+    if not isinstance(items, dict):
+        return {}
+    notes: dict[str, str] = {}
+    for key, entry in items.items():
+        if not isinstance(key, str) or not isinstance(entry, dict):
+            continue
+        note = entry.get("note")
+        if isinstance(note, str) and note.strip():
+            notes[key] = note.strip()
+    reporter.info(f"stat names: {len(notes)} notes from {len(items)} assets")
+    return notes
+
+
 def render_language(lang: str, locale: dict, node_ids: list[str],
                     models: dict[str, ScriptAnalysis], chapter_of_id: dict[str, str],
                     chapters, facets: dict[str, Facets], edges: list[Edge],
-                    lore: dict[str, str] | None, used: labels.NameTables) -> LanguageRender:
+                    lore: dict[str, str] | None, used: labels.NameTables,
+                    stats: dict[str, str] | None = None) -> LanguageRender:
     started = time.time()
-    renderer = Renderer(locale, lore_fallback=lore, used=used)
+    renderer = Renderer(locale, lore_fallback=lore, used=used, stat_notes=stats)
     stories: dict[str, list] = {}
     rows: dict[str, list[list[int]]] = {}
     for sid in node_ids:
@@ -324,12 +351,12 @@ def _pack_shards(node_ids: list[str], chapter_index_map: dict[str, int], chapter
 
 
 def _emit_checkpoints(reporter: Reporter, locale: dict[str, Any],
-                      used: labels.NameTables) -> dict[str, Any]:
+                      used: labels.NameTables, stats: dict[str, str] | None = None) -> dict[str, Any]:
     blob = read_json(CHECKPOINTS_PATH)
     if not isinstance(blob, dict):
         blob = {}
     items = checkpoint_models.sanitize(blob.get("items"))
-    labels.attach(items, locale, used)
+    labels.attach(items, locale, used, stats)
     variants = sum(len(model.get("variants") or []) for model in items.values())
     parts: list[dict[str, Any]] = []
     mapping: dict[str, int] = {}
@@ -486,16 +513,17 @@ def run_build(*, langs: tuple[str, ...], default_lang: str,
     if locale is None:
         return BuildResult(False, len(node_ids), len(edges), len(chapters), {}, REPORT_PATH)
     lore = _load_lore(reporter)
+    stat_notes = _load_stats(reporter)
 
     WEB_DATA_DIR.mkdir(parents=True, exist_ok=True)
     reporter.stage(3, 4, "render")
     used_names: labels.NameTables = {}
-    checkpoints = _emit_checkpoints(reporter, locale, used_names)
+    checkpoints = _emit_checkpoints(reporter, locale, used_names, stat_notes)
     checkpoint_mapping = checkpoints["mapping"]
 
     render = render_language(
         TEXT_SOURCE_LANG, locale, node_ids, models, chapter_of_id, chapters, facets, edges,
-        lore, used_names)
+        lore, used_names, stat_notes)
     names = labels.trim(used_names)
     metrics = render.metrics
     reporter.info(

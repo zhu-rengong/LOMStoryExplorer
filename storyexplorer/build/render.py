@@ -44,10 +44,12 @@ def _cond_wire(cond: OptionCond | None) -> dict[str, Any] | None:
 class Renderer:
     def __init__(self, locale: dict[str, dict[str, str]],
                  lore_fallback: dict[str, str] | None = None,
-                 used: labels.NameTables | None = None) -> None:
+                 used: labels.NameTables | None = None,
+                 stat_notes: dict[str, str] | None = None) -> None:
         self.counter = WordCounter()
         self.locale = locale
         self.used = used if used is not None else {}
+        self.stat_notes = stat_notes or {}
         self.lore_fallback = lore_fallback or {}
         self.story = locale.get("Story", {})
         self.chars = locale.get("Character", {})
@@ -128,7 +130,7 @@ class Renderer:
                     labels.resolve_check(beat.key, self.locale, self.used)
                 elif beat.kind != "mission":
                     labels.resolve(labels.META_NAME_KINDS.get(beat.kind, beat.kind),
-                                   beat.key, "", self.locale, self.used)
+                                   beat.key, "", self.locale, self.used, self.stat_notes)
                 out.append([BEAT_META, beat.kind, beat.key, beat.value])
             elif isinstance(beat, LoreBeat):
                 self._lore(beat.key, out)

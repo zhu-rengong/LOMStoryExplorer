@@ -28,6 +28,8 @@ from .game.profile import (
 from .game.scripts import extract_scripts
 from .game.sources import collect_checkpoint_keys, collect_checkpoint_methods
 from .game.sources import scan_story_keys
+from .game.stats import extract as extract_stats
+from .game.stats import summarize as summarize_stats
 from .game.unity import available as typetree_available
 from .game.unity import fingerprint as unity_fingerprint
 from .jsonio import file_fingerprint, read_json, write_json
@@ -42,12 +44,15 @@ from .paths import (
     LORE_PATH,
     LUA_DIR,
     MANIFEST_PATH,
+    STATS_CACHE_PATH,
+    STATS_PATH,
 )
 from .versions import (
     CHECKPOINT_VERSION,
     ENTRY_VERSION,
     LORE_VERSION,
     SCHEMA_VERSION,
+    STAT_VERSION,
 )
 
 OK = "ok"
@@ -63,6 +68,7 @@ class ExtractRequest:
     checkpoints: bool = True
     entries: bool = True
     lore: bool = True
+    stats: bool = True
 
 
 @dataclass(frozen=True)
@@ -84,6 +90,10 @@ def _write_checkpoints(items: dict[str, Any], gaps: list[dict[str, Any]]) -> Non
 
 def _write_entries(payload: dict[str, Any]) -> None:
     write_json(ENTRIES_PATH, payload, indent=None)
+
+
+def _write_stats(items: dict[str, Any]) -> None:
+    write_json(STATS_PATH, {"version": STAT_VERSION, "items": items}, indent=None)
 
 
 def _extract_checkpoints(game: Path, sources: dict[str, str], force: bool,
@@ -169,6 +179,34 @@ def _extract_entries(game: Path, ids: set[str], force: bool,
     else:
         save_envelope(ENTRY_CACHE_PATH, key, payload)
     _write_entries(payload)
+    return {"enabled": True, "skipped": False, **stats}
+
+
+def _extract_stats(game: Path, force: bool, reporter: Reporter) -> dict[str, Any]:
+    finger = unity_fingerprint(asset_dir(game))
+    key = CacheKey(STAT_VERSION, finger)
+    cached = None if force else load_envelope(STATS_CACHE_PATH, key)
+    if isinstance(cached, dict):
+        items = cached.get("items") or {}
+        stats = summarize_stats(items, float(cached.get("elapsed") or 0.0))
+        reporter.info(f"stat assets: {stats['assets']} from cache")
+        _write_stats(items)
+        return {"enabled": True, "skipped": False, **stats}
+    if not typetree_available():
+        reporter.warn(
+            "TypeTreeGeneratorAPI is not installed or its .NET runtime is unavailable;"
+            " skipping stat asset extraction, stat names fall back to the locale table"
+        )
+        _write_stats({})
+        return {"enabled": True, "skipped": True, "assets": 0, "with_note": 0, "elapsed": 0.0}
+    try:
+        items, stats = extract_stats(asset_dir(game), reporter)
+    except Exception as exc:
+        reporter.warn(f"stat asset extraction failed: {type(exc).__name__}: {exc}")
+        _write_stats({})
+        return {"enabled": True, "skipped": True, "assets": 0, "with_note": 0, "elapsed": 0.0}
+    save_envelope(STATS_CACHE_PATH, key, {"items": items, "elapsed": stats["elapsed"]})
+    _write_stats(items)
     return {"enabled": True, "skipped": False, **stats}
 
 
@@ -282,7 +320,8 @@ def _manifest_payload(
     game: Path, langs: tuple[str, ...], assets: dict[str, dict[str, Any]],
     corpus, locale_keys: dict[str, int], locale_stats: dict[str, Any],
     namespaces: dict[str, int], checkpoint_stats: dict[str, Any],
-    entry_stats: dict[str, Any], lore_stats: dict[str, Any],
+    entry_stats: dict[str, Any], stat_stats: dict[str, Any],
+    lore_stats: dict[str, Any],
 ) -> dict[str, Any]:
     return {
         "schema": SCHEMA_VERSION,
@@ -298,9 +337,11 @@ def _manifest_payload(
             lang: namespaces[lang] for lang in sorted(namespaces)}},
         "checkpoint_stats": checkpoint_stats,
         "entry_stats": entry_stats,
+        "stat_stats": stat_stats,
         "lore_stats": lore_stats,
         "checkpoint_version": CHECKPOINT_VERSION,
         "entry_version": ENTRY_VERSION,
+        "stat_version": STAT_VERSION,
         "lore_version": LORE_VERSION,
     }
 
@@ -317,6 +358,9 @@ def _rebuild_conditional(game: Path, langs: tuple[str, ...], manifest: dict[str,
         "lore": request.lore and (
             not LORE_PATH.exists()
             or manifest.get("lore_version") != LORE_VERSION),
+        "stat": request.stats and (
+            not STATS_PATH.exists()
+            or manifest.get("stat_version") != STAT_VERSION),
     }
     if not any(redo.values()):
         return
@@ -326,6 +370,8 @@ def _rebuild_conditional(game: Path, langs: tuple[str, ...], manifest: dict[str,
         manifest["checkpoint_stats"] = _extract_checkpoints(game, sources, request.force, reporter)
     if redo["entries"]:
         manifest["entry_stats"] = _extract_entries(game, set(sources), request.force, reporter)
+    if redo["stat"]:
+        manifest["stat_stats"] = _extract_stats(game, request.force, reporter)
     if redo["lore"]:
         tables = {}
         for lang in langs:
@@ -337,6 +383,7 @@ def _rebuild_conditional(game: Path, langs: tuple[str, ...], manifest: dict[str,
         "checkpoints": CHECKPOINT_VERSION,
         "entries": ENTRY_VERSION,
         "lore": LORE_VERSION,
+        "stat": STAT_VERSION,
     }
     for name, version in versions.items():
         if redo[name]:
@@ -379,6 +426,8 @@ def run(request: ExtractRequest, reporter: Reporter) -> ExtractResult:
                         if request.checkpoints else {"enabled": False, "skipped": True})
     entry_stats = (_extract_entries(game, set(corpus.scripts), request.force, reporter)
                    if request.entries else {"enabled": False, "skipped": True})
+    stat_stats = (_extract_stats(game, request.force, reporter)
+                  if request.stats else {"enabled": False, "skipped": True})
 
     tables, locale_stats = extract_locales(locale_path(game), langs, reporter)
     locale_keys, namespaces = _write_locales(tables, langs, reporter)
@@ -392,10 +441,11 @@ def run(request: ExtractRequest, reporter: Reporter) -> ExtractResult:
     save_manifest(
         MANIFEST_PATH,
         _manifest_payload(game, langs, assets, corpus, locale_keys, locale_stats, namespaces,
-                          checkpoint_stats, entry_stats, lore_stats),
+                          checkpoint_stats, entry_stats, stat_stats, lore_stats),
     )
     reporter.blank()
     reporter.write(f"[done] {len(corpus.scripts)} scripts -> {LUA_DIR}")
+    reporter.write(f"[done] stat assets -> {STATS_PATH}")
     for lang in langs:
         reporter.write(f"[done] {lang} locale table -> {LOCALE_DIR / (lang + '.json')}")
     reporter.write(f"[done] manifest -> {MANIFEST_PATH}")

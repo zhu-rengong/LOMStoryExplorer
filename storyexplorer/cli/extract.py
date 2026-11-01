@@ -27,6 +27,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="also extract StoryData lore fallback texts (default on)")
     parser.add_argument("--no-lore", dest="lore", action="store_false",
                         help="skip the StoryData lore fallback extraction")
+    parser.add_argument("--stats", dest="stats", action="store_true", default=True,
+                        help="also extract stat asset names and notes (default on)")
+    parser.add_argument("--no-stats", dest="stats", action="store_false",
+                        help="skip the stat asset extraction")
     args = parser.parse_args(argv)
 
     request = ExtractRequest(
@@ -36,6 +40,7 @@ def main(argv: list[str] | None = None) -> int:
         checkpoints=args.checkpoints,
         entries=args.entries,
         lore=args.lore,
+        stats=args.stats,
     )
     result = run(request, Reporter())
     if result.kind == USAGE:
