@@ -105,14 +105,15 @@ CHECKPOINT_CALL = re.compile(
 class NameSpec:
     namespace: str
     prefix: str = ""
+    key_prefix: str = ""
     use_id: bool = False
     use_name: bool = False
     use_segments: bool = False
 
 
 NAME_SPECS: dict[str, NameSpec] = {
-    VALUE_STAT: NameSpec("PlayerStat", use_name=True, use_segments=True),
-    VALUE_REL: NameSpec("Character", use_name=True, use_segments=True),
+    VALUE_STAT: NameSpec("PlayerStat", key_prefix="Player_", use_name=True, use_segments=True),
+    VALUE_REL: NameSpec("Character", key_prefix="Relationship_", use_name=True, use_segments=True),
     VALUE_FLAG: NameSpec("Flag", prefix="Name/", use_name=True),
     VALUE_BOOK: NameSpec("Book", prefix="Name/", use_id=True, use_segments=True),
     VALUE_MISC: NameSpec("Misc", prefix="Name/", use_id=True, use_segments=True),

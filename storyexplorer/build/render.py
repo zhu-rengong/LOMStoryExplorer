@@ -126,12 +126,13 @@ class Renderer:
                 if beat.kind == "story":
                     self._lore(beat.key, out)
                     continue
+                key = beat.key
                 if beat.kind == "dice":
                     labels.resolve_check(beat.key, self.locale, self.used)
                 elif beat.kind != "mission":
-                    labels.resolve(labels.META_NAME_KINDS.get(beat.kind, beat.kind),
-                                   beat.key, "", self.locale, self.used, self.stat_notes)
-                out.append([BEAT_META, beat.kind, beat.key, beat.value])
+                    key = labels.resolve(labels.META_NAME_KINDS.get(beat.kind, beat.kind),
+                                         beat.key, "", self.locale, self.used, self.stat_notes)
+                out.append([BEAT_META, beat.kind, key, beat.value])
             elif isinstance(beat, LoreBeat):
                 self._lore(beat.key, out)
             elif isinstance(beat, SceneBeat):

@@ -9,6 +9,7 @@ from ..vocab import COND_CHECK, COND_COMPARE, COND_GROUP, COND_LOGIC, COND_VAR, 
 
 _SEGMENT_SPLIT = re.compile(r"[^0-9A-Za-z]+")
 _TOKEN_SPLIT = re.compile(r"[A-Z]+(?![a-z])|[A-Z][a-z]+|[a-z]+|[0-9]+")
+_KEY_HEAD = re.compile(r"[A-Za-z0-9]+")
 
 CHECK_NAMESPACE = "DiceHeader"
 META_NAME_KINDS = {"library": "chronicle"}
@@ -62,29 +63,62 @@ def _note(stats: Mapping[str, str] | None, key: str) -> str:
     return note.strip() if isinstance(note, str) else ""
 
 
+def _match(spec: NameSpec, key: str, ident: str, alias: str,
+           locale: Mapping[str, Any]) -> tuple[str, str]:
+    table = locale.get(spec.namespace) or {}
+    if not isinstance(table, dict):
+        return "", ""
+    for candidate in _candidates(spec, key, ident, alias):
+        value = table.get(candidate)
+        if value:
+            canonical = (candidate[len(spec.prefix):]
+                         if spec.prefix and candidate.startswith(spec.prefix) else candidate)
+            return canonical, str(value)
+    return "", ""
+
+
+def _fallback(spec: NameSpec, key: str, ident: str) -> str:
+    if ident:
+        return ident
+    prefix = spec.key_prefix
+    if prefix and key.startswith(prefix):
+        rest = key[len(prefix):]
+        head = _KEY_HEAD.match(rest)
+        if head:
+            rest = head.group(0)
+        return rest.lower()
+    return key
+
+
+def canonical_of(kind: str, key: str, ident: str, locale: Mapping[str, Any],
+                 alias: str = "") -> str:
+    spec = NAME_SPECS.get(kind)
+    if spec is None:
+        return ident or key
+    canonical, _display = _match(spec, key, ident, alias, locale)
+    return canonical or _fallback(spec, key, ident)
+
+
 def resolve(kind: str, key: str, ident: str, locale: Mapping[str, Any],
             used: NameTables, stats: Mapping[str, str] | None = None) -> str:
     spec = NAME_SPECS.get(kind)
-    wire_key = ident or key
-    if spec is None or not wire_key:
-        return wire_key
+    if spec is None:
+        return ident or key
+    alias = STAT_ALIASES.get(key, "") if kind == VALUE_STAT else ""
+    canonical, display = _match(spec, key, ident, alias, locale)
+    wire_key = canonical or _fallback(spec, key, ident)
+    if not wire_key:
+        return ""
     bucket = used.setdefault(kind, {})
     if wire_key in bucket:
         return wire_key
     if kind == VALUE_STAT:
-        note = _note(stats, wire_key)
+        note = _note(stats, wire_key) or _note(stats, ident or key)
         if note:
             bucket[wire_key] = note
             return wire_key
-    table = locale.get(spec.namespace) or {}
-    if not isinstance(table, dict):
-        return wire_key
-    alias = STAT_ALIASES.get(key, "") if kind == VALUE_STAT else ""
-    for candidate in _candidates(spec, key, ident, alias):
-        value = table.get(candidate)
-        if value:
-            bucket[wire_key] = str(value)
-            return wire_key
+    if display:
+        bucket[wire_key] = display
     return wire_key
 
 
@@ -96,7 +130,8 @@ def resolve_check(key: str, locale: Mapping[str, Any], used: NameTables) -> None
         used.setdefault("check", {})[key] = str(table[key])
 
 
-def _seed_group(node: Mapping[str, Any], used: NameTables) -> None:
+def _seed_group(node: Mapping[str, Any], used: NameTables,
+                locale: Mapping[str, Any]) -> None:
     if node.get("op") not in (None, "", "sum"):
         return
     items = node.get("items") or []
@@ -113,36 +148,40 @@ def _seed_group(node: Mapping[str, Any], used: NameTables) -> None:
     label = name[len(STAT_GROUP_PREFIX):].strip()
     if not label or "_" in label:
         return
-    key = str(child.get("id") or child.get("name") or "")
-    if key:
-        used.setdefault(VALUE_STAT, {}).setdefault(key, label)
+    key = str(child.get("name") or "")
+    ident = str(child.get("id") or "")
+    alias = STAT_ALIASES.get(key, "")
+    canonical = canonical_of(VALUE_STAT, key, ident, locale, alias) or ident or key
+    if canonical:
+        used.setdefault(VALUE_STAT, {}).setdefault(canonical, label)
 
 
-def _seed_expr(node: Any, used: NameTables) -> None:
+def _seed_expr(node: Any, used: NameTables, locale: Mapping[str, Any]) -> None:
     if not isinstance(node, Mapping):
         return
     tag = node.get("tag")
     if tag == COND_GROUP:
-        _seed_group(node, used)
+        _seed_group(node, used, locale)
         for item in node.get("items") or []:
-            _seed_expr(item, used)
+            _seed_expr(item, used, locale)
         return
     if tag in (COND_COMPARE, COND_LOGIC):
-        _seed_expr(node.get("left"), used)
-        _seed_expr(node.get("right"), used)
+        _seed_expr(node.get("left"), used, locale)
+        _seed_expr(node.get("right"), used, locale)
         for item in node.get("items") or []:
-            _seed_expr(item, used)
+            _seed_expr(item, used, locale)
 
 
-def _seed_model(model: Mapping[str, Any], used: NameTables) -> None:
+def _seed_model(model: Mapping[str, Any], used: NameTables,
+                locale: Mapping[str, Any]) -> None:
     for branch in model.get("branches") or []:
         if isinstance(branch, Mapping):
-            _seed_expr(branch.get("expr"), used)
+            _seed_expr(branch.get("expr"), used, locale)
     for variant in model.get("variants") or []:
         if isinstance(variant, Mapping):
-            _seed_model(variant, used)
+            _seed_model(variant, used, locale)
     for item in model.get("countItems") or []:
-        _seed_expr(item, used)
+        _seed_expr(item, used, locale)
 
 
 def _walk_expr(node: Any, locale: Mapping[str, Any], used: NameTables,
@@ -200,7 +239,7 @@ def attach(models: Mapping[str, dict[str, Any]], locale: Mapping[str, Any],
            used: NameTables, stats: Mapping[str, str] | None = None) -> None:
     for model in models.values():
         if isinstance(model, dict):
-            _seed_model(model, used)
+            _seed_model(model, used, locale)
     for model in models.values():
         if isinstance(model, dict):
             _walk_model(model, locale, used, stats)
