@@ -323,7 +323,6 @@
 .branch-group > .branch { margin: 0; }
 
 .branch-group > .branch + .branch {
-  border-top: 1px solid var(--line-1);
   padding-top: 4px;
 }
 
