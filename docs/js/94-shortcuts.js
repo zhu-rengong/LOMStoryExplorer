@@ -60,9 +60,7 @@
         overlay.open("help", { trigger: button, autofocus: "helpClose" });
       };
 
-      const close = () => {
-        if (!overlay.close("help")) hideRaw();
-      };
+      const close = () => overlay.close("help");
 
       const toggle = () => {
         if (openFlag) close();

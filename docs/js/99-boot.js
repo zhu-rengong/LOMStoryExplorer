@@ -47,7 +47,7 @@
   }, true);
 
   try {
-    window.SR.start("app").start();
+    window.SR.require("app").start();
   } catch (error) {
     showFatal(error);
   }

@@ -5,13 +5,8 @@
 
   SR.define("storage", ["ui"], ({ ui }) => {
     const BOOKMARK_KEY = "legend-of-mortal.explorer.bookmarks.v1";
-    const POSITION_KEY = "legend-of-mortal.explorer.positions.v1";
-    const SESSION_KEY = "legend-of-mortal.explorer.session.v1";
 
     const LOCAL = window.SR_LOCAL;
-
-    LOCAL.remove(POSITION_KEY);
-    LOCAL.remove(SESSION_KEY);
 
     const bookmarks = new Set();
 

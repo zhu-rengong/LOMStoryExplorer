@@ -6,6 +6,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from ..build import load_sources
 from ..cache import CacheKey, file_fingerprint, load_envelope, read_json, save_envelope, write_json
 from ..config import (
     CACHE_DIR,
@@ -24,6 +25,7 @@ from ..config import (
     SCHEMA_VERSION,
     asset_dir,
     game_root,
+    install_dir,
     locale_path,
     managers_path,
     resources_path,
@@ -133,7 +135,8 @@ def _extract_entries(game: Path, ids: set[str], force: bool,
     reporter.stage(3, 4, "system entries: scanning asset files")
     payload = probe_entries(assets, ids, reporter)
     stats = summarize_entries(payload)
-    stats["elapsed"] = stats.get("elapsed") or round(time.time() - started, 1)
+    if stats.get("elapsed") is None:
+        stats["elapsed"] = round(time.time() - started, 1)
     if not stats["ok"]:
         reporter.warn(
             f"system entries unresolved: {stats['reason']};"
@@ -242,10 +245,13 @@ def _extract_lore(game: Path, sources: dict[str, str], tables: dict[str, dict],
 
 
 def _asset_fingerprints(game: Path) -> dict[str, dict[str, Any]]:
+    resources = resources_path(game)
+    locale = locale_path(game)
+    managers = managers_path(game)
     return {
-        resources_path(game).name: file_fingerprint(resources_path(game)),
-        locale_path(game).name: file_fingerprint(locale_path(game)),
-        MANAGERS_ASSET: file_fingerprint(managers_path(game)),
+        resources.name: file_fingerprint(resources),
+        locale.name: file_fingerprint(locale),
+        MANAGERS_ASSET: file_fingerprint(managers),
     }
 
 
@@ -278,35 +284,39 @@ def _manifest(
 
 def _rebuild_conditional(game: Path, langs: tuple[str, ...], manifest: dict[str, Any],
                          args: argparse.Namespace, reporter: Reporter) -> None:
-    redo_checkpoints = args.checkpoints and (
-        not CHECKPOINTS_PATH.exists()
-        or manifest.get("checkpoint_version") != CHECKPOINT_VERSION)
-    redo_entries = args.entries and (
-        not ENTRIES_PATH.exists()
-        or manifest.get("entry_version") != ENTRY_VERSION)
-    redo_lore = args.lore and (
-        not LORE_PATH.exists()
-        or manifest.get("lore_version") != LORE_VERSION)
-    if not (redo_checkpoints or redo_entries or redo_lore):
+    redo = {
+        "checkpoints": args.checkpoints and (
+            not CHECKPOINTS_PATH.exists()
+            or manifest.get("checkpoint_version") != CHECKPOINT_VERSION),
+        "entries": args.entries and (
+            not ENTRIES_PATH.exists()
+            or manifest.get("entry_version") != ENTRY_VERSION),
+        "lore": args.lore and (
+            not LORE_PATH.exists()
+            or manifest.get("lore_version") != LORE_VERSION),
+    }
+    if not any(redo.values()):
         return
-    sources = {}
-    for path in sorted(LUA_DIR.glob("*.lua")):
-        sources[path.stem] = path.read_text(encoding="utf-8")
-    if redo_checkpoints:
+    sources = load_sources()
+    if redo["checkpoints"]:
         manifest["checkpoint_stats"] = _extract_checkpoints(game, sources, args.force, reporter)
-    if redo_entries:
+    if redo["entries"]:
         manifest["entry_stats"] = _extract_entries(game, set(sources), args.force, reporter)
-    if redo_lore:
+    if redo["lore"]:
         tables = {}
         for lang in langs:
             payload = read_json(LOCALE_DIR / f"{lang}.json")
             tables[lang] = payload if isinstance(payload, dict) else {}
         manifest["lore_stats"] = _extract_lore(
             game, sources, tables, langs, args.force, reporter)
-    manifest["checkpoint_version"] = CHECKPOINT_VERSION
-    manifest["entry_version"] = ENTRY_VERSION
-    if args.lore:
-        manifest["lore_version"] = LORE_VERSION
+    versions = {
+        "checkpoints": CHECKPOINT_VERSION,
+        "entries": ENTRY_VERSION,
+        "lore": LORE_VERSION,
+    }
+    for name, version in versions.items():
+        if redo[name]:
+            manifest[f"{name}_version"] = version
     write_json(MANIFEST_PATH, manifest, indent=2)
 
 
@@ -370,7 +380,7 @@ def main(argv: list[str] | None = None) -> int:
     lore_stats = (_extract_lore(game, corpus.scripts, tables, langs, args.force, reporter)
                   if args.lore else {"enabled": False, "skipped": True})
 
-    info = read_game_info(managers_path(game), None, game.name)
+    info = read_game_info(managers_path(game), None, install_dir(game))
     if info.version:
         reporter.info(f"game version: v{info.version}")
 

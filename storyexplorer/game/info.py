@@ -65,7 +65,7 @@ def read_steam_build(steamapps: Path, install_dir: str) -> dict[str, str | None]
                 found["updated"] = datetime.fromtimestamp(int(stamp)).strftime("%Y-%m-%d")
             except (OverflowError, OSError, ValueError):
                 found["updated"] = None
-        return found
+        break
     return found
 
 

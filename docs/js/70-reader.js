@@ -13,8 +13,6 @@
       let pendingHit = null;
       let flashTimer = 0;
 
-      const isMobile = () => store.state.layout === "mobile";
-
       const revealHit = (target) => {
         const body = $("readerBody");
         let current = target.parentElement;
@@ -137,7 +135,6 @@
       };
 
       const buildContext = () => ({
-        seq: 0,
         lookup: { open: panels.openLookup, targetOf: panels.lookupTargetOf },
         preview: { bind: panels.bindBranchPreview, hide: panels.hideBranchPreview },
         navigate: (id) => store.select(id, { history: true }),
@@ -194,7 +191,6 @@
             render(node, { keepScroll: true });
           });
           readerPanel.classList.add("is-open");
-          if (isMobile() && !document.body.dataset.sheet) document.body.dataset.sheet = "half";
           return;
         }
 
@@ -224,7 +220,6 @@
         applyHit(node);
         prefetchNeighbors(node);
         readerPanel.classList.add("is-open");
-        if (isMobile() && !document.body.dataset.sheet) document.body.dataset.sheet = "half";
       };
 
       const empty = () => {

@@ -22,19 +22,13 @@
       let activeKind = "all";
       let openChapter = "";
       let lastFocus = null;
-      let chapterNodes = null;
 
       const ensureData = () => {
         if (window.SR_WORDCOUNT) return Promise.resolve(window.SR_WORDCOUNT);
         if (dataPromise) return dataPromise;
-        dataPromise = new Promise((resolve) => {
-          const script = document.createElement("script");
-          script.src = "data/wordcount.js";
-          script.async = true;
-          script.onload = () => resolve(window.SR_WORDCOUNT || null);
-          script.onerror = () => resolve(null);
-          document.head.appendChild(script);
-        });
+        dataPromise = ui.loadScript("data/wordcount.js")
+          .then(() => window.SR_WORDCOUNT || null)
+          .catch(() => null);
         return dataPromise;
       };
 
@@ -57,18 +51,7 @@
         return total;
       };
 
-      const chapterNodeMap = () => {
-        if (chapterNodes) return chapterNodes;
-        chapterNodes = {};
-        for (const node of graph.nodes) {
-          const chapter = graph.chapters[node.chapter];
-          if (!chapter) continue;
-          (chapterNodes[chapter.id] || (chapterNodes[chapter.id] = [])).push(node.id);
-        }
-        return chapterNodes;
-      };
-
-      const storyIdsOf = (chapterId) => chapterNodeMap()[chapterId] || [];
+      const storyIdsOf = (index) => (graph.nodesByChapter()[index] || []).map((node) => node.id);
 
       const hidePanelRaw = () => {
         const panel = $("statsPanel");
@@ -141,11 +124,9 @@
         return row;
       };
 
-      const chapterRow = (data, chapter) => {
-        const pair = counts((data.chapters || {})[chapter.id], activeKind);
+      const chapterRow = (chapter, index, pair) => {
         const isOpen = openChapter === chapter.id;
         const row = ui.el("tr", `stats-chapter${isOpen ? " is-open" : ""}`);
-        row.dataset.chapter = chapter.id;
 
         const nameCell = ui.el("th", "name");
         nameCell.scope = "row";
@@ -156,7 +137,7 @@
         nameCell.appendChild(button);
         row.appendChild(nameCell);
 
-        row.appendChild(numCell(storyIdsOf(chapter.id).length));
+        row.appendChild(numCell(storyIdsOf(index).length));
         row.appendChild(numCell(pair[0]));
         row.appendChild(numCell(pair[1]));
         row.appendChild(numCell(pair[0] + pair[1], "sum"));
@@ -205,13 +186,13 @@
 
         const tbody = ui.el("tbody");
         const foot = [0, 0];
-        graph.chapters.forEach((chapter) => {
+        graph.chapters.forEach((chapter, index) => {
           const pair = counts((data.chapters || {})[chapter.id], activeKind);
           foot[0] += pair[0];
           foot[1] += pair[1];
-          tbody.appendChild(chapterRow(data, chapter));
+          tbody.appendChild(chapterRow(chapter, index, pair));
           if (openChapter !== chapter.id) return;
-          const rows = storyIdsOf(chapter.id).map((id) => ({
+          const rows = storyIdsOf(index).map((id) => ({
             id,
             pair: counts((data.stories || {})[id], activeKind),
           })).filter((item) => item.pair[0] || item.pair[1]);
@@ -271,14 +252,13 @@
         overlay.open("stats", { trigger: lastFocus, autofocus: "statsClose" });
         ensureData().then(() => {
           if (!openFlag) return;
-          chapterNodes = null;
           renderSummary();
           renderTable();
         });
       };
 
       const closePanel = () => {
-        if (!overlay.close("stats")) hidePanelRaw();
+        overlay.close("stats");
         if (lastFocus && lastFocus.isConnected) {
           try {
             lastFocus.focus({ preventScroll: true });
@@ -290,7 +270,6 @@
 
       const refresh = () => {
         if (!openFlag) return;
-        chapterNodes = null;
         renderSummary();
         renderKinds();
         renderTable();

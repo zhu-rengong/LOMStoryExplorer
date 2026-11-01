@@ -9,6 +9,7 @@ from typing import Any
 from ..config import MAX_BRANCH_DEPTH
 from ..console import Reporter
 from ..wire import (
+    CHECKPOINT_METHODS,
     COND_COMPARE,
     COND_CONST,
     COND_DICE,
@@ -24,7 +25,6 @@ GAP_NO_TREE = "no_tree"
 GAP_PARSE_ERROR = "parse_error"
 GAP_UNMATCHED = "unmatched"
 GAP_FILE_ERROR = "file_error"
-GAP_REASONS = (GAP_NOT_FOUND, GAP_NO_TREE, GAP_PARSE_ERROR, GAP_UNMATCHED, GAP_FILE_ERROR)
 
 STAT_CHECK = {0: "常數", 1: "角色數值", 2: "好感度", 3: "旗標", 4: "書籍", 5: "雜物",
               6: "貴重品", 7: "隨機值", 8: "數值群組", 9: "遊戲時間", 10: "技能",
@@ -43,7 +43,7 @@ DICE_FIELD = {0: "_stat", 1: "_relationship", 2: "_talent", 3: "_flag"}
 ITEM_CHECKS = frozenset({4, 5, 6, 10, 15})
 
 CHECKPOINT_CALL = re.compile(
-    r'checkpointmanager\.(Switch|Condition|Dice|Position)\(\s*"([^"]{2,60})"')
+    rf'checkpointmanager\.({"|".join(CHECKPOINT_METHODS)})\(\s*"([^"]{{2,60}})"')
 
 
 def collect_keys(sources: Mapping[str, str]) -> set[str]:
@@ -416,15 +416,15 @@ def _parse_position(tree: dict[str, Any], deref: Deref) -> dict[str, Any]:
     }
 
 
-PARSERS = {
-    "_useCount": _parse_switch,
-    "_resultItems": _parse_dice,
-    "_scriptPrefix": _parse_position,
-}
+PARSERS = (
+    ("_useCount", _parse_switch),
+    ("_resultItems", _parse_dice),
+    ("_scriptPrefix", _parse_position),
+)
 
 
 def _parse(tree: dict[str, Any], deref: Deref) -> dict[str, Any] | None:
-    for marker, parser in PARSERS.items():
+    for marker, parser in PARSERS:
         if marker in tree:
             return parser(tree, deref)
     if "_default" in tree and "State" in tree:

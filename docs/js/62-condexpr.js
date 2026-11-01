@@ -55,15 +55,11 @@
       };
 
       const countOf = (kind, key) => {
-        try {
-          if (kind === "flag") {
-            const groups = graph.flagGroups(key);
-            return groups.writes.length + groups.reads.length;
-          }
-          return graph.lookup(kind, key).length;
-        } catch {
-          return 0;
+        if (kind === "flag") {
+          const groups = graph.flagGroups(key);
+          return groups.writes.length + groups.reads.length;
         }
+        return graph.lookup(kind, key).length;
       };
 
       const bindVar = (chip, target, opts) => {
@@ -252,15 +248,15 @@
         return { n: branches.length, excluded };
       };
 
-      const resultOf = (text) => {
-        const found = /==\s*(-?\d+)\s*$/.exec(String(text || ""));
+      const resultOf = (source) => {
+        const found = /==\s*(-?\d+)\s*$/.exec(String(source || ""));
         return found ? Number(found[1]) : null;
       };
 
       return {
-        ensure: checkpoints.ensure,
         fallback,
         label,
+        localizedName,
         pick,
         render,
         resultOf,

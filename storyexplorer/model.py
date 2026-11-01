@@ -11,6 +11,7 @@ from .wire import (
     BEAT_META,
     BEAT_SAY,
     BEAT_SCENE,
+    EDGE_JUMP,
     FACET_LIST_FIELDS,
     SAY_MODE_CODE,
     SAY_MODES,
@@ -21,10 +22,6 @@ from .wire import (
 class TextRef:
     value: str
     keyed: bool = False
-
-    @property
-    def kind(self) -> str:
-        return "key" if self.keyed else "text"
 
 
 @dataclass(frozen=True)
@@ -123,21 +120,10 @@ class ScriptAnalysis:
     edges: list[Edge] = field(default_factory=list)
     reads: list[str] = field(default_factory=list)
     dynamic: list[str] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
     say_count: int = 0
     fx_count: int = 0
     scene_count: int = 0
     option_count: int = 0
-
-    @property
-    def stats(self) -> dict[str, int]:
-        return {
-            "say": self.say_count,
-            "choice": self.option_count,
-            "fx": self.fx_count,
-            "beats": len(self.beats),
-            "reads": len(self.reads),
-        }
 
 
 @dataclass(frozen=True)
@@ -327,7 +313,6 @@ def analysis_to_wire(analysis: ScriptAnalysis) -> dict[str, Any]:
         "edges": [{"target": edge.target, "kind": edge.kind, "label": edge.label} for edge in analysis.edges],
         "reads": list(analysis.reads),
         "dynamic": list(analysis.dynamic),
-        "warnings": list(analysis.warnings),
         "say": analysis.say_count,
         "fx": analysis.fx_count,
         "scenes": analysis.scene_count,
@@ -338,18 +323,17 @@ def analysis_to_wire(analysis: ScriptAnalysis) -> dict[str, Any]:
 def analysis_from_wire(payload: dict[str, Any]) -> ScriptAnalysis:
     script_id = str(payload.get("id") or "")
     edges = [
-        Edge(script_id, str(item.get("target") or ""), str(item.get("kind") or "jump"),
+        Edge(script_id, str(item.get("target") or ""), str(item.get("kind") or EDGE_JUMP),
              str(item.get("label") or ""))
         for item in payload.get("edges") or []
         if isinstance(item, dict)
     ]
     return ScriptAnalysis(
-        id=str(payload.get("id") or ""),
+        id=script_id,
         beats=list(beats_from_raw(payload.get("beats") or [])),
         edges=edges,
         reads=[str(item) for item in payload.get("reads") or []],
         dynamic=[str(item) for item in payload.get("dynamic") or []],
-        warnings=[str(item) for item in payload.get("warnings") or []],
         say_count=int(payload.get("say") or 0),
         fx_count=int(payload.get("fx") or 0),
         scene_count=int(payload.get("scenes") or 0),

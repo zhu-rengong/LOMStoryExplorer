@@ -94,9 +94,7 @@
         suggest = { open: false, items: [], active: 0, from: 0, to: 0, mode: "field" };
       };
 
-      const hideSuggest = () => {
-        if (!overlay.close("filterSuggest")) hideSuggestRaw();
-      };
+      const hideSuggest = () => overlay.close("filterSuggest");
 
       const paintActive = (list) => {
         if (!list) return;
@@ -218,38 +216,36 @@
 
       const apply = (source) => {
         const value = source || "";
-        store.applyFilter({ source: value });
         if (!value.trim()) {
           store.applyFilter({ source: "", set: null, error: "", loading: false });
           return { ok: true, count: null };
         }
         const loading = TEXT_RE.test(value) && !text.progress(store.textLang()).done;
-        store.applyFilter({ loading });
-        if (loading) {
-          text.ensureAll(store.textLang()).then(() => {
-            resetContext();
-            if (store.state.filterSource === value) {
-              const result = query.compile(value, buildContext());
-              store.applyFilter({
-                set: result.ok ? result.set : null,
-                error: result.ok ? "" : i18n.t("filterSyntax", {
-                  column: result.error.column, message: result.error.message,
-                }),
-                loading: false,
-              });
-            }
-          });
-        }
         const result = query.compile(value, buildContext());
         if (!result.ok) {
           store.applyFilter({
+            source: value,
             set: null,
             error: i18n.t("filterSyntax", { column: result.error.column, message: result.error.message }),
             loading: false,
           });
           return { ok: false, count: 0 };
         }
-        store.applyFilter({ set: result.set, error: "", loading });
+        store.applyFilter({ source: value, set: result.set, error: "", loading });
+        if (loading) {
+          text.ensureAll(store.textLang()).then(() => {
+            resetContext();
+            if (store.state.filterSource !== value) return;
+            const later = query.compile(value, buildContext());
+            store.applyFilter({
+              set: later.ok ? later.set : null,
+              error: later.ok ? "" : i18n.t("filterSyntax", {
+                column: later.error.column, message: later.error.message,
+              }),
+              loading: false,
+            });
+          });
+        }
         return { ok: true, count: result.set ? result.set.size : 0 };
       };
 
@@ -258,15 +254,18 @@
         if (expr) apply(expr.value);
       }, 250);
 
-      const insertAtCursor = (input, value) => {
+      const replaceRange = (input, start, end, value) => {
         if (!input) return;
-        const start = input.selectionStart || 0;
-        const end = input.selectionEnd || 0;
         const textValue = input.value || "";
         input.value = textValue.slice(0, start) + value + textValue.slice(end);
         const caret = start + value.length;
         input.setSelectionRange(caret, caret);
         input.focus();
+      };
+
+      const insertAtCursor = (input, value) => {
+        if (!input) return;
+        replaceRange(input, input.selectionStart || 0, input.selectionEnd || 0, value);
       };
 
       const suggestLabel = (item) => {
@@ -324,11 +323,7 @@
         const item = suggest.items[index === undefined ? suggest.active : index];
         if (!input || !item) return;
         const insert = item.insert || item.value;
-        const value = input.value;
-        input.value = value.slice(0, suggest.from) + insert + value.slice(suggest.to);
-        const caret = suggest.from + insert.length;
-        input.setSelectionRange(caret, caret);
-        input.focus();
+        replaceRange(input, suggest.from, suggest.to, insert);
         hideSuggest();
         schedule();
         if (/(:|\(|\s)$/.test(insert)) updateSuggest();
@@ -338,7 +333,7 @@
         const panel = $("filterPanel");
         if (panel) panel.hidden = true;
         ui.setExpanded($("filterBtn"), false);
-        hideSuggestRaw();
+        hideSuggest();
       };
 
       const open = () => {
@@ -356,9 +351,7 @@
         updateUi();
       };
 
-      const close = () => {
-        if (!overlay.close("filterPanel")) hideRaw();
-      };
+      const close = () => overlay.close("filterPanel");
 
       const toggle = () => {
         const panel = $("filterPanel");

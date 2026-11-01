@@ -26,14 +26,10 @@ window.SR = window.SR || {};
     return api;
   };
 
-  SR.version = 2;
   SR.define = (name, deps, factory) => {
     if (registry.has(name)) throw new Error(`SR module "${name}" is already defined`);
     registry.set(name, { deps: (deps || []).slice(), factory });
     return SR;
   };
   SR.require = resolve;
-  SR.start = (name) => resolve(name);
-  SR.isDefined = (name) => registry.has(name);
-  SR.moduleNames = () => Array.from(registry.keys());
 })();

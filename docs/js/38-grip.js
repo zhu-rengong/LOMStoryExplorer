@@ -15,8 +15,6 @@
       return { init: () => {} };
     }
 
-    const range = () => prefs.measureRange;
-
     const widthNow = () => Math.round(reader.getBoundingClientRect().width);
 
     const available = () => {
@@ -26,7 +24,7 @@
     };
 
     const clamp = (value) => {
-      const bounds = range();
+      const bounds = prefs.measureRange;
       const room = Math.max(bounds.min, Math.min(bounds.max, available() - 32));
       const max = Math.max(room, Math.min(bounds.max, widthNow()));
       return Math.round(ui.clamp(value, bounds.min, max));
@@ -73,7 +71,7 @@
         grip.addEventListener("pointermove", move);
         grip.addEventListener("pointerup", stop);
         grip.addEventListener("pointercancel", stop);
-        grip.addEventListener("dblclick", () => commit(clamp(range().fallback)));
+        grip.addEventListener("dblclick", () => commit(clamp(prefs.measureRange.fallback)));
         grip.addEventListener("keydown", (event) => {
           if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
           event.preventDefault();

@@ -19,15 +19,6 @@ class Analyzer:
         self.expressions = ExpressionEvaluator(self)
         self.calls = CallHandler(self)
 
-    def eval(self, expr: L.Node, state: EvalState) -> Any:
-        return self.expressions.eval(expr, state)
-
-    def cond_label(self, cond: L.Node, state: EvalState) -> str:
-        return self.expressions.cond_label(cond, state)
-
-    def cond_kind(self, cond: L.Node, state: EvalState) -> str:
-        return self.expressions.cond_kind(cond, state)
-
     def analyze(self, source: str) -> ScriptAnalysis:
         script = L.parse(source)
         self.block(script.statements, EvalState(), self.ctx.beats, "")
@@ -101,7 +92,7 @@ class Analyzer:
         name = L.text(table_node)
         table = state.env.get(name)
         field = target.child_by_field_name("field")
-        key = L.index_key(target) or as_text(self.eval(field, state)) or L.text(field)
+        key = L.index_key(target) or as_text(self.expressions.eval(field, state)) or L.text(field)
         if isinstance(table, dict):
             table[key] = value
         else:
@@ -111,8 +102,8 @@ class Analyzer:
         group = self.ctx.branch_seq
         self.ctx.branch_seq += 1
         for cond, body in L.clauses(stmt):
-            cond_label = "其他情況" if cond is None else self.cond_label(cond, state)
-            kind = "if" if cond is None else self.cond_kind(cond, state)
+            cond_label = "其他情況" if cond is None else self.expressions.cond_label(cond, state)
+            kind = "if" if cond is None else self.expressions.cond_kind(cond, state)
             sub: list[Any] = []
             child = f"{label} › {cond_label}" if label else cond_label
             self.block(body, state.clone(), sub, child)

@@ -34,9 +34,7 @@
         toggleRailButton(false);
       };
 
-      const closeRail = () => {
-        if (!overlay.close("rail")) hideRail();
-      };
+      const closeRail = () => overlay.close("rail");
 
       const openRail = () => {
         if (!isOverlayRail()) return;
@@ -52,23 +50,13 @@
         else openRail();
       };
 
-      const closeMore = () => {
-        if (!overlay.close("moreMenu")) {
-          const menu = $("moreMenu");
-          if (menu) menu.hidden = true;
-        }
-      };
+      const closeMore = () => overlay.close("moreMenu");
 
-      const closeNav = () => {
-        if (!overlay.close("navMenu")) {
-          const menu = $("navMenu");
-          if (menu) menu.hidden = true;
-        }
-      };
+      const closeNav = () => overlay.close("navMenu");
 
-      const applyLayout = (force) => {
+      const applyLayout = () => {
         const next = layoutFor(window.innerWidth);
-        if (!force && next === store.state.layout && document.body.dataset.layout) return;
+        if (next === store.state.layout && document.body.dataset.layout === next) return;
         store.setLayout(next);
         document.body.dataset.layout = next;
         if (!isOverlayRail()) closeRail();
@@ -100,14 +88,7 @@
         }
       };
 
-      const closeLang = () => {
-        if (!overlay.close("langMenu")) {
-          const menu = $("langMenu");
-          if (menu) menu.hidden = true;
-          const button = $("langBtn");
-          if (button) ui.setOn(button, false);
-        }
-      };
+      const closeLang = () => overlay.close("langMenu");
 
       const renderLangMenu = () => {
         const menu = $("langMenu");
@@ -121,7 +102,6 @@
           row.setAttribute("role", "menuitemradio");
           row.setAttribute("aria-checked", on ? "true" : "false");
           row.setAttribute("lang", item.html);
-          row.dataset.lang = item.id;
           row.title = item.label;
           row.addEventListener("click", () => {
             closeLang();
@@ -342,11 +322,11 @@
           body.addEventListener("scroll", () => {
             const node = store.selected();
             if (node) store.rememberPosition(node.id, reader.scrollFraction());
+            panels.hideBranchPreview();
           }, { passive: true });
         }
 
         document.addEventListener("click", () => panels.hideBranchPreview(), true);
-        if (body) body.addEventListener("scroll", panels.hideBranchPreview, { passive: true });
 
         const langButton = $("langBtn");
         if (langButton) {
@@ -359,7 +339,7 @@
         }
 
         window.addEventListener("resize", ui.debounce(() => {
-          applyLayout(false);
+          applyLayout();
           panels.hideBranchPreview();
           closeNav();
         }, 80));
@@ -370,9 +350,6 @@
           if (graph.nodeById.has(id)) store.select(id, { history: false });
           else ui.toast(i18n.t("statusNotFound", { id }));
         });
-
-        const readerBody = $("readerBody");
-        if (readerBody) readerBody.addEventListener("click", () => panels.hideBranchPreview());
       };
 
       const bindOverlays = () => {
@@ -439,8 +416,8 @@
       };
 
       const start = () => {
-        applyLayout(true);
         bindOverlays();
+        applyLayout();
         bindSubscriptions();
         store.restore();
         bindShell();

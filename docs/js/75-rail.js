@@ -10,15 +10,6 @@
       const $ = ui.$;
       const ENTRY_KEYS = { combat: "entryCombat", free: "entryFree" };
 
-      let nodesByChapter = null;
-
-      const chapterNodes = (index) => {
-        if (!nodesByChapter) {
-          nodesByChapter = graph.nodesByChapter();
-        }
-        return nodesByChapter[index] || [];
-      };
-
       const syncSelection = (id) => {
         const list = $("chapterList");
         if (!list) return;
@@ -110,7 +101,7 @@
         const frag = document.createDocumentFragment();
 
         graph.chapters.forEach((chapter, index) => {
-          let members = chapterNodes(index);
+          let members = graph.nodesByChapter()[index] || [];
           if (query) {
             const title = i18n.chapterTitle(chapter).toLowerCase();
             if (title.indexOf(query) < 0 && chapter.id.toLowerCase().indexOf(query) < 0) {
@@ -175,20 +166,10 @@
         render();
       };
 
-      const reset = () => {
-        nodesByChapter = null;
-      };
-
       return {
-        chapterNodes,
-        railRow,
         render,
-        renderBookmarks,
-        renderOutline,
-        reset,
         setTab,
         syncSelection,
-        syncTabs,
       };
     });
 })();

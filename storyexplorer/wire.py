@@ -28,6 +28,22 @@ COND_VAR = "var"
 COND_GROUP = "group"
 COND_COMPARE = "compare"
 COND_LOGIC = "logic"
+COND_TAGS = frozenset({
+    COND_CONST, COND_RANDOM, COND_DICE, COND_VAR,
+    COND_GROUP, COND_COMPARE, COND_LOGIC,
+})
+
+CHECKPOINT_METHODS = ("Switch", "Dice", "Condition", "Position")
+CHECKPOINT_MARKS = {
+    "Switch": "switch",
+    "Dice": "dice",
+    "Condition": "condition",
+    "Position": "position",
+}
+MARK_KINDS = frozenset(CHECKPOINT_MARKS.values())
+
+TEXT_MODE_FULL = "full"
+TEXT_MODE_SHARDS = "shards"
 
 HARDCODED_ENTRIES = (
     {"id": "ch1_1", "label": "New game start", "source": "SaveSystem.cs L174-L177"},

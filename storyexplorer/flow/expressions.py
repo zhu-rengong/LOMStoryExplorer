@@ -4,12 +4,11 @@ from typing import Any
 
 from .. import lua as L
 from ..model import Locked, Mark, MetaBeat, TextRef, Unknown
+from ..wire import CHECKPOINT_MARKS, MARK_KINDS
 from .calls import callee
 from .state import EvalState, as_text, num_text, short
 
 _COND_KIND_BY_MARK = {"switch": "分支判定", "dice": "骰子判定", "condition": "條件", "position": "場所事件"}
-
-_MARK_KINDS = {"switch", "dice", "condition", "position"}
 
 _INDEX_KINDS = ("dot_index_expression", "bracket_index_expression")
 
@@ -132,12 +131,11 @@ class ExpressionEvaluator:
         if kind == "function_call":
             obj, method = callee(cond)
             if obj == "checkpointmanager":
-                return {"Switch": "switch", "Dice": "dice",
-                        "Condition": "condition", "Position": "position"}.get(method, "if")
+                return CHECKPOINT_MARKS.get(method, "if")
             return "if"
         if kind == "identifier":
             value = state.env.get(L.text(cond))
-            if isinstance(value, Mark) and value.kind in _MARK_KINDS:
+            if isinstance(value, Mark) and value.kind in MARK_KINDS:
                 return value.kind
             return "if"
         if kind == "binary_expression":
@@ -161,8 +159,8 @@ class ExpressionEvaluator:
                 key = as_text(self.eval(args[0], state)) or ""
                 if key:
                     self.flow.ctx.reads.add(key)
-                name = {"Condition": "條件", "Switch": "分支判定", "Dice": "骰子判定",
-                        "Position": "場所事件"}.get(method, method)
+                mark = CHECKPOINT_MARKS.get(method)
+                name = _COND_KIND_BY_MARK.get(mark, method) if mark else method
                 return f"{name}「{key}」"
             if obj == "statmodifymanager" and method.startswith("Get"):
                 key = as_text(self.eval(args[0], state)) if args else ""

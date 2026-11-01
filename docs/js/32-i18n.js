@@ -13,25 +13,19 @@
     "zh-tw": {
       errorTitle: "資料載入失敗",
       errorMissing: "找不到 data/graph.js，請先執行 build.py 產生資料。",
-      errorSchema: "資料版本不符，請重新執行 build.py。",
       errorReload: "重新載入",
-      errorScript: "頁面腳本載入失敗：{name}",
       filterSyntax: "第 {column} 欄：{message}",
     },
     "zh-cn": {
       errorTitle: "数据加载失败",
       errorMissing: "找不到 data/graph.js，请先运行 build.py 生成数据。",
-      errorSchema: "数据版本不符，请重新运行 build.py。",
       errorReload: "重新加载",
-      errorScript: "页面脚本加载失败：{name}",
       filterSyntax: "第 {column} 栏：{message}",
     },
     "en": {
       errorTitle: "Failed to load data",
       errorMissing: "data/graph.js is missing. Run build.py to generate the data first.",
-      errorSchema: "The data version does not match. Run build.py again.",
       errorReload: "Reload",
-      errorScript: "Failed to load a page script: {name}",
       filterSyntax: "Column {column}: {message}",
     },
   };

@@ -52,9 +52,8 @@ def _strip_prefix(table: dict[str, str], prefix: str) -> dict[str, str]:
 
 class Renderer:
     def __init__(self, locale: dict[str, dict[str, str]],
-                 counter: WordCounter | None = None,
                  lore_fallback: dict[str, str] | None = None) -> None:
-        self.counter = counter or WordCounter()
+        self.counter = WordCounter()
         self.lore_fallback = lore_fallback or {}
         self.story = locale.get("Story", {})
         self.chars = locale.get("Character", {})

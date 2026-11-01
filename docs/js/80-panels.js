@@ -87,9 +87,7 @@
         lookup.open = false;
       };
 
-      const closeLookup = () => {
-        if (!overlay.close("lookup")) hideLookup();
-      };
+      const closeLookup = () => overlay.close("lookup");
 
       const positionLookup = (trigger) => {
         const panel = $("lookupPanel");
@@ -199,12 +197,6 @@
 
       const ADDITION_TYPES = ["diceAddStat", "diceAddRel", "diceAddTalent", "diceAddFlag"];
 
-      const additionLabel = (item) => {
-        const label = item && item.label;
-        if (typeof label !== "string" || !label) return "";
-        return convert.string(store.textLang(), label);
-      };
-
       const additionRow = (item) => {
         if (!item || typeof item !== "object") {
           return ui.el("p", "lc-row lc-plain", item == null ? "" : String(item));
@@ -213,7 +205,7 @@
         const main = ui.el("span", "lc-add-main");
         const typeKey = ADDITION_TYPES[Number(item.type)] || "";
         if (typeKey) main.appendChild(ui.el("span", "lc-add-type", i18n.t(typeKey)));
-        main.appendChild(ui.el("span", "lc-add-name", additionLabel(item) || item.name || "—"));
+        main.appendChild(ui.el("span", "lc-add-name", condexpr.localizedName(item) || item.name || "—"));
         row.appendChild(main);
         const rate = Number(item.rate);
         const factor = Number.isFinite(rate) && rate !== 1 ? i18n.t("diceAddRate", { n: rate }) : "";

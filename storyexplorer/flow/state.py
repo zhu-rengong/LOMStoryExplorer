@@ -57,3 +57,10 @@ def num_text(value: Any) -> str:
     if number.is_integer():
         return str(int(number))
     return f"{number:g}"
+
+
+def numeric_key(value: str) -> tuple[int, int | str]:
+    try:
+        return (0, int(value))
+    except ValueError:
+        return (1, value)

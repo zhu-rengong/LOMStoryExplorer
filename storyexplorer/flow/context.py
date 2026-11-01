@@ -13,7 +13,6 @@ class AnalysisContext:
     edges: list[Edge] = field(default_factory=list)
     reads: set[str] = field(default_factory=set)
     dynamic: list[str] = field(default_factory=list)
-    warnings: list[str] = field(default_factory=list)
     say_count: int = 0
     fx_count: int = 0
     scene_count: int = 0
@@ -35,7 +34,6 @@ class AnalysisContext:
             edges=list(self.edges),
             reads=sorted(self.reads),
             dynamic=list(self.dynamic),
-            warnings=list(self.warnings[:20]),
             say_count=self.say_count,
             fx_count=self.fx_count,
             scene_count=self.scene_count,

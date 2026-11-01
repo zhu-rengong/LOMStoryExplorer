@@ -5,6 +5,7 @@ import argparse
 from ..build.pipeline import run_build
 from ..config import DEFAULT_LANG, DEFAULT_LANGS
 from ..console import Reporter
+from ..wire import TEXT_MODE_FULL, TEXT_MODE_SHARDS
 from .common import EXIT_DATA, EXIT_OK, EXIT_USAGE, split_langs
 
 
@@ -31,7 +32,7 @@ def main(argv: list[str] | None = None) -> int:
         langs=langs,
         default_lang=default_lang,
         use_cache=not args.no_cache,
-        full_text=args.full_text,
+        mode=TEXT_MODE_FULL if args.full_text else TEXT_MODE_SHARDS,
         jobs=args.jobs,
         reporter=Reporter(),
     )

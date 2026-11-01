@@ -14,31 +14,16 @@
 
     const $ = (id) => document.getElementById(id);
 
-    const panelOf = (def) => {
-      if (!def) return null;
-      if (def.panel && def.panel.isConnected) return def.panel;
-      if (typeof def.panel === "string") {
-        def.panel = $(def.panel);
-      } else if (def.id) {
-        def.panel = $(def.id);
-      }
-      return def.panel;
-    };
+    const panelOf = (def) => (def ? def.panel : null);
 
-    const triggerOf = (def, explicit) => {
-      if (explicit) return explicit;
-      if (def.trigger && def.trigger.isConnected) return def.trigger;
-      if (typeof def.trigger === "string") {
-        def.trigger = $(def.trigger);
-      } else if (def.triggerId) {
-        def.trigger = $(def.triggerId);
-      }
-      return def.trigger;
-    };
+    const triggerOf = (def, explicit) => explicit || (def ? def.trigger : null);
 
     const register = (key, def) => {
-      defs[key] = def || {};
-      return defs[key];
+      const entry = def || {};
+      entry.panel = entry.panel || $(entry.id) || null;
+      entry.trigger = entry.trigger || $(entry.triggerId) || null;
+      defs[key] = entry;
+      return entry;
     };
 
     const topKey = () => (stack.length ? stack[stack.length - 1].key : "");
@@ -251,13 +236,7 @@
 
     const close = (key, options) => {
       const opts = options || {};
-      let index = -1;
-      for (let cursor = 0; cursor < stack.length; cursor++) {
-        if (stack[cursor].key === key) {
-          index = cursor;
-          break;
-        }
-      }
+      const index = stack.findIndex((layer) => layer.key === key);
       if (index < 0) {
         hideLayer(key);
         return false;

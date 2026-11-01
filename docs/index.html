@@ -70,7 +70,7 @@
       <div id="searchResults" class="dropdown surface popover" role="listbox" hidden></div>
     </div>
 
-    <div class="menu-wrap" id="filterWrap">
+    <div class="menu-wrap">
       <button id="filterBtn" class="btn filter-btn" type="button" aria-haspopup="dialog" aria-expanded="false"
               aria-controls="filterPanel"
               data-i18n-title="filterBtnTitle" title="用條件篩選劇本">
@@ -114,8 +114,8 @@
     </div>
   </div>
 
-  <div class="tools" id="toolbar">
-    <div class="menu-wrap" id="langWrap">
+  <div class="tools">
+    <div class="menu-wrap">
       <button id="langBtn" class="btn btn-icon" type="button" aria-haspopup="true" aria-expanded="false"
               aria-controls="langMenu"
               data-i18n-title="langBtnTitle" title="語言">
@@ -142,7 +142,7 @@
       <svg><use href="#i-gear"/></svg>
     </button>
 
-    <div class="menu-wrap more-wrap" id="moreWrap">
+    <div class="menu-wrap more-wrap">
       <button id="moreBtn" class="btn btn-icon" type="button" aria-haspopup="true" aria-expanded="false"
               aria-controls="moreMenu"
               data-i18n-title="moreTitle" title="更多">
@@ -162,9 +162,9 @@
       </button>
     </div>
     <div class="rail-tabs tabs" role="tablist" data-i18n-label="railTabsLabel" aria-label="左欄視圖">
-      <button id="railTabOutline" class="rail-tab tab is-on" data-rail="outline" role="tab"
+      <button class="rail-tab tab is-on" data-rail="outline" role="tab"
               aria-selected="true" data-i18n="railTabOutline">目錄</button>
-      <button id="railTabBookmarks" class="rail-tab tab" data-rail="bookmarks" role="tab"
+      <button class="rail-tab tab" data-rail="bookmarks" role="tab"
               aria-selected="false" data-i18n="railTabBookmarks">書籤</button>
     </div>
     <div id="railSearchBox" class="rail-search">
@@ -178,7 +178,7 @@
   <div id="railScrim" class="scrim" hidden></div>
 
   <section id="reader" aria-live="polite">
-    <header id="readerHead" class="reader-head">
+    <header class="reader-head">
       <div class="reader-title">
         <div class="reader-title-row">
           <div class="reader-headline">

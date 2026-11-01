@@ -7,11 +7,13 @@ from typing import Any
 
 from .cache import atomic_write_text, dump_json
 from .config import CHECKPOINT_SHARDS, SCHEMA_VERSION
-from .wire import GLOBAL_CHECKPOINTS, GLOBAL_GRAPH, GLOBAL_TEXT, GLOBAL_WORDCOUNT
-
-
-def write_script(path: Path, body: str) -> int:
-    return atomic_write_text(path, body)
+from .wire import (
+    GLOBAL_CHECKPOINTS,
+    GLOBAL_GRAPH,
+    GLOBAL_TEXT,
+    GLOBAL_WORDCOUNT,
+    TEXT_MODE_FULL,
+)
 
 
 def graph_script(payload: Any) -> str:
@@ -45,7 +47,7 @@ def wordcount_script(payload: Any) -> str:
 def text_payload(lang: str, characters: Mapping[str, str], names: Mapping[str, Any],
                  edge_labels: Mapping[str, str], stories: Mapping[str, Any],
                  shard_keys: Sequence[str], missing: int, missing_keys: Sequence[str],
-                 full_text: bool) -> dict[str, Any]:
+                 mode: str) -> dict[str, Any]:
     return {
         "schema": SCHEMA_VERSION,
         "lang": lang,
@@ -56,24 +58,24 @@ def text_payload(lang: str, characters: Mapping[str, str], names: Mapping[str, A
         "missingKeys": list(missing_keys),
         "stories": dict(stories),
         "shardKeys": list(shard_keys),
-        "fullText": full_text,
+        "fullText": mode == TEXT_MODE_FULL,
     }
 
 
 def write_graph(path: Path, payload: Mapping[str, Any]) -> int:
-    return write_script(path, graph_script(payload))
+    return atomic_write_text(path, graph_script(payload))
 
 
 def write_text(path: Path, lang: str, payload: Mapping[str, Any]) -> int:
-    return write_script(path, text_head_script(lang, payload))
+    return atomic_write_text(path, text_head_script(lang, payload))
 
 
 def write_text_shard(path: Path, lang: str, stories: Mapping[str, Any]) -> int:
-    return write_script(path, text_shard_script(lang, stories))
+    return atomic_write_text(path, text_shard_script(lang, stories))
 
 
 def write_wordcount(path: Path, payload: Mapping[str, Any]) -> int:
-    return write_script(path, wordcount_script(payload))
+    return atomic_write_text(path, wordcount_script(payload))
 
 
 def write_checkpoint_shards(dir_path: Path, items: Mapping[str, Any],
@@ -88,6 +90,6 @@ def write_checkpoint_shards(dir_path: Path, items: Mapping[str, Any],
     written: list[dict[str, Any]] = []
     for index, bucket in enumerate(buckets):
         path = Path(dir_path) / f"checkpoints-{index}.js"
-        size = write_script(path, checkpoint_script(bucket))
+        size = atomic_write_text(path, checkpoint_script(bucket))
         written.append({"index": index, "name": path.name, "keys": len(bucket), "bytes": size})
     return written

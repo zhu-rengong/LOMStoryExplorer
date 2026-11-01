@@ -259,8 +259,11 @@
 
   const snapshot = () => clone(state);
 
+  const listeners = new Set();
+
   const notify = () => {
-    document.dispatchEvent(new CustomEvent("sr:prefs", { detail: snapshot() }));
+    const detail = snapshot();
+    for (const listener of Array.from(listeners)) listener(detail);
   };
 
   const restoreDefaults = () => {
@@ -372,6 +375,10 @@
       weights: WEIGHTS.slice(),
     },
     measureRange: { min: MEASURE_MIN, max: MEASURE_MAX, fallback: MEASURE_DEFAULT },
+    onChange: (listener) => {
+      listeners.add(listener);
+      return () => listeners.delete(listener);
+    },
     groupById: groupById,
     typeById: typeById,
     computed: computedOf,

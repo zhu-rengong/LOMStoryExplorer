@@ -14,7 +14,6 @@
       let total = 0;
       let outside = 0;
       let rendered = 0;
-      let active = 0;
       let lastQuery = "";
       let renderedQuery = "";
       let renderedFilterSet = null;
@@ -44,13 +43,7 @@
         return node;
       };
 
-      const hide = () => {
-        if (!overlay.close("searchResults")) {
-          const box = $("searchResults");
-          if (box) box.hidden = true;
-          ui.setExpanded($("search"), false);
-        }
-      };
+      const hide = () => overlay.close("searchResults");
 
       const show = () => {
         const input = $("search");
@@ -135,7 +128,6 @@
         hits = result.hits;
         total = result.total;
         outside = result.outside;
-        active = 0;
         const scrollTop = keepScroll ? box.scrollTop : 0;
         const limit = keepScroll ? Math.max(rendered, PAGE) : PAGE;
         rendered = Math.min(hits.length, limit);
@@ -202,7 +194,6 @@
         if (!input || !box) return 0;
         const query = input.value.trim();
         lastQuery = query;
-        store.setQuery(query);
         if (!query) {
           hide();
           return 0;
@@ -276,7 +267,7 @@
       const onInput = ui.debounce(perform, 160);
 
       const choose = () => {
-        const hit = hits[active] || hits[0];
+        const hit = hits[0];
         if (!hit) return false;
         hide();
         reader.focusText(hit.id, lastQuery);
@@ -289,7 +280,6 @@
         total = 0;
         outside = 0;
         rendered = 0;
-        active = 0;
         renderedQuery = "";
         renderedFilterSet = null;
         stale = true;

@@ -92,8 +92,13 @@ class CacheKey:
     fingerprint: str
 
 
+def _is_gzip(path: Path) -> bool:
+    return Path(path).suffix == ".gz"
+
+
 def load_envelope(path: Path, key: CacheKey) -> Any | None:
-    payload = read_gzip_json(path) if Path(path).suffix == ".gz" else read_json(path)
+    target = Path(path)
+    payload = read_gzip_json(target) if _is_gzip(target) else read_json(target)
     if not isinstance(payload, dict):
         return None
     if payload.get("version") != key.version:
@@ -104,8 +109,9 @@ def load_envelope(path: Path, key: CacheKey) -> Any | None:
 
 
 def save_envelope(path: Path, key: CacheKey, data: Any) -> None:
+    target = Path(path)
     envelope = {"version": key.version, "fingerprint": key.fingerprint, "data": data}
-    if Path(path).suffix == ".gz":
-        write_gzip_json(path, envelope)
+    if _is_gzip(target):
+        write_gzip_json(target, envelope)
     else:
-        write_json(path, envelope, indent=None)
+        write_json(target, envelope, indent=None)

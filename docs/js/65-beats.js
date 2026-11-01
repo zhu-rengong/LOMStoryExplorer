@@ -10,8 +10,8 @@
   const SAY_CLASS = ["", "narration", "think"];
   const ENTRY_KEYS = { combat: "entryCombat", free: "entryFree" };
 
-  SR.define("beats", ["schema", "graph", "store", "i18n", "ui", "text", "condexpr"],
-    ({ schema, graph, store, i18n, ui, text, condexpr }) => {
+  SR.define("beats", ["schema", "graph", "store", "i18n", "ui", "text", "condexpr", "checkpoints"],
+    ({ schema, graph, store, i18n, ui, text, condexpr, checkpoints }) => {
       const clampScale = (value) => {
         if (!Number.isFinite(value) || value <= 0) return 1;
         return ui.clamp(value, RICH_MIN, RICH_MAX);
@@ -97,7 +97,7 @@
         const key = extractKey(label);
         if (!key) return;
         const result = condexpr.resultOf(label);
-        condexpr.ensure(key).then(() => {
+        checkpoints.ensure(key).then(() => {
           if (!cond.isConnected) return;
           const expr = condexpr.pick(kind, key, result);
           if (expr) {
@@ -122,11 +122,8 @@
 
       const renderChoice = (beat, ctx) => {
         const box = ui.el("div", "choice");
-        const beatKey = `bt${ctx.seq++}`;
-        box.dataset.beat = beatKey;
         schema.choices(beat).forEach((option, index) => {
           const wrapper = ui.el("div", "option");
-          wrapper.dataset.opt = `${beatKey}:${index}`;
           const button = ui.el("button", "option-head row");
           button.type = "button";
           ui.setExpanded(button, false);
@@ -161,7 +158,6 @@
       const renderBranch = (beat, ctx) => {
         const data = schema.branch(beat);
         const box = ui.el("div", "branch");
-        box.dataset.beat = `bt${ctx.seq++}`;
         const body = ui.el("div", "branch-body");
         body.appendChild(renderBeats(data.beats, ctx));
         const empty = !body.childNodes.length;
@@ -169,10 +165,7 @@
 
         const head = ui.el("div", empty ? "branch-head" : "branch-head row row-sm");
         const cond = ui.el("span", "cond", data.label);
-        if (data.label) {
-          cond.title = data.label;
-          cond.dataset.label = data.label;
-        }
+        if (data.label) cond.title = data.label;
         head.appendChild(cond);
         upgradeBranchCond(cond, data.label, data.kind, empty ? { lookup: null } : ctx);
 
@@ -262,7 +255,7 @@
       };
 
       const renderBeats = (rows, context) => {
-        const ctx = context || { seq: 0 };
+        const ctx = context || {};
         const frag = document.createDocumentFragment();
         let metaBuffer = [];
         let branchBuffer = [];
@@ -476,7 +469,6 @@
       return {
         beatsPreview,
         entryBadge,
-        extractKey,
         firstLineOf,
         previewOfBranches,
         renderBeats,

@@ -19,7 +19,6 @@
       railTab: "outline",
       outlineChapter: undefined,
       settingsTarget: "type:dialog",
-      query: "",
     };
 
     const listeners = [];
@@ -137,9 +136,6 @@
       setOutlineChapter: (value) => {
         state.outlineChapter = value;
         commit("outline");
-      },
-      setQuery: (value) => {
-        state.query = value;
       },
       setRailTab: (tab) => {
         if (tab === state.railTab) return;

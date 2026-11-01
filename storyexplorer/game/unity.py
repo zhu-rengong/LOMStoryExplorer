@@ -90,22 +90,17 @@ def fingerprint(base_dir: Path) -> str:
 
 class Deref:
     def __init__(self, env: Any, local: dict[int, Any], serialized: Any,
-                 base_dir: Path, adapter: Any, store: dict[Any, Any] | None = None) -> None:
+                 base_dir: Path, adapter: Any, store: dict[str, Any] | None = None) -> None:
         self.env = env
         self.local = local
         self.serialized = serialized
         self.base_dir = Path(base_dir)
         self.adapter = adapter
         self.externals = list(getattr(serialized, "externals", []) or [])
-        self.store: dict[Any, Any] = store if store is not None else {}
-        self.children: dict[int, Deref] = {}
-        self.store.setdefault(self.key(serialized), (env, serialized, local))
+        self.store: dict[str, Any] = store if store is not None else {}
+        self.children: dict[str, Deref] = {}
 
-    @staticmethod
-    def key(serialized: Any) -> int:
-        return id(serialized)
-
-    def _file(self, file_id: int) -> tuple[Any, Any, dict[int, Any]] | None:
+    def _file(self, file_id: int) -> tuple[str, Any, Any, dict[int, Any]] | None:
         if not 1 <= file_id <= len(self.externals):
             return None
         try:
@@ -117,7 +112,7 @@ class Deref:
         loaded = self.store[name] if name in self.store else self._load(name)
         if not isinstance(loaded, tuple):
             return None
-        return loaded
+        return name, *loaded
 
     def _load(self, name: str) -> tuple[Any, Any, dict[int, Any]] | None:
         entry = None
@@ -131,8 +126,6 @@ class Deref:
             except Exception:
                 entry = None
         self.store[name] = entry
-        if entry is not None:
-            self.store.setdefault(self.key(entry[1]), entry)
         return entry
 
     def scope(self, ref: Any) -> tuple[Any, Deref]:
@@ -147,15 +140,14 @@ class Deref:
         entry = self._file(file_id)
         if entry is None:
             return None, self
-        env, serialized, table = entry
+        name, env, serialized, table = entry
         obj = table.get(path_id)
         if obj is None:
             return None, self
-        key = self.key(serialized)
-        child = self.children.get(key)
+        child = self.children.get(name)
         if child is None:
             child = Deref(env, table, serialized, self.base_dir, self.adapter, self.store)
-            self.children[key] = child
+            self.children[name] = child
         return obj, child
 
     def __call__(self, ref: Any) -> Any:
@@ -174,12 +166,6 @@ class Session:
         self._known: set[str] | None = None
         self._failed: set[str] = set()
         self.warnings = 0
-
-    def __enter__(self) -> Session:
-        return self
-
-    def __exit__(self, *_exc: Any) -> None:
-        self.close()
 
     def close(self) -> None:
         for env in self._envs.values():
@@ -277,7 +263,8 @@ class Session:
 
     def object_of(self, name: str, ref: Any) -> Any:
         if not isinstance(ref, dict):
-            ref = getattr(ref, "as_dict", lambda: None)()
+            convert = getattr(ref, "as_dict", None)
+            ref = convert() if callable(convert) else None
         if not isinstance(ref, dict):
             return None
         path_id = int(ref.get("m_PathID") or 0)
@@ -313,8 +300,3 @@ class Session:
 
     def ref_tree(self, name: str, ref: Any) -> dict | None:
         return self.tree(name, self.object_of(name, ref))
-
-    def string_of(self, name: str, ref: Any, field: str) -> str:
-        tree = self.ref_tree(name, ref) or {}
-        value = tree.get(field)
-        return value.strip() if isinstance(value, str) else ""

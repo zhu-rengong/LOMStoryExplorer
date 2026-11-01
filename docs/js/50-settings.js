@@ -110,23 +110,14 @@
     const families = () => detected || FONT_CANDIDATES;
 
     return {
-      computed: prefs.computed,
-      describe: prefs.describe,
+      ...prefs,
       ensureFamilies,
       families,
-      get: prefs.get,
-      groupById: prefs.groupById,
-      labels: prefs.labels,
       onFamilies: (fn) => {
         const handler = (event) => fn(event.detail.families);
         document.addEventListener("sr:fonts", handler);
         return () => document.removeEventListener("sr:fonts", handler);
       },
-      pickLabel: prefs.pickLabel,
-      presets: prefs.presets,
-      reset: prefs.reset,
-      set: prefs.set,
-      typeById: prefs.typeById,
     };
   });
 })();

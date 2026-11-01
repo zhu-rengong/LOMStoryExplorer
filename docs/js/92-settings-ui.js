@@ -118,9 +118,7 @@
         if (search) search.focus();
       };
 
-      const closePicker = () => {
-        if (!overlay.close("fontPicker")) hidePickerRaw();
-      };
+      const closePicker = () => overlay.close("fontPicker");
 
       const patchEntry = (patch) => {
         const target = parseTarget();
@@ -292,7 +290,6 @@
         head.appendChild(ui.el("span", "preview-tag", i18n.typeLabel(typeId)));
         box.appendChild(head);
         const specimen = ui.el("div", "preview-specimen");
-        specimen.dataset.type = typeId;
         specimen.appendChild(specimenOf(typeId));
         box.appendChild(specimen);
       };
@@ -320,7 +317,6 @@
           const on = !!group && item.id === group.id;
           const button = ui.el("button", `type-group${on ? " is-on" : ""}`, label(item.label));
           button.type = "button";
-          button.dataset.group = item.id;
           button.setAttribute("aria-pressed", String(on));
           button.addEventListener("click", () => {
             store.setSettingsTarget(`group:${item.id}`);
@@ -340,7 +336,6 @@
           `type-tab btn btn-sm${target.scope === "group" ? " is-on" : ""}`,
           label(settings.labels.groupAll));
         all.type = "button";
-        all.dataset.target = `group:${group.id}`;
         all.setAttribute("aria-pressed", String(target.scope === "group"));
         all.addEventListener("click", () => {
           store.setSettingsTarget(`group:${group.id}`);
@@ -351,7 +346,6 @@
           const on = target.scope === "type" && target.id === type.id;
           const button = ui.el("button", `type-tab btn btn-sm${on ? " is-on" : ""}`, i18n.typeLabel(type.id));
           button.type = "button";
-          button.dataset.target = `type:${type.id}`;
           button.setAttribute("aria-pressed", String(on));
           button.addEventListener("click", () => {
             store.setSettingsTarget(`type:${type.id}`);
@@ -440,7 +434,7 @@
 
       const close = () => {
         closePicker();
-        if (!overlay.close("settings")) hideRaw();
+        overlay.close("settings");
       };
 
       const bind = () => {
@@ -527,10 +521,7 @@
         const button = $("settingsBtn");
         if (button) button.addEventListener("click", open);
 
-        document.addEventListener("sr:prefs", () => {
-          if (!document.getElementById("settingsDrawer")) return;
-          sync();
-        });
+        settings.onChange(() => sync());
         settings.onFamilies(() => {
           const picker = $("fontPicker");
           if (!picker || picker.hidden || !pickerState.target) return;
