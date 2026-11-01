@@ -18,7 +18,6 @@
       let lastQuery = "";
       let renderedQuery = "";
       let renderedFilterSet = null;
-      let savedScroll = 0;
       let stale = true;
       let warming = null;
       let warmingLang = "";
@@ -55,13 +54,11 @@
 
       const show = () => {
         const input = $("search");
-        const box = $("searchResults");
         overlay.open("searchResults", {
           trigger: input,
           placement: { align: "start", gap: 8, matchWidth: true, fit: true },
         });
         ui.setExpanded(input, true);
-        if (box) box.scrollTop = savedScroll;
       };
 
       const loadingText = () => {
@@ -139,7 +136,7 @@
         total = result.total;
         outside = result.outside;
         active = 0;
-        const scrollTop = keepScroll ? savedScroll : 0;
+        const scrollTop = keepScroll ? box.scrollTop : 0;
         const limit = keepScroll ? Math.max(rendered, PAGE) : PAGE;
         rendered = Math.min(hits.length, limit);
 
@@ -181,11 +178,10 @@
 
         box.replaceChildren(frag);
         updateStatus(query);
-        savedScroll = scrollTop;
         renderedQuery = query;
         renderedFilterSet = store.state.filterSet;
         stale = false;
-        box.scrollTop = savedScroll;
+        box.scrollTop = scrollTop;
         return hits.length;
       };
 
@@ -217,7 +213,7 @@
           show();
           return hits.length;
         }
-        const count = render(query, query === renderedQuery && filterSet === renderedFilterSet);
+        const count = render(query);
         show();
         return count;
       };
@@ -296,7 +292,6 @@
         active = 0;
         renderedQuery = "";
         renderedFilterSet = null;
-        savedScroll = 0;
         stale = true;
         hide();
       };
@@ -321,7 +316,6 @@
           }
         });
         box.addEventListener("scroll", () => {
-          savedScroll = box.scrollTop;
           if (box.scrollTop + box.clientHeight >= box.scrollHeight - SCROLL_GAP) appendMore();
         });
         overlay.register("searchResults", {
