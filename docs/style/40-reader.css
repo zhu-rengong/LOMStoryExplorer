@@ -372,12 +372,6 @@
   color: var(--ink-hold);
 }
 
-.branch-head.row .cond {
-  font-family: inherit;
-  font-size: inherit;
-  font-weight: 400;
-}
-
 .branch-head.row .cond.is-expr { color: inherit; }
 
 .branch-head.row:active .cond,
@@ -625,7 +619,9 @@
 
 .jump .option-cond {
   color: inherit;
-  font: inherit;
+  font-family: var(--rd-font-option-cond, var(--font-mono));
+  font-size: var(--rd-fs-option-cond, var(--fs-xs));
+  font-weight: var(--rd-w-option-cond, 400);
 }
 
 .jump.dynamic {
@@ -674,6 +670,12 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.meta-action {
+  font-family: var(--rd-font-label, var(--font-mono));
+  font-size: var(--rd-fs-label, var(--fs-xs));
+  font-weight: var(--rd-w-label, 400);
 }
 
 .is-flash {
