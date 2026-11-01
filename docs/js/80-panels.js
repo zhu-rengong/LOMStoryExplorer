@@ -55,6 +55,8 @@
         if (!kind) {
           const index = ensureNameIndex();
           const plain = raw.replace(/\s*[+-]\d+\s*$/, "").trim();
+          const relName = plain.replace(/\s*(?:好感度|好感)$/, "").trim();
+          const relKey = index.rels[plain] || index.rels[relName];
           if (index.flags[plain]) {
             kind = "flag";
             key = index.flags[plain];
@@ -64,9 +66,9 @@
           } else if (index.stats[plain]) {
             kind = "stat";
             key = index.stats[plain];
-          } else if (index.rels[plain]) {
+          } else if (relKey) {
             kind = "rel";
-            key = index.rels[plain];
+            key = relKey;
           }
         }
         return kind ? { kind, key } : null;

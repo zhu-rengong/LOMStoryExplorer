@@ -196,24 +196,42 @@
   isolation: isolate;
 }
 
-.option + .option { border-top: 1px solid var(--line-1); }
+.option + .option { margin-top: var(--sp-1); }
 
 .option-head {
   display: flex;
   align-items: flex-start;
   gap: var(--sp-3);
   width: 100%;
-  padding: 13px 4px;
+  min-height: var(--ctl-sm);
+  padding: 8px var(--sp-2);
+  border: 1px solid var(--line-1);
   border-radius: var(--r-sm);
-  background: transparent;
+  background: var(--surface);
   color: var(--ink-2);
-  font-size: var(--rd-fs-option, var(--rd-fs-sm));
+  font-size: var(--fs-xs);
   text-align: left;
   transition: color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease),
               border-color var(--t-fast) var(--ease);
 }
 
-.option-head:hover { color: var(--ink-hover); }
+.option-head:hover {
+  border-color: var(--line-2);
+  background: var(--surface-hover);
+  color: var(--ink-hover);
+}
+
+.option-head:active {
+  border-color: var(--line-3);
+  background: var(--surface-active);
+  color: var(--ink);
+}
+
+.option-head:active:not(:hover) {
+  border-color: var(--line-hold);
+  background: var(--surface-hold);
+  color: var(--ink-hold);
+}
 
 .option-head:hover .option-idx { color: var(--accent); }
 
@@ -454,7 +472,7 @@
 .cx-gtag {
   border: 1px solid transparent;
   border-radius: var(--r-sm);
-  background: var(--surface-inset);
+  background: none;
 }
 
 .cx-var {
@@ -485,19 +503,29 @@
 
 .cx-neg { color: var(--danger); font-size: var(--fs-micro); }
 
-.cx-var.is-link { cursor: pointer; }
+.cx-var.is-link {
+  border-color: var(--line-1);
+  background: var(--surface);
+  cursor: pointer;
+}
 
 .cx-var.is-link:hover {
-  border-color: var(--accent);
-  color: var(--accent-strong);
+  border-color: var(--line-2);
+  background: var(--surface-hover);
+  color: var(--ink-hover);
 }
 
-.cx-var.is-link:hover .cx-name {
-  text-decoration: underline;
-  text-underline-offset: 3px;
+.cx-var.is-link:active {
+  border-color: var(--line-3);
+  background: var(--surface-active);
+  color: var(--ink);
 }
 
-.cx-var.is-link:active { border-color: var(--accent-strong); }
+.cx-var.is-link:active:not(:hover) {
+  border-color: var(--line-hold);
+  background: var(--surface-hold);
+  color: var(--ink-hold);
+}
 
 .cx-group {
   display: inline-flex;
@@ -522,14 +550,13 @@
 
 .cx-fallback {
   display: inline-block;
-  padding: 0 6px;
-  border: 1px dashed var(--line-2);
-  border-radius: var(--r-sm);
-  background: var(--surface-inset);
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--ink-2);
   font-family: var(--font-mono);
   letter-spacing: .04em;
-  cursor: help;
+  cursor: default;
 }
 
 .branch-head .cond .cx-fallback,
@@ -557,14 +584,6 @@
 
 .lore-text .lore-p + .lore-p { margin-top: .45em; }
 
-.scene-switch,
-.chip-stat {
-  border: 1px solid transparent;
-  border-radius: var(--r-sm);
-  background: var(--surface-inset);
-  color: var(--ink-2);
-}
-
 .scene-switch {
   display: flex;
   flex-wrap: wrap;
@@ -573,7 +592,10 @@
   width: fit-content;
   max-width: 100%;
   margin: 0 0 var(--rd-gap-3);
-  padding: 3px 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
   font-family: var(--rd-font-label, var(--font-mono));
   font-size: var(--rd-fs-label, var(--fs-xs));
   font-weight: var(--rd-w-label, 400);
@@ -612,22 +634,15 @@
   gap: 6px;
   width: fit-content;
   height: auto;
-  padding: 3px 8px;
+  padding: 0;
+  border: 0;
+  background: none;
   font-family: var(--rd-font-label, var(--font-mono));
   font-size: var(--rd-fs-label, var(--fs-xs));
   font-weight: var(--rd-w-label, 400);
   line-height: 1.7;
-  border-style: dashed;
-  border-color: var(--line-2);
-  background: transparent;
   color: var(--ink-2);
   cursor: default;
-}
-
-.jump.dynamic:hover {
-  border-color: var(--line-1);
-  background: transparent;
-  color: var(--ink-2);
 }
 
 .meta-group {
@@ -647,8 +662,10 @@
   justify-content: flex-start;
   max-width: 100%;
   height: auto;
-  min-height: 22px;
-  padding: 2px 7px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-2);
   font-family: var(--rd-font-label, var(--font-mono));
   font-size: var(--rd-fs-label, var(--fs-xs));
   font-weight: var(--rd-w-label, 400);
