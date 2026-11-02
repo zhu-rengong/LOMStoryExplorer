@@ -196,7 +196,7 @@
 .choice:hover::after,
 .branch-group:hover::after { color: var(--accent); }
 
-.choice > .meta-action { margin: var(--rd-gap-3) 0 var(--rd-gap-2); }
+.choice > .meta-action { margin: var(--rd-gap-3) var(--sp-2) var(--rd-gap-2) 0; }
 
 .option {
   position: relative;
@@ -660,7 +660,7 @@
 .scene-switch .scene-next { color: var(--ink-2); }
 
 .jump {
-  margin: 0 0 var(--rd-gap-3);
+  margin: 0 var(--sp-2) var(--rd-gap-3) 0;
   font-family: var(--rd-ff-jump, var(--font-base));
   font-size: var(--rd-fs-jump, 16px);
   font-weight: var(--rd-fw-jump, 400);
