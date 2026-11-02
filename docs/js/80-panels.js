@@ -9,7 +9,7 @@
       const $ = ui.$;
       const HOVER_OK = !(window.matchMedia && window.matchMedia("(hover: none)").matches);
 
-      const lookup = { open: false, seq: 0 };
+      const lookup = { open: false, seq: 0, pinned: false };
 
       let preview = null;
 
@@ -32,6 +32,7 @@
         const panel = $("lookupPanel");
         if (panel) panel.hidden = true;
         lookup.open = false;
+        lookup.pinned = false;
       };
 
       const closeLookup = () => overlay.close("lookup");
@@ -52,6 +53,7 @@
         if (!key) return;
         const panel = $("lookupPanel");
         if (!panel) return;
+        const inPanel = !!(trigger && panel.contains(trigger));
         const data = lookupItems(kind, key);
         const name = kind === "speaker" ? beats.speakerName(key) : names.label(kind, key);
 
@@ -98,8 +100,11 @@
 
         lookup.open = true;
         panel.hidden = false;
-        overlay.open("lookup", { trigger: trigger || null });
-        positionLookup(trigger);
+        lookup.pinned = inPanel;
+        if (!inPanel) {
+          overlay.open("lookup", { trigger: trigger || null });
+          positionLookup(trigger);
+        }
       };
 
       const condRow = (parent, content, result) => {
@@ -139,11 +144,27 @@
           return ui.el("p", "lc-row lc-plain", item == null ? "" : String(item));
         }
         const row = ui.el("p", `lc-row lc-add${item.negative ? " is-neg" : ""}`);
-        const main = ui.el("span", "lc-add-main");
         const typeKey = item.kind ? `diceAdd.${item.kind}` : "";
         const typeLabel = typeKey ? i18n.t(typeKey, { defaultValue: "" }) : "";
-        if (typeLabel) main.appendChild(ui.el("span", "lc-add-type", typeLabel));
-        main.appendChild(ui.el("span", "lc-add-name", condexpr.localizedName(item) || item.key || "—"));
+        const name = condexpr.localizedName(item) || item.key || "—";
+        const linkable = !!item.key && (item.kind === "stat" || item.kind === "rel" || item.kind === "flag");
+        let main;
+        if (linkable) {
+          main = ui.el("button", "cx-var is-link");
+          main.type = "button";
+          main.title = i18n.t(lookupTitleKey(item.kind));
+          if (typeLabel) main.appendChild(ui.el("span", "cx-type", typeLabel));
+          main.appendChild(ui.el("span", "cx-name", name));
+          main.addEventListener("click", (event) => {
+            event.stopPropagation();
+            event.preventDefault();
+            openLookup(item.kind, item.key, main);
+          });
+        } else {
+          main = ui.el("span", "lc-add-main");
+          if (typeLabel) main.appendChild(ui.el("span", "lc-add-type", typeLabel));
+          main.appendChild(ui.el("span", "lc-add-name", name));
+        }
         row.appendChild(main);
         const rate = Number(item.rate);
         const factor = Number.isFinite(rate) && rate !== 1 ? i18n.t("diceAddRate", { n: rate }) : "";
@@ -219,12 +240,12 @@
           const model = checkpoints.get(key, method);
           if (!model) {
             box.remove();
-            if (lookup.open) overlay.reposition("lookup");
+            if (lookup.open && !lookup.pinned) overlay.reposition("lookup");
             return;
           }
           body.replaceChildren();
           renderCondModel(body, model);
-          if (lookup.open) overlay.reposition("lookup");
+          if (lookup.open && !lookup.pinned) overlay.reposition("lookup");
         });
       };
 
