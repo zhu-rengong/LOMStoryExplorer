@@ -1,0 +1,171 @@
+(() => {
+  "use strict";
+
+  const SR = window.SR;
+
+  SR.define("store", ["schema", "graph", "storage", "lang"], ({ schema, graph, storage, lang }) => {
+    const meta = schema.meta;
+
+    const state = {
+      lang: lang.initial(),
+      selectedId: "",
+      history: [],
+      hIndex: -1,
+      filterSource: "",
+      filterSet: null,
+      filterError: "",
+      filterLoading: false,
+      layout: "wide",
+      railTab: "outline",
+      outlineChapter: undefined,
+      settingsTarget: "type:dialog",
+    };
+
+    const listeners = [];
+    const pending = new Set();
+    let restored = false;
+
+    const notify = () => {
+      if (!pending.size) return;
+      const keys = new Set(pending);
+      pending.clear();
+      for (const listener of listeners.slice()) {
+        let hit = false;
+        for (const key of keys) {
+          if (listener.keys.has(key)) {
+            hit = true;
+            break;
+          }
+        }
+        if (hit) listener.fn(keys);
+      }
+    };
+
+    const commit = (...keys) => {
+      for (const key of keys) pending.add(key);
+      notify();
+    };
+
+    const computeVisible = () => graph.computeVisibility(
+      state.filterSet, state.selectedId);
+
+    const selected = () => (state.selectedId ? graph.nodeById.get(state.selectedId) || null : null);
+
+    const select = (id, options) => {
+      const node = graph.nodeById.get(id);
+      if (!node) return false;
+      const opts = options || {};
+      state.selectedId = id;
+      if (opts.history !== false) {
+        state.history = state.history.slice(0, state.hIndex + 1);
+        if (state.history[state.history.length - 1] !== id) state.history.push(id);
+        state.hIndex = state.history.length - 1;
+      }
+      computeVisible();
+      commit("selected", "history", "visible");
+      return true;
+    };
+
+    const back = () => {
+      if (state.hIndex <= 0) return null;
+      state.hIndex -= 1;
+      const id = state.history[state.hIndex];
+      if (!graph.nodeById.has(id)) return null;
+      state.selectedId = id;
+      computeVisible();
+      commit("selected", "history", "visible");
+      return graph.nodeById.get(id);
+    };
+
+    const forward = () => {
+      if (state.hIndex >= state.history.length - 1) return null;
+      state.hIndex += 1;
+      const id = state.history[state.hIndex];
+      if (!graph.nodeById.has(id)) return null;
+      state.selectedId = id;
+      computeVisible();
+      commit("selected", "history", "visible");
+      return graph.nodeById.get(id);
+    };
+
+    const setFilter = (patch) => {
+      if (!patch || typeof patch !== "object") return;
+      if (patch.source !== undefined) state.filterSource = String(patch.source);
+      if (patch.set !== undefined) state.filterSet = patch.set;
+      if (patch.error !== undefined) state.filterError = String(patch.error);
+      if (patch.loading !== undefined) state.filterLoading = !!patch.loading;
+      computeVisible();
+      commit("filter", "visible");
+    };
+
+    const restore = () => {
+      if (restored) return;
+      restored = true;
+      state.lang = lang.initial();
+      computeVisible();
+      commit("lang", "filter", "visible", "selected");
+    };
+
+    return {
+      applyFilter: setFilter,
+      back,
+      clearBookmarks: () => {
+        storage.clearBookmarks();
+        commit("bookmarks");
+      },
+      forward,
+      isBookmarked: (id) => storage.bookmarks.has(id),
+      positionOf: (id) => storage.positionOf(id),
+      rememberPosition: (id, fraction) => storage.rememberPosition(id, fraction),
+      restore,
+      selected,
+      select,
+      setLang: (id) => {
+        if (!lang.has(id)) return false;
+        const changed = id !== state.lang;
+        lang.pin(id);
+        state.lang = id;
+        if (changed) commit("lang");
+        return changed;
+      },
+      setLayout: (layout) => {
+        if (!layout || layout === state.layout) return;
+        state.layout = layout;
+        commit("layout");
+      },
+      setOutlineChapter: (value) => {
+        state.outlineChapter = value;
+        commit("outline");
+      },
+      setRailTab: (tab) => {
+        if (tab === state.railTab) return;
+        state.railTab = tab;
+        commit("railTab");
+      },
+      setSettingsTarget: (target) => {
+        state.settingsTarget = target;
+        commit("settingsTarget");
+      },
+      state,
+      textLang: () => {
+        if (meta.langs.indexOf(state.lang) >= 0) return state.lang;
+        if (meta.langs.indexOf(meta.defaultLang) >= 0) return meta.defaultLang;
+        return meta.langs[0] || meta.defaultLang || "";
+      },
+      subscribe: (keys, fn) => {
+        const listener = { keys: new Set(keys), fn };
+        listeners.push(listener);
+        return () => {
+          const index = listeners.indexOf(listener);
+          if (index >= 0) listeners.splice(index, 1);
+        };
+      },
+      toggleBookmark: (id) => {
+        if (!id) return false;
+        const on = storage.toggleBookmark(id);
+        commit("bookmarks");
+        return on;
+      },
+    };
+  });
+})();

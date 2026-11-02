@@ -1,0 +1,92 @@
+(() => {
+  "use strict";
+
+  const SR = window.SR;
+
+  SR.define("search", ["beat", "condtext", "graph", "store", "text", "ui"], ({ beat, condtext, graph, store, text, ui }) => {
+    const empty = () => ({ lang: "", seen: new Set(), entries: [], sorted: true });
+
+    let index = empty();
+
+    const passes = (nodeIndex) => graph.passes(nodeIndex, store.state.filterSet);
+
+    const ITEM_META = { book: true, misc: true, special: true, talent: true };
+
+    const itemText = (rows) => {
+      const parts = [];
+      beat.walk(rows, (row) => {
+        if (!beat.is(row, "meta")) return;
+        const data = beat.meta(row);
+        if (!ITEM_META[data.kind]) return;
+        const label = condtext.meta(data.kind, data.key, data.value);
+        if (label) parts.push(label);
+      });
+      return parts.join("\n");
+    };
+
+    const buildIndex = () => {
+      const lang = store.textLang();
+      if (index.lang !== lang) index = empty();
+      index.lang = lang;
+      const pack = text.pack(lang);
+      const stories = (pack && pack.stories) || {};
+      const ids = Object.keys(stories);
+      let added = false;
+      for (const id of ids) {
+        if (index.seen.has(id)) continue;
+        index.seen.add(id);
+        added = true;
+        const nodeIndex = graph.indexById.get(id);
+        const node = nodeIndex === undefined ? null : graph.nodes[nodeIndex];
+        index.entries.push({
+          id,
+          order: nodeIndex === undefined ? -1 : nodeIndex,
+          chapter: node ? graph.chapterOf(node) : null,
+          text: `${beat.textOf(stories[id])}\n${itemText(stories[id])}`.toLowerCase(),
+        });
+      }
+      if (added) index.sorted = false;
+      if (!index.sorted) {
+        index.entries.sort((a, b) => a.order - b.order);
+        index.sorted = true;
+      }
+      return index;
+    };
+
+    const invalidate = () => {
+      index = empty();
+    };
+
+    const search = (query) => {
+      const lower = ui.normalizeQuery(query);
+      const result = { hits: [], total: 0, outside: 0 };
+      if (lower.length < 2) return result;
+      const data = buildIndex();
+      const hits = result.hits;
+      let outside = 0;
+      for (const entry of data.entries) {
+        const position = entry.text.indexOf(lower);
+        if (position < 0) continue;
+        if (entry.order < 0) continue;
+        if (!passes(entry.order)) {
+          outside++;
+          continue;
+        }
+        hits.push({
+          id: entry.id,
+          index: entry.order,
+          chapter: entry.chapter,
+          snippet: entry.text.slice(Math.max(0, position - 16), position + 46),
+        });
+      }
+      result.total = hits.length + outside;
+      result.outside = outside;
+      return result;
+    };
+
+    return {
+      invalidate,
+      search,
+    };
+  });
+})();
