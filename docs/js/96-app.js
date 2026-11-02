@@ -7,10 +7,10 @@
 
   SR.define("app",
     ["schema", "beat", "graph", "store", "i18n", "text", "search", "searchUi",
-      "filterUi", "settingsUi", "rail", "reader", "panels", "stats", "shortcuts",
-      "grip", "overlay", "ui"],
+      "filterUi", "settingsUi", "rail", "reader", "panels", "stats", "changelog",
+      "shortcuts", "grip", "overlay", "ui"],
     ({ schema, beat, graph, store, i18n, text, search, searchUi, filterUi, settingsUi,
-      rail, reader, panels, stats, shortcuts, grip, overlay, ui }) => {
+      rail, reader, panels, stats, changelog, shortcuts, grip, overlay, ui }) => {
       const $ = ui.$;
 
       const layoutFor = (width) => {
@@ -137,6 +137,7 @@
         if (node) reader.render(node);
         else reader.empty();
         stats.refresh();
+        changelog.refresh();
         if (store.state.filterSource.trim()) filterUi.apply(store.state.filterSource);
       };
 
@@ -238,8 +239,15 @@
           closeMore();
           shortcuts.toggle();
         });
+        const changelogRow = ui.el("button", "menu-item row", i18n.t("changelogTitle"));
+        changelogRow.type = "button";
+        changelogRow.addEventListener("click", () => {
+          closeMore();
+          changelog.open($("changelogBtn"));
+        });
         menu.appendChild(statsRow);
         menu.appendChild(helpRow);
+        menu.appendChild(changelogRow);
 
         const node = store.selected();
         const targets = node ? reader.nextTargets(node) : [];
@@ -425,6 +433,7 @@
         filterUi.bind();
         searchUi.bind();
         stats.init();
+        changelog.init();
         shortcuts.init();
         grip.init();
         renderLangMenu();

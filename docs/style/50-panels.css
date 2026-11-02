@@ -953,7 +953,8 @@
 }
 
 .help-panel,
-.stats-panel {
+.stats-panel,
+.changelog-panel {
   position: fixed;
   top: 50%;
   left: 50%;
@@ -968,6 +969,8 @@
 }
 
 .help-panel { width: min(640px, calc(100vw - 40px)); }
+
+.changelog-panel { width: min(560px, calc(100vw - 40px)); }
 
 .stats-panel {
   width: min(880px, calc(100vw - 40px));
@@ -1024,6 +1027,75 @@
   font-size: var(--rd-fs-ui, 16px);
   font-weight: var(--rd-fw-ui, 400);
   line-height: var(--rd-lh-ui, 1.6);
+}
+
+.changelog-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  gap: var(--sp-5);
+  overflow-y: auto;
+  padding: var(--sp-5);
+}
+
+.changelog-entry {
+  display: grid;
+  gap: var(--sp-2);
+  padding-bottom: var(--sp-5);
+  border-bottom: 1px solid var(--line-1);
+}
+
+.changelog-entry:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.changelog-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.changelog-date {
+  color: var(--ink);
+  font-family: var(--rd-ff-caption, var(--font-mono));
+  font-size: var(--rd-fs-caption, 16px);
+  font-weight: var(--rd-fw-caption, 400);
+  line-height: var(--rd-lh-caption, 1.6);
+  letter-spacing: .06em;
+  font-variant-numeric: tabular-nums;
+}
+
+.changelog-range {
+  color: var(--ink-2);
+  font-family: var(--rd-ff-id, var(--font-mono));
+  font-size: var(--rd-fs-id, 16px);
+  font-weight: var(--rd-fw-id, 400);
+  line-height: var(--rd-lh-id, 1.6);
+}
+
+.changelog-badge {
+  margin-left: auto;
+  padding: 1px 7px;
+  border: 1px solid var(--line-1);
+  border-radius: var(--r-sm);
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  font-family: var(--rd-ff-caption, var(--font-mono));
+  font-size: var(--rd-fs-caption, 16px);
+  font-weight: var(--rd-fw-caption, 400);
+  line-height: 1.5;
+  letter-spacing: .08em;
+  white-space: nowrap;
+}
+
+.changelog-text {
+  color: var(--ink);
+  font-family: var(--rd-ff-ui, var(--font-base));
+  font-size: var(--rd-fs-ui, 16px);
+  font-weight: var(--rd-fw-ui, 400);
+  line-height: 1.85;
 }
 
 .stats-summary {

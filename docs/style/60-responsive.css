@@ -144,7 +144,8 @@ body[data-layout="mobile"] .searchwrap {
 body[data-layout="mobile"] .search-key { display: none; }
 
 body[data-layout="mobile"] #statsBtn,
-body[data-layout="mobile"] #helpBtn { display: none; }
+body[data-layout="mobile"] #helpBtn,
+body[data-layout="mobile"] #changelogBtn { display: none; }
 
 body[data-layout="mobile"] #chapterRail { width: min(320px, 88vw); }
 
@@ -230,7 +231,8 @@ body[data-layout="mobile"] .io-status { left: 12px; bottom: 12px; }
 
 @media (max-width: 767px) {
   .help-panel,
-  .stats-panel {
+  .stats-panel,
+  .changelog-panel {
     top: auto;
     bottom: 0;
     left: 0;
@@ -242,6 +244,8 @@ body[data-layout="mobile"] .io-status { left: 12px; bottom: 12px; }
   }
 
   .help-panel { max-height: 82vh; }
+
+  .changelog-panel { max-height: 78vh; }
 
   .help-list { grid-template-columns: 92px minmax(0, 1fr); }
 
