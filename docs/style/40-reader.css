@@ -552,6 +552,20 @@
   color: var(--ink-hold);
 }
 
+.reader-body :is(.branch-head, .option-head, .option-cond) .cx-var.is-link {
+  border-color: transparent;
+  background: none;
+}
+
+.reader-body :is(.branch-head, .option-head, .option-cond) .cx-var.is-link:hover,
+.reader-body :is(.branch-head, .option-head, .option-cond) .cx-var.is-link:hover span,
+.reader-body :is(.branch-head, .option-head, .option-cond) .cx-var.is-link:focus-visible,
+.reader-body :is(.branch-head, .option-head, .option-cond) .cx-var.is-link:focus-visible span {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
 .cx-group {
   display: inline-flex;
   align-items: baseline;
