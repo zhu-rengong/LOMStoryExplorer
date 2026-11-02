@@ -731,17 +731,6 @@
   font-weight: var(--rd-fw-label, 400);
 }
 
-.is-flash {
-  --flash-base: var(--ink-2);
-  animation: flash-beat 0.1667s ease-in-out 3;
-}
-
-.say .what.is-flash { --flash-base: var(--ink); }
-
-.say.narration .what.is-flash { --flash-base: var(--ink-2); }
-
-.say.think .what.is-flash { --flash-base: var(--ink-think); }
-
 .reader-skeleton {
   display: flex;
   flex-direction: column;

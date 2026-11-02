@@ -14,11 +14,6 @@
   from { opacity: 0; transform: translateY(3px); }
 }
 
-@keyframes flash-beat {
-  0%, 100% { color: var(--flash-base, var(--ink-2)); }
-  35%, 65% { color: var(--seal); }
-}
-
 @keyframes sk-pulse {
   0%, 100% { opacity: .5; }
   50% { opacity: 1; }
@@ -36,6 +31,4 @@
   .reader-body { scroll-behavior: auto; }
 
   .sk-line { animation: none; }
-
-  .is-flash { color: var(--seal) !important; }
 }

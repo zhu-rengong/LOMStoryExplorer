@@ -11,7 +11,6 @@
       const scrollMemory = new Map();
       let readingId = "";
       let pendingHit = null;
-      let flashTimer = 0;
 
       const revealHit = (target) => {
         const body = $("readerBody");
@@ -40,14 +39,6 @@
         });
       };
 
-      const flashHit = (target) => {
-        target.classList.remove("is-flash");
-        void target.offsetWidth;
-        target.classList.add("is-flash");
-        clearTimeout(flashTimer);
-        flashTimer = setTimeout(() => target.classList.remove("is-flash"), 1500);
-      };
-
       const applyHit = (node) => {
         if (!pendingHit) return;
         if (pendingHit.id !== node.id) {
@@ -67,7 +58,6 @@
         pendingHit = null;
         revealHit(target);
         scrollHit(target);
-        flashHit(target);
       };
 
       const focusText = (id, query) => {
