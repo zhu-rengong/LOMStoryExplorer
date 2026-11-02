@@ -149,7 +149,6 @@
   overflow-y: auto;
 }
 
-.filter-results-more,
 .filter-results-empty {
   padding: var(--sp-2) var(--sp-1);
   color: var(--ink-2);

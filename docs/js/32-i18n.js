@@ -199,10 +199,7 @@
           chapters: graph.chapters.length,
         });
         const line = document.getElementById("metaLine");
-        if (line) {
-          line.textContent = countsText;
-          line.title = countsText;
-        }
+        if (line) line.textContent = countsText;
 
         const meta = data.meta;
         const game = meta.game || {};
@@ -212,10 +209,7 @@
         if (game.build) parts.push(t("gameBuild", { build: game.build }));
         const buildText = parts.join(" · ");
         const build = document.getElementById("buildLine");
-        if (build) {
-          build.textContent = buildText;
-          build.title = buildText;
-        }
+        if (build) build.textContent = buildText;
       };
 
       return {

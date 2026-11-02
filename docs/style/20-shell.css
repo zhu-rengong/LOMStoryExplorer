@@ -132,14 +132,17 @@
   font-family: var(--rd-ff-ui-compact, var(--font-base));
   font-size: var(--rd-fs-ui-compact, 16px);
   font-weight: var(--rd-fw-ui-compact, 400);
-  transition: border-color var(--t-fast) var(--ease);
+  transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
 }
 
 .search-input:hover { border-color: var(--line-2); }
 
 .search-input:focus-visible { outline: none; }
 
-.search-input:focus { border-color: var(--accent); }
+.search-input:focus {
+  border-color: var(--accent);
+  background: var(--surface-focus);
+}
 
 .search-input::-webkit-search-cancel-button { appearance: none; }
 
