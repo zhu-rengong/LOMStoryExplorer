@@ -135,7 +135,7 @@
           if (option.lock || condText || needText) {
             const badges = ui.el("span", "option-badges");
             if (option.lock) {
-              badges.appendChild(ui.el("span", "badge badge-danger", `🔒 ${option.lock}`));
+              badges.appendChild(ui.el("span", "option-cond is-danger", `🔒 ${option.lock}`));
             }
             if (condText) badges.appendChild(ui.el("span", "option-cond", condText));
             if (needText) badges.appendChild(ui.el("span", "badge", needText));

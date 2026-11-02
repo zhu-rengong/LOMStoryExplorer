@@ -303,6 +303,8 @@
   color: var(--ink-2);
 }
 
+.option-cond.is-danger { color: var(--danger); }
+
 .option-body {
   padding: 2px var(--sp-3) var(--rd-gap-4) 30px;
   transition: background-color var(--t-fast) var(--ease);
