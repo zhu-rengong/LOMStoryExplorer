@@ -7,7 +7,7 @@
     ["store", "graph", "i18n", "text", "beats", "panels", "ui"],
     ({ store, graph, i18n, text, beats, panels, ui }) => {
       const $ = ui.$;
-      const HIT_SELECTOR = ".say .what, .option-text, .lore-p";
+      const HIT_SELECTOR = ".say .what, .option-text, .lore-p, .meta-chips .chip, .meta-chips .meta-action";
       const scrollMemory = new Map();
       let readingId = "";
       let pendingHit = null;
