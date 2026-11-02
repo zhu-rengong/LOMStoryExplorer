@@ -232,7 +232,7 @@
         if (data.name) line.appendChild(ui.el("span", "scene-name", data.name));
         if (data.key) line.appendChild(ui.el("span", "scene-key", data.key));
         if (data.next) {
-          line.appendChild(ui.el("span", "scene-arrow", "→"));
+          line.appendChild(ui.svg("i-arrow-right", "scene-arrow"));
           line.appendChild(ui.el("span", "scene-next", data.next));
         }
         return line;
@@ -249,7 +249,7 @@
         }
         const button = ui.el("button", "jump btn btn-sm");
         button.type = "button";
-        button.appendChild(ui.el("span", "arrow", "→"));
+        button.appendChild(ui.svg("i-arrow-right", "arrow"));
         button.appendChild(document.createTextNode(data.target));
         if (data.label) button.appendChild(ui.el("span", "option-cond", `  ${data.label}`));
         button.addEventListener("click", () => {

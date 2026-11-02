@@ -653,7 +653,12 @@
 
 .scene-switch .scene-key { color: var(--ink-2); }
 
-.scene-switch .scene-arrow { color: var(--accent); }
+.scene-switch .scene-arrow {
+  align-self: center;
+  width: 1em;
+  height: 1em;
+  color: var(--accent);
+}
 
 .scene-switch .scene-next { color: var(--ink-2); }
 
@@ -665,7 +670,11 @@
   line-height: 1;
 }
 
-.jump .arrow { color: var(--accent); }
+.jump .arrow {
+  width: 1em;
+  height: 1em;
+  color: var(--accent);
+}
 
 .jump .option-cond {
   color: inherit;

@@ -223,7 +223,7 @@
           case "jump": {
             const button = ui.el("button", "jump btn btn-sm");
             button.type = "button";
-            button.appendChild(ui.el("span", "arrow", "→"));
+            button.appendChild(ui.svg("i-arrow-right", "arrow"));
             button.appendChild(document.createTextNode(i18n.t("previewJump")));
             return button;
           }
