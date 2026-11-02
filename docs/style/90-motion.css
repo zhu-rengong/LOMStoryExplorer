@@ -15,7 +15,7 @@
 }
 
 @keyframes flash-beat {
-  0% { background: var(--accent-soft); }
+  0%, 55% { background: var(--accent-soft); }
   100% { background: transparent; }
 }
 
