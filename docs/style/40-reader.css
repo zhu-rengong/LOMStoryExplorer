@@ -733,7 +733,7 @@
 
 .is-flash {
   --flash-base: var(--ink-2);
-  animation: flash-beat 1.4s ease-in-out;
+  animation: flash-beat 0.5s ease-in-out;
 }
 
 .say .what.is-flash { --flash-base: var(--ink); }
