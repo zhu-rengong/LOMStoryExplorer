@@ -596,13 +596,10 @@
   color: var(--ink-2);
   font-family: var(--rd-ff-id, var(--font-mono));
   letter-spacing: .04em;
-  cursor: default;
 }
 
 .branch-head .cond .cx-fallback,
 .option-cond .cx-fallback { font-family: inherit; }
-
-.branch-head .cond.is-fallback { cursor: pointer; }
 
 .lore {
   margin: var(--rd-gap-3) 0 var(--rd-gap-4);
