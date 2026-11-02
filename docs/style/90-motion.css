@@ -15,8 +15,8 @@
 }
 
 @keyframes flash-beat {
-  0%, 55% { background: var(--accent-soft); }
-  100% { background: transparent; }
+  0%, 100% { color: var(--flash-base, var(--ink-2)); }
+  50% { color: var(--accent); }
 }
 
 @keyframes sk-pulse {
@@ -36,4 +36,6 @@
   .reader-body { scroll-behavior: auto; }
 
   .sk-line { animation: none; }
+
+  .is-flash { color: var(--accent) !important; }
 }

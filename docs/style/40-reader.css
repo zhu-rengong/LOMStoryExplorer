@@ -732,10 +732,15 @@
 }
 
 .is-flash {
-  border-radius: var(--r-sm);
-  box-shadow: inset 0 0 0 1px var(--accent);
-  animation: flash-beat 1.4s var(--ease);
+  --flash-base: var(--ink-2);
+  animation: flash-beat 1.4s ease-in-out;
 }
+
+.say .what.is-flash { --flash-base: var(--ink); }
+
+.say.narration .what.is-flash { --flash-base: var(--ink-2); }
+
+.say.think .what.is-flash { --flash-base: var(--ink-think); }
 
 .reader-skeleton {
   display: flex;
