@@ -42,6 +42,18 @@
 
 .btn:disabled { opacity: .38; }
 
+a.btn:hover {
+  border-color: var(--line-2);
+  background: var(--surface-hover);
+  color: var(--ink-hover);
+}
+
+a.btn:active {
+  border-color: var(--line-3);
+  background: var(--surface-active);
+  color: var(--ink);
+}
+
 .btn svg { width: 16px; height: 16px; }
 
 .btn-icon {
