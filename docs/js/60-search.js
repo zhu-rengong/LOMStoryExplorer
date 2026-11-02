@@ -3,12 +3,26 @@
 
   const SR = window.SR;
 
-  SR.define("search", ["beat", "graph", "store", "text", "ui"], ({ beat, graph, store, text, ui }) => {
+  SR.define("search", ["beat", "condtext", "graph", "store", "text", "ui"], ({ beat, condtext, graph, store, text, ui }) => {
     const empty = () => ({ lang: "", seen: new Set(), entries: [], sorted: true });
 
     let index = empty();
 
     const passes = (nodeIndex) => graph.passes(nodeIndex, store.state.filterSet);
+
+    const ITEM_META = { book: true, misc: true, special: true, talent: true };
+
+    const itemText = (rows) => {
+      const parts = [];
+      beat.walk(rows, (row) => {
+        if (!beat.is(row, "meta")) return;
+        const data = beat.meta(row);
+        if (!ITEM_META[data.kind]) return;
+        const label = condtext.meta(data.kind, data.key, data.value);
+        if (label) parts.push(label);
+      });
+      return parts.join("\n");
+    };
 
     const buildIndex = () => {
       const lang = store.textLang();
@@ -28,7 +42,7 @@
           id,
           order: nodeIndex === undefined ? -1 : nodeIndex,
           chapter: node ? graph.chapterOf(node) : null,
-          text: beat.textOf(stories[id]).toLowerCase(),
+          text: `${beat.textOf(stories[id])}\n${itemText(stories[id])}`.toLowerCase(),
         });
       }
       if (added) index.sorted = false;
