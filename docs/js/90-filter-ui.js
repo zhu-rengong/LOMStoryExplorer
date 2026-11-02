@@ -119,7 +119,10 @@
         const indexes = Array.from(state.filterSet);
         resultsKey = { source: state.filterSource, set: state.filterSet };
         box.replaceChildren();
-        box.appendChild(ui.el("div", "filter-results-title", i18n.t("filterResults", { n: indexes.length })));
+        const head = ui.el("div", "filter-results-title", i18n.t("filterResults", { n: indexes.length }));
+        head.appendChild(ui.el("span", "filter-count",
+          i18n.t("filterCount", { n: indexes.length, total: graph.nodes.length })));
+        box.appendChild(head);
         if (!indexes.length) {
           box.appendChild(ui.el("div", "filter-results-empty", i18n.t("filterResultsEmpty")));
           return;
@@ -203,12 +206,6 @@
           }
         }
 
-        const count = $("filterCount");
-        if (count) {
-          count.textContent = state.filterSet
-            ? i18n.t("filterCount", { n: state.filterSet.size, total: graph.nodes.length })
-            : "";
-        }
         renderResults();
       };
 
