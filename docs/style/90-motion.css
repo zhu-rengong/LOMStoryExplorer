@@ -15,8 +15,8 @@
 }
 
 @keyframes flash-beat {
-  0%, 33.333%, 66.667%, 100% { color: var(--flash-base, var(--ink-2)); }
-  16.667%, 50%, 83.333% { color: var(--accent); }
+  0%, 100% { color: var(--flash-base, var(--ink-2)); }
+  35%, 65% { color: var(--seal); }
 }
 
 @keyframes sk-pulse {
@@ -37,5 +37,5 @@
 
   .sk-line { animation: none; }
 
-  .is-flash { color: var(--accent) !important; }
+  .is-flash { color: var(--seal) !important; }
 }
